@@ -1,0 +1,32 @@
+<.header>
+  Observation <%= @observation.id %>
+  <:subtitle>This is a observation record from your database.</:subtitle>
+  <:actions>
+    <.link patch={~p"/observations/#{@observation}/show/edit"} phx-click={JS.push_focus()}>
+      <.button>Edit observation</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Observation date"><%= @observation.observation_date %></:item>
+  <:item title="Position"><%= @observation.position %></:item>
+  <:item title="Organic"><%= @observation.organic %></:item>
+  <:item title="Control method"><%= @observation.control_method %></:item>
+  <:item title="Host other"><%= @observation.host_other %></:item>
+  <:item title="Notes"><%= @observation.notes %></:item>
+  <:item title="Metadata"><%= @observation.metadata %></:item>
+</.list>
+
+<.back navigate={~p"/observations"}>Back to observations</.back>
+
+<.modal :if={@live_action == :edit} id="observation-modal" show on_cancel={JS.patch(~p"/observations/#{@observation}")}>
+  <.live_component
+    module={PlantAidWeb.ObservationLive.FormComponent}
+    id={@observation.id}
+    title={@page_title}
+    action={@live_action}
+    observation={@observation}
+    navigate={~p"/observations/#{@observation}"}
+  />
+</.modal>

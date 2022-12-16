@@ -1,0 +1,45 @@
+<.header>
+  Listing Observations
+  <:actions>
+    <.link patch={~p"/observations/new"}>
+      <.button>New Observation</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table id="observations" rows={@observations} row_click={&JS.navigate(~p"/observations/#{&1}")}>
+  <:col :let={observation} label="Observation date"><%= observation.observation_date %></:col>
+  <:col :let={observation} label="Position"><%= observation.position %></:col>
+  <:col :let={observation} label="Organic"><%= observation.organic %></:col>
+  <:col :let={observation} label="Control method"><%= observation.control_method %></:col>
+  <:col :let={observation} label="Host other"><%= observation.host_other %></:col>
+  <:col :let={observation} label="Notes"><%= observation.notes %></:col>
+  <:col :let={observation} label="Metadata"><%= observation.metadata %></:col>
+  <:action :let={observation}>
+    <div class="sr-only">
+      <.link navigate={~p"/observations/#{observation}"}>Show</.link>
+    </div>
+    <.link patch={~p"/observations/#{observation}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={observation}>
+    <.link phx-click={JS.push("delete", value: %{id: observation.id})} data-confirm="Are you sure?">
+      Delete
+    </.link>
+  </:action>
+</.table>
+
+<.modal
+  :if={@live_action in [:new, :edit]}
+  id="observation-modal"
+  show
+  on_cancel={JS.navigate(~p"/observations")}
+>
+  <.live_component
+    module={PlantAidWeb.ObservationLive.FormComponent}
+    id={@observation.id || :new}
+    title={@page_title}
+    action={@live_action}
+    observation={@observation}
+    navigate={~p"/observations"}
+  />
+</.modal>

@@ -1,0 +1,27 @@
+<.header>
+  Pathology <%= @pathology.id %>
+  <:subtitle>This is a pathology record from your database.</:subtitle>
+  <:actions>
+    <.link patch={~p"/pathologies/#{@pathology}/show/edit"} phx-click={JS.push_focus()}>
+      <.button>Edit pathology</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Common name"><%= @pathology.common_name %></:item>
+  <:item title="Scientific name"><%= @pathology.scientific_name %></:item>
+</.list>
+
+<.back navigate={~p"/pathologies"}>Back to pathologies</.back>
+
+<.modal :if={@live_action == :edit} id="pathology-modal" show on_cancel={JS.patch(~p"/pathologies/#{@pathology}")}>
+  <.live_component
+    module={PlantAidWeb.PathologyLive.FormComponent}
+    id={@pathology.id}
+    title={@page_title}
+    action={@live_action}
+    pathology={@pathology}
+    navigate={~p"/pathologies/#{@pathology}"}
+  />
+</.modal>

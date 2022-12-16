@@ -1,6 +1,8 @@
 defmodule PlantAidWeb.Router do
   use PlantAidWeb, :router
 
+  import PlantAidWeb.UserAuth
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -8,17 +10,18 @@ defmodule PlantAidWeb.Router do
     plug :put_root_layout, {PlantAidWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug :fetch_current_user
   end
 
   pipeline :api do
     plug :accepts, ["json"]
   end
 
-  scope "/", PlantAidWeb do
-    pipe_through :browser
+  # scope "/", PlantAidWeb do
+  #   pipe_through :browser
 
-    get "/", PageController, :home
-  end
+  #   get "/", PageController, :home
+  # end
 
   # Other scopes may use custom stacks.
   # scope "/api", PlantAidWeb do
@@ -39,6 +42,70 @@ defmodule PlantAidWeb.Router do
 
       live_dashboard "/dashboard", metrics: PlantAidWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
+    end
+  end
+
+  ## Authentication routes
+
+  scope "/", PlantAidWeb do
+    pipe_through [:browser, :redirect_if_user_is_authenticated]
+
+    live_session :redirect_if_user_is_authenticated,
+      on_mount: [{PlantAidWeb.UserAuth, :redirect_if_user_is_authenticated}] do
+      live "/users/register", UserRegistrationLive, :new
+      live "/users/log_in", UserLoginLive, :new
+      live "/users/reset_password", UserForgotPasswordLive, :new
+      live "/users/reset_password/:token", UserResetPasswordLive, :edit
+    end
+
+    post "/users/log_in", UserSessionController, :create
+  end
+
+  scope "/", PlantAidWeb do
+    pipe_through [:browser, :require_authenticated_user]
+
+    live_session :require_authenticated_user,
+      on_mount: [{PlantAidWeb.UserAuth, :ensure_authenticated}] do
+      live "/users/settings", UserSettingsLive, :edit
+      live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
+
+      live "/location_types", LocationTypeLive.Index, :index
+      live "/location_types/new", LocationTypeLive.Index, :new
+      live "/location_types/:id/edit", LocationTypeLive.Index, :edit
+      live "/location_types/:id", LocationTypeLive.Show, :show
+      live "/location_types/:id/show/edit", LocationTypeLive.Show, :edit
+
+      live "/hosts", HostLive.Index, :index
+      live "/hosts/new", HostLive.Index, :new
+      live "/hosts/:id/edit", HostLive.Index, :edit
+      live "/hosts/:id", HostLive.Show, :show
+      live "/hosts/:id/show/edit", HostLive.Show, :edit
+
+      live "/pathologies", PathologyLive.Index, :index
+      live "/pathologies/new", PathologyLive.Index, :new
+      live "/pathologies/:id/edit", PathologyLive.Index, :edit
+      live "/pathologies/:id", PathologyLive.Show, :show
+      live "/pathologies/:id/show/edit", PathologyLive.Show, :edit
+
+      live "/observations", ObservationLive.Index, :index
+      live "/observations/new", ObservationLive.Index, :new
+      live "/observations/:id/edit", ObservationLive.Index, :edit
+      live "/observations/:id", ObservationLive.Show, :show
+      live "/observations/:id/show/edit", ObservationLive.Show, :edit
+    end
+  end
+
+  scope "/", PlantAidWeb do
+    pipe_through [:browser]
+
+    delete "/users/log_out", UserSessionController, :delete
+
+    live_session :current_user,
+      on_mount: [{PlantAidWeb.UserAuth, :mount_current_user}] do
+      live "/", HomeLive.Index, :index
+
+      live "/users/confirm/:token", UserConfirmationLive, :edit
+      live "/users/confirm", UserConfirmationInstructionsLive, :new
     end
   end
 end

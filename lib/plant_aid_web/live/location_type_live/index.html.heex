@@ -1,0 +1,39 @@
+<.header>
+  Listing Location types
+  <:actions>
+    <.link patch={~p"/location_types/new"}>
+      <.button>New Location type</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table id="location_types" rows={@location_types} row_click={&JS.navigate(~p"/location_types/#{&1}")}>
+  <:col :let={location_type} label="Name"><%= location_type.name %></:col>
+  <:action :let={location_type}>
+    <div class="sr-only">
+      <.link navigate={~p"/location_types/#{location_type}"}>Show</.link>
+    </div>
+    <.link patch={~p"/location_types/#{location_type}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={location_type}>
+    <.link phx-click={JS.push("delete", value: %{id: location_type.id})} data-confirm="Are you sure?">
+      Delete
+    </.link>
+  </:action>
+</.table>
+
+<.modal
+  :if={@live_action in [:new, :edit]}
+  id="location_type-modal"
+  show
+  on_cancel={JS.navigate(~p"/location_types")}
+>
+  <.live_component
+    module={PlantAidWeb.LocationTypeLive.FormComponent}
+    id={@location_type.id || :new}
+    title={@page_title}
+    action={@live_action}
+    location_type={@location_type}
+    navigate={~p"/location_types"}
+  />
+</.modal>

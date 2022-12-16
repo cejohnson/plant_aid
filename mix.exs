@@ -19,7 +19,7 @@ defmodule PlantAid.MixProject do
   def application do
     [
       mod: {PlantAid.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :os_mon]
     ]
   end
 
@@ -32,6 +32,8 @@ defmodule PlantAid.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      # Phoenix defaults
+      {:argon2_elixir, "~> 3.0"},
       {:phoenix, "~> 1.7.0-rc.0", override: true},
       {:phoenix_ecto, "~> 4.4"},
       {:ecto_sql, "~> 3.6"},
@@ -50,7 +52,12 @@ defmodule PlantAid.MixProject do
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 0.20"},
       {:jason, "~> 1.2"},
-      {:plug_cowboy, "~> 2.5"}
+      {:plug_cowboy, "~> 2.5"},
+      # PlantAid specific
+      {:geo_postgis, "~> 3.4"},
+      {:nimble_csv, "~> 1.2"},
+      {:petal_components, "~> 0.19"},
+      {:ecto_psql_extras, "~> 0.6"}
     ]
   end
 
@@ -64,9 +71,13 @@ defmodule PlantAid.MixProject do
     [
       setup: ["deps.get", "ecto.setup"],
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
-      "ecto.reset": ["ecto.drop", "ecto.setup"],
+      "ecto.reset": ["ecto.drop", "ecto.setup", "run priv/repo/seeds/users.exs"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
-      "assets.deploy": ["tailwind default --minify", "esbuild default --minify", "phx.digest"]
+      "assets.deploy": [
+        "tailwind default --minify",
+        "esbuild default --minify",
+        "phx.digest"
+      ]
     ]
   end
 end

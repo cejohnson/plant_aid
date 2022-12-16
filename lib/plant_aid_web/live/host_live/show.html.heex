@@ -1,0 +1,27 @@
+<.header>
+  Host <%= @host.id %>
+  <:subtitle>This is a host record from your database.</:subtitle>
+  <:actions>
+    <.link patch={~p"/hosts/#{@host}/show/edit"} phx-click={JS.push_focus()}>
+      <.button>Edit host</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Common name"><%= @host.common_name %></:item>
+  <:item title="Scientific name"><%= @host.scientific_name %></:item>
+</.list>
+
+<.back navigate={~p"/hosts"}>Back to hosts</.back>
+
+<.modal :if={@live_action == :edit} id="host-modal" show on_cancel={JS.patch(~p"/hosts/#{@host}")}>
+  <.live_component
+    module={PlantAidWeb.HostLive.FormComponent}
+    id={@host.id}
+    title={@page_title}
+    action={@live_action}
+    host={@host}
+    navigate={~p"/hosts/#{@host}"}
+  />
+</.modal>

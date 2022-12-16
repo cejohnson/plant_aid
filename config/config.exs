@@ -10,6 +10,8 @@ import Config
 config :plant_aid,
   ecto_repos: [PlantAid.Repo]
 
+config :plant_aid, PlantAid.Repo, types: PlantAid.PostgresTypes
+
 # Configures the endpoint
 config :plant_aid, PlantAidWeb.Endpoint,
   url: [host: "localhost"],

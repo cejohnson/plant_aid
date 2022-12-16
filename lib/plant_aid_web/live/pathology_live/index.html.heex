@@ -1,0 +1,40 @@
+<.header>
+  Listing Pathologies
+  <:actions>
+    <.link patch={~p"/pathologies/new"}>
+      <.button>New Pathology</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table id="pathologies" rows={@pathologies} row_click={&JS.navigate(~p"/pathologies/#{&1}")}>
+  <:col :let={pathology} label="Common name"><%= pathology.common_name %></:col>
+  <:col :let={pathology} label="Scientific name"><%= pathology.scientific_name %></:col>
+  <:action :let={pathology}>
+    <div class="sr-only">
+      <.link navigate={~p"/pathologies/#{pathology}"}>Show</.link>
+    </div>
+    <.link patch={~p"/pathologies/#{pathology}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={pathology}>
+    <.link phx-click={JS.push("delete", value: %{id: pathology.id})} data-confirm="Are you sure?">
+      Delete
+    </.link>
+  </:action>
+</.table>
+
+<.modal
+  :if={@live_action in [:new, :edit]}
+  id="pathology-modal"
+  show
+  on_cancel={JS.navigate(~p"/pathologies")}
+>
+  <.live_component
+    module={PlantAidWeb.PathologyLive.FormComponent}
+    id={@pathology.id || :new}
+    title={@page_title}
+    action={@live_action}
+    pathology={@pathology}
+    navigate={~p"/pathologies"}
+  />
+</.modal>
