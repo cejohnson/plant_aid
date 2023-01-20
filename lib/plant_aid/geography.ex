@@ -6,7 +6,95 @@ defmodule PlantAid.Geography do
   import Ecto.Query, warn: false
   alias PlantAid.Repo
 
-  alias PlantAid.Geography.County
+  alias PlantAid.Geography.{
+    County,
+    Country,
+    PrimarySubdivision,
+    SecondarySubdivision
+  }
+
+  alias PlantAid.Observations.Observation
+
+  def list_countries do
+    Repo.all(Country)
+  end
+
+  def list_countries_for_filtering do
+    Repo.all(Country)
+    |> Repo.preload(
+      primary_subdivisions: [
+        secondary_subdivisions:
+          from(s in SecondarySubdivision,
+            select: %SecondarySubdivision{id: s.id, name: s.name, category: s.category}
+          )
+      ]
+    )
+  end
+
+  def list_primary_subdivisions do
+    Repo.all(PrimarySubdivision)
+  end
+
+  def list_secondary_subdivisions do
+    from(ssd in SecondarySubdivision,
+      left_join: psd in PrimarySubdivision,
+      on: ssd.primary_subdivision_id == psd.id,
+      left_join: c in Country,
+      on: psd.country_id == c.id,
+      preload: [primary_subdivision: psd, country: c]
+    )
+    |> Repo.all()
+
+    # |> Repo.preload([:primary_subdivision])
+  end
+
+  def list_secondary_subdivisions(params, opts \\ []) do
+    observation_count_query =
+      from(
+        o in Observation,
+        where: parent_as(:secondary_subdivision).id == o.secondary_subdivision_id,
+        select: %{count: count(o.id)}
+      )
+
+    query =
+      from(
+        ssd in SecondarySubdivision,
+        as: :secondary_subdivision,
+        join: psd in assoc(ssd, :primary_subdivision),
+        as: :primary_subdivision,
+        join: c in assoc(psd, :country),
+        as: :country,
+        left_lateral_join: o in subquery(observation_count_query),
+        as: :observation_count,
+        select: %{ssd | observation_count: o.count},
+        preload: [primary_subdivision: {psd, country: c}]
+      )
+
+    paginate? = Keyword.get(opts, :paginate, true)
+
+    if paginate? do
+      Flop.validate_and_run(query, params, for: SecondarySubdivision)
+    else
+      # flop = %Flop{filters: flop.filters}
+      # Flop.validate_and_run(query, params, for: SecondarySubdivision)
+      with {:ok, flop} <- Flop.validate(params, for: SecondarySubdivision) do
+        IO.inspect(flop, label: "flop")
+        # flop = %Flop{filters: flop.filters}
+        flop = %{
+          flop
+          | limit: nil,
+            page: nil,
+            page_size: nil,
+            order_by: nil,
+            order_directions: nil
+        }
+
+        IO.inspect(flop, label: "flop2")
+        Flop.run(query, flop, for: SecondarySubdivision)
+        # Flop.all(query, flop)
+      end
+    end
+  end
 
   @doc """
   Returns the list of counties.

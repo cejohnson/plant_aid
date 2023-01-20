@@ -1,0 +1,58 @@
+code,name,category,fips
+US-AL,Alabama,State,US01
+US-AK,Alaska,State,US02
+US-AZ,Arizona,State,US04
+US-AR,Arkansas,State,US05
+US-CA,California,State,US06
+US-CO,Colorado,State,US08
+US-CT,Connecticut,State,US09
+US-DE,Delaware,State,US10
+US-FL,Florida,State,US12
+US-GA,Georgia,State,US13
+US-HI,Hawaii,State,US15
+US-ID,Idaho,State,US16
+US-IL,Illinois,State,US17
+US-IN,Indiana,State,US18
+US-IA,Iowa,State,US19
+US-KS,Kansas,State,US20
+US-KY,Kentucky,State,US21
+US-LA,Louisiana,State,US22
+US-ME,Maine,State,US23
+US-MD,Maryland,State,US24
+US-MA,Massachusetts,State,US25
+US-MI,Michigan,State,US26
+US-MN,Minnesota,State,US27
+US-MS,Mississippi,State,US28
+US-MO,Missouri,State,US29
+US-MT,Montana,State,US30
+US-NE,Nebraska,State,US31
+US-NV,Nevada,State,US32
+US-NH,New Hampshire,State,US33
+US-NJ,New Jersey,State,US34
+US-NM,New Mexico,State,US35
+US-NY,New York,State,US36
+US-NC,North Carolina,State,US37
+US-ND,North Dakota,State,US38
+US-OH,Ohio,State,US39
+US-OK,Oklahoma,State,US40
+US-OR,Oregon,State,US41
+US-PA,Pennsylvania,State,US42
+US-RI,Rhode Island,State,US44
+US-SC,South Carolina,State,US45
+US-SD,South Dakota,State,US46
+US-TN,Tennessee,State,US47
+US-TX,Texas,State,US48
+US-UT,Utah,State,US49
+US-VT,Vermont,State,US50
+US-VA,Virginia,State,US51
+US-WA,Washington,State,US53
+US-WV,West Virginia,State,US54
+US-WI,Wisconsin,State,US55
+US-WY,Wyoming,State,US56
+US-DC,District of Columbia,District,US11
+US-AS,American Samoa,Outlying area,
+US-GU,Guam,Outlying area,
+US-MP,Northern Mariana Islands,Outlying area,
+US-PR,Puerto Rico,Outlying area,
+US-UM,United States Minor Outlying Islands,Outlying area,
+US-VI,"Virgin Islands, U.S.",Outlying area,

@@ -1,0 +1,14 @@
+code,name,category,fips,sgc
+CA-AB,Alberta,Province,CA01,48
+CA-BC,British Columbia,Province,CA02,59
+CA-MB,Manitoba,Province,CA03,46
+CA-NB,New Brunswick,Province,CA04,13
+CA-NL,Newfoundland and Labrador,Province,CA05,10
+CA-NS,Nova Scotia,Province,CA07,12
+CA-ON,Ontario,Province,CA08,35
+CA-PE,Prince Edward Island,Province,CA09,11
+CA-QC,Quebec,Province,CA10,24
+CA-SK,Saskatchewan,Province,CA11,47
+CA-NT,Northwest Territories,Territory,CA13,61
+CA-NU,Nunavut,Territory,CA14,62
+CA-YT,Yukon,Territory,CA12,60

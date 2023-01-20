@@ -201,6 +201,96 @@ defmodule PlantAidWeb.CoreComponents do
     """
   end
 
+  attr :meta, Flop.Meta, required: true
+  attr :fields, :list, required: true
+  attr :id, :string, default: nil
+  attr :change_event, :string, default: "update-filter"
+  attr :submit_event, :string, default: "submit-filter"
+  attr :reset_event, :string, default: "reset-filter"
+  attr :target, :string, default: nil
+  attr :debounce, :integer, default: 100
+
+  def filter_form(assigns) do
+    ~H"""
+    <div class="filter-form">
+      <.form
+        :let={f}
+        for={@meta}
+        as={:filter}
+        id={@id}
+        phx-target={@target}
+        phx-submit={@submit_event}
+        phx-change={@change_event}
+      >
+        <div class="filter-form-inputs">
+          <Flop.Phoenix.filter_fields :let={i} form={f} fields={@fields}>
+            <.input
+              id={i.id}
+              name={i.name}
+              label={i.label}
+              type={i.type}
+              value={i.value}
+              field={{i.form, i.field}}
+              hide_labels={true}
+              phx-debounce={@debounce}
+              {i.rest}
+            />
+          </Flop.Phoenix.filter_fields>
+        </div>
+
+        <.button phx-disable-with="Applying...">Filter</.button>
+        <.button phx-click={@reset_event}>Reset</.button>
+
+        <div class="filter-form-reset">
+          <a href="#" class="button" phx_target={@target} phx_click={@reset_event}>
+            Reset
+          </a>
+        </div>
+      </.form>
+    </div>
+    """
+  end
+
+  @doc """
+  Renders a simple form.
+
+  ## Examples
+
+      <.simple_form :let={f} for={:user} phx-change="validate" phx-submit="save">
+        <.input field={{f, :email}} label="Email"/>
+        <.input field={{f, :username}} label="Username" />
+        <:actions>
+          <.button>Save</.button>
+        </:actions>
+      </.simple_form>
+  """
+
+  # attr :for, :any, default: nil, doc: "the datastructure for the form"
+  # attr :as, :any, default: nil, doc: "the server side parameter to collect all input under"
+
+  # attr :rest, :global,
+  #   include: ~w(autocomplete name rel action enctype method novalidate target),
+  #   doc: "the arbitrary HTML attributes to apply to the form tag"
+
+  # slot :inner_block, required: true
+  # slot :actions, doc: "the slot for form actions, such as a submit button"
+
+  # def simple_form(assigns) do
+  #   ~H"""
+  #   <div>
+  #   <%= for fp <- Phoenix.HTML.inputs_for()
+  #   </div>
+  #   <.form :let={f} for={@for} as={@as} {@rest}>
+  #     <div class="space-y-8 bg-white mt-10">
+  #       <%= render_slot(@inner_block, f) %>
+  #       <div :for={action <- @actions} class="mt-2 flex items-center justify-between gap-6">
+  #         <%= render_slot(action, f) %>
+  #       </div>
+  #     </div>
+  #   </.form>
+  #   """
+  # end
+
   @doc """
   Renders a button.
 
@@ -485,6 +575,37 @@ defmodule PlantAidWeb.CoreComponents do
     </div>
     """
   end
+
+  # attr :id, :string, required: true
+  # attr :meta, Flop.Meta, required: true
+  # attr :path, :any, required: true
+  # attr :event, :string, required: true
+  # attr :target, :string, required: true
+  # attr :caption, :string, required: true
+  # attr :opts, :any, required: true
+  # attr :col, :any, required: true
+  # attr :items, :list, required: true
+  # attr :foot, :any, required: true
+  # attr :row_click, JS, default: nil
+  # attr :action, :any, required: true
+
+  # def flop_table(assigns) do
+  #   ~H"""
+  #   <div id={@id} class="overflow-y-auto px-4 sm:overflow-visible sm:px-0">
+  #     <Flop.Phoenix.table
+  #       items={@items}
+  #       meta={@meta}
+  #       path={@path}
+  #       row_click={@row_click}
+  #       opts=
+  #     >
+
+  #     </Flop.Phoenix.table>
+
+  #     <Flop.Phoenix.pagination meta={@meta} path={@path} />
+  #   </div>
+  #   """
+  # end
 
   @doc """
   Renders a data list.

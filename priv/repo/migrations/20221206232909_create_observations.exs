@@ -18,6 +18,9 @@ defmodule PlantAid.Repo.Migrations.CreateObservations do
       add :suspected_pathology_id, references(:pathologies, on_delete: :nothing)
       add :host_id, references(:hosts, on_delete: :nothing)
       add :host_variety_id, references(:host_varieties, on_delete: :nothing)
+      add :country_id, references(:countries)
+      add :primary_subdivision_id, references(:primary_subdivisions)
+      add :secondary_subdivision_id, references(:secondary_subdivisions)
 
       timestamps()
     end
@@ -28,5 +31,8 @@ defmodule PlantAid.Repo.Migrations.CreateObservations do
     create index(:observations, [:host_id])
     create index(:observations, [:host_variety_id])
     create index(:observations, [:position], using: :gist)
+    create index(:observations, [:country_id])
+    create index(:observations, [:primary_subdivision_id])
+    create index(:observations, [:secondary_subdivision_id])
   end
 end

@@ -1,5 +1,8 @@
 # Usage: mix run priv/scripts/usa_blight_import.exs <folder>
 
+import Ecto.Query
+import Geo.PostGIS
+
 alias PlantAid.Observations
 alias NimbleCSV.RFC4180, as: CSV
 alias PlantAid.Repo
@@ -10,12 +13,18 @@ alias PlantAid.Pathologies.Pathology
 alias PlantAid.Observations.Observation
 alias PlantAid.Genomics.Genotype
 
+alias PlantAid.Geography.{
+  Country,
+  PrimarySubdivision,
+  SecondarySubdivision
+}
+
 [folder | []] = System.argv()
 IO.puts("Importing USA Blight data from #{folder}")
 
 timestamp = DateTime.utc_now() |> DateTime.truncate(:second)
 
-csv_users =
+alert_users =
   (folder <> "/usablight_alert_users - usablight_alert_users.csv")
   |> File.read!()
   |> CSV.parse_string()
@@ -29,26 +38,46 @@ csv_users =
       preferred_name: first_name,
       inserted_at: timestamp,
       updated_at: timestamp,
-      metadata: %{source: "usa_blight"},
+      metadata: %{"source" => "usa_blight", "alert" => true},
       roles: [],
       # No password can ever match this value
       hashed_password: "INVALID"
     }
   end)
 
-{_count, users} = Repo.insert_all(User, csv_users, returning: [:id, :email])
-# IO.inspect(count)
-# IO.inspect(List.first(users))
+non_alert_users =
+  (folder <> "/usablight_alert_users - Dec 2022 List - Reporters WITHOUT sites.csv")
+  |> File.read!()
+  |> CSV.parse_string()
+  |> Enum.map(fn [email, first_name, last_name] ->
+    first_name = String.capitalize(first_name)
+    last_name = String.capitalize(last_name)
+
+    %{
+      email: String.downcase(email),
+      name: first_name <> " " <> last_name,
+      preferred_name: first_name,
+      inserted_at: timestamp,
+      updated_at: timestamp,
+      metadata: %{"source" => "usa_blight", "alert" => false},
+      roles: [],
+      # No password can ever match this value
+      hashed_password: "INVALID"
+    }
+  end)
+
+{count, users} =
+  Repo.insert_all(User, Enum.concat(alert_users, non_alert_users), returning: [:id, :email])
+
+IO.inspect("Imported #{count} users")
+IO.inspect(List.first(users), label: "Example")
+
 emails_to_user_ids =
   users
   |> Enum.map(fn user ->
     {user.email, user.id}
   end)
   |> Enum.into(%{})
-
-# IO.puts("Found #{length(users)} users")
-# IO.puts("Example/sanity check:")
-# IO.inspect(List.first(users))
 
 csv_hosts =
   (folder <> "/lateblight_table_host.csv")
@@ -64,9 +93,10 @@ csv_hosts =
     }
   end)
 
-# IO.inspect(usa_blight_host_ids_to_hosts)
-# IO.inspect(plant_aid_hosts)
-{_count, hosts} = Repo.insert_all(Host, csv_hosts, returning: [:id, :metadata])
+{count, hosts} = Repo.insert_all(Host, csv_hosts, returning: [:id, :metadata])
+
+IO.inspect("Imported #{count} hosts")
+IO.inspect(List.first(hosts), label: "Example")
 
 usa_blight_codes_to_host_ids =
   hosts
@@ -75,7 +105,7 @@ usa_blight_codes_to_host_ids =
   end)
   |> Enum.into(%{})
 
-IO.inspect(usa_blight_codes_to_host_ids, label: "usa_blight_codes_to_host_ids")
+# IO.inspect(usa_blight_codes_to_host_ids, label: "usa_blight_codes_to_host_ids")
 
 csv_location_types =
   (folder <> "/lateblight_table_location_setting.csv")
@@ -120,10 +150,12 @@ plant_aid_location_types =
     end
   end)
 
-{_count, location_types} =
+{count, location_types} =
   Repo.insert_all(LocationType, plant_aid_location_types, returning: [:id, :metadata])
 
-IO.inspect(location_types, label: "location_types")
+IO.inspect("Imported #{count} location types")
+IO.inspect(List.first(location_types), label: "Example")
+# IO.inspect(location_types, label: "location_types")
 
 usa_blight_codes_to_location_types =
   csv_location_types
@@ -141,7 +173,7 @@ usa_blight_codes_to_location_types =
   end)
   |> Enum.into(%{})
 
-IO.inspect(usa_blight_codes_to_location_types, label: "usa_blight_codes_to_location_types")
+# IO.inspect(usa_blight_codes_to_location_types, label: "usa_blight_codes_to_location_types")
 
 # IO.inspect(plant_aid_location_types)
 # IO.inspect(usa_blight_location_settings)
@@ -154,7 +186,26 @@ IO.inspect(usa_blight_codes_to_location_types, label: "usa_blight_codes_to_locat
     updated_at: timestamp
   })
 
-IO.inspect(late_blight, label: "late_blight")
+# IO.inspect(late_blight, label: "late_blight")
+
+# counties = PlantAid.Geography.list_counties()
+# county_names_to_ids = Enum.map(counties, fn county ->
+
+# end)
+
+# Ecto.Query.from(
+#   c in Country,
+#   left_join: psd in PrimarySubdivision,
+#   on: c.id == psd.country_id,
+#   left_join: ssd in SecondarySubdivision,
+#   on: psd.id == ssd.primary_subdivision_id,
+#   select: {c, psd, ssd.id, ssd.name, ssd.metadata},
+#   preload: []
+# )
+# |> PlantAid.Repo.all()
+countries =
+  PlantAid.Repo.all(Country)
+  |> PlantAid.Repo.preload(primary_subdivisions: [:secondary_subdivisions])
 
 csv_observations =
   (folder <> "/lateblight_table_obs.csv")
@@ -253,10 +304,10 @@ csv_observations =
   # |> Stream.filter(fn %{confirmer_email: email} ->
   #   Map.has_key?(emails_to_user_ids, String.downcase(email))
   # end)
-  |> Stream.filter(fn %{lat: lat, lon: lon} ->
-    is_float(elem(Float.parse(lat), 0)) && elem(Float.parse(lat), 0) != 0 &&
-      is_float(elem(Float.parse(lon), 0)) && elem(Float.parse(lon), 0) != 0
-  end)
+  # |> Stream.filter(fn %{lat: lat, lon: lon} ->
+  #   is_float(elem(Float.parse(lat), 0)) && elem(Float.parse(lat), 0) != 0 &&
+  #     is_float(elem(Float.parse(lon), 0)) && elem(Float.parse(lon), 0) != 0
+  # end)
   |> Stream.reject(fn %{host: host} ->
     String.length(host) == 0
   end)
@@ -326,6 +377,34 @@ obs =
       end
       |> DateTime.from_naive!("Etc/UTC")
 
+    country =
+      if o.dm_country do
+        Enum.find(countries, fn c -> String.contains?(c.name, o.dm_country) end)
+      end
+
+    primary_subdivision =
+      if country && o.dm_state do
+        Enum.find(country.primary_subdivisions, fn psd ->
+          String.contains?(psd.iso3166_2, o.dm_state)
+        end)
+      end
+
+    secondary_subdivision =
+      if primary_subdivision && o.dm_county do
+        Enum.find(primary_subdivision.secondary_subdivisions, fn ssd ->
+          ssd.name == o.fips_name
+        end)
+      end
+
+    position =
+      if is_float(elem(Float.parse(o.lat), 0)) && elem(Float.parse(o.lat), 0) != 0 &&
+           is_float(elem(Float.parse(o.lon), 0)) && elem(Float.parse(o.lon), 0) != 0 do
+        %Geo.Point{
+          coordinates: {String.to_float(o.lon), String.to_float(o.lat)},
+          srid: 4326
+        }
+      end
+
     %{
       status: :submitted,
       user_id: user_id,
@@ -337,10 +416,10 @@ obs =
       host_id: host_id,
       location_type_id: location_type_id,
       suspected_pathology_id: late_blight.id,
-      position: %Geo.Point{
-        coordinates: {String.to_float(o.lon), String.to_float(o.lat)},
-        srid: 4326
-      },
+      position: position,
+      country_id: country && country.id,
+      primary_subdivision_id: primary_subdivision && primary_subdivision.id,
+      secondary_subdivision_id: secondary_subdivision && secondary_subdivision.id,
       inserted_at: inserted_at,
       updated_at: updated_at,
       metadata: %{
@@ -393,8 +472,40 @@ obs =
 
 {count, observations} = Repo.insert_all(Observation, obs, returning: [:id, :metadata])
 
-IO.inspect(count, label: "insertion count")
-IO.inspect(List.first(observations), label: "example observation")
+IO.puts("Inserted #{count} observations")
+IO.inspect(List.first(observations), label: "Example")
+
+# Manually fix a few issues
+# from(
+#   o in Observations,
+#   update: [
+#     set: [
+#       secondary_subdivision_id:
+#         subquery(
+#           from(
+#             ssd in SecondarySubdivision,
+#             where: st_covers(ssd.geog, ^o.position),
+#             select: ssd.id
+#           )
+#         )
+#     ]
+#   ]
+# )
+# |> Repo.update_all()
+
+mexico = Enum.find(countries, fn c -> c.name == "Mexico" end)
+
+Ecto.Adapters.SQL.query!(
+  PlantAid.Repo,
+  "update observations as o set secondary_subdivision_id = (select ssd.id from secondary_subdivisions as ssd where st_covers(ssd.geog, o.position)) where country_id = $1",
+  [mexico.id]
+)
+
+Ecto.Adapters.SQL.query!(
+  PlantAid.Repo,
+  "update observations as o set secondary_subdivision_id = (select ssd.id from secondary_subdivisions as ssd where ssd.name = 'Chatham-Kent') where o.metadata #>> '{usa_blight, id}' = '150820092R'",
+  []
+)
 
 # usa_blight_obs_id_to_id =
 #   observations

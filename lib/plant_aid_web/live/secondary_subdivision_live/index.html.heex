@@ -1,0 +1,44 @@
+<.header>
+  Secondary Subdivisions
+</.header>
+
+<div class="flex flex-row">
+
+  <div id="map" class="w-5/12 border-solid border-2" phx-hook="MapBox" phx-update="ignore" style="height: 1000px; max-height: calc(800px - 150px);"></div>
+
+  <div class="flex-col w-5/12">
+  <Flop.Phoenix.table
+    items={@secondary_subdivisions}
+    meta={@meta}
+    path={~p"/secondary_subdivisions"}
+    row_click={&JS.navigate(~p"/secondary_subdivisions/#{&1}")}
+  >
+    <:col :let={secondary_subdivision} label="Country"><%= secondary_subdivision.primary_subdivision.country.name %></:col>
+    <:col :let={secondary_subdivision} label="Primary Subdivision"><%= secondary_subdivision.primary_subdivision.name %></:col>
+    <:col :let={secondary_subdivision} label="Secondary Subdivision"><%= "#{secondary_subdivision.name} #{secondary_subdivision.category}" %></:col>
+    <:col :let={secondary_subdivision} label="Observations"><%= secondary_subdivision.observation_count %></:col>
+  </Flop.Phoenix.table>
+
+  <Flop.Phoenix.pagination meta={@meta} path={~p"/secondary_subdivisions"} />
+  </div>
+
+  <div class="w-2/12">
+  <.filter_form id="secondary-subdivisions-filter" meta={@meta} fields={[
+      country_id: [
+        label: "Country",
+        type: "select",
+        options: @country_options
+      ],
+      primary_subdivision_id: [
+        label: "Primary Subdivision",
+        type: "select",
+        options: @primary_subdivision_options
+      ],
+      id: [
+        label: "Secondary Subdivision",
+        type: "select",
+        options: @secondary_subdivision_options
+      ]
+    ]} />
+    </div>
+</div>

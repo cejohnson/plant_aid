@@ -1,0 +1,33 @@
+code,name,category,fips,inegi
+MX-CMX,Ciudad de México,Federal entity,MX09,09
+MX-AGU,Aguascalientes,State,MX01,01
+MX-BCN,Baja California,State,MX02,02
+MX-BCS,Baja California Sur,State,MX03,03
+MX-CAM,Campeche,State,MX04,04
+MX-COA,Coahuila de Zaragoza,State,MX07,05
+MX-COL,Colima,State,MX08,06
+MX-CHP,Chiapas,State,MX05,07
+MX-CHH,Chihuahua,State,MX06,08
+MX-DUR,Durango,State,MX10,10
+MX-GUA,Guanajuato,State,MX11,11
+MX-GRO,Guerrero,State,MX12,12
+MX-HID,Hidalgo,State,MX13,13
+MX-JAL,Jalisco,State,MX14,14
+MX-MEX,México,State,MX15,15
+MX-MIC,Michoacán de Ocampo,State,MX16,16
+MX-MOR,Morelos,State,MX17,17
+MX-NAY,Nayarit,State,MX18,18
+MX-NLE,Nuevo León,State,MX19,19
+MX-OAX,Oaxaca,State,MX20,20
+MX-PUE,Puebla,State,MX21,21
+MX-QUE,Querétaro,State,MX22,22
+MX-ROO,Quintana Roo,State,MX23,23
+MX-SLP,San Luis Potosí,State,MX24,24
+MX-SIN,Sinaloa,State,MX25,25
+MX-SON,Sonora,State,MX26,26
+MX-TAB,Tabasco,State,MX27,27
+MX-TAM,Tamaulipas,State,MX28,28
+MX-TLA,Tlaxcala,State,MX29,29
+MX-VER,Veracruz de Ignacio de la Llave,State,MX30,30
+MX-YUC,Yucatán,State,MX31,31
+MX-ZAC,Zacatecas,State,MX32,32

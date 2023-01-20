@@ -24,89 +24,128 @@ import topbar from "../vendor/topbar"
 
 mapboxgl.accessToken = "pk.eyJ1Ijoic2hhbmtqNjg3IiwiYSI6ImNsNHlneGluejFqaDkzam5rNmc1Nmg1c2oifQ.OKCoEsxl4NF19EnW95zc7A"
 
+// Prefetch and cache GeoJSON
+// let countyGeojson
+// fetch("/api/v1/geojson/counties").then((response) => {
+//   if (!response.ok) {
+//     throw new Error(`Error retrieving county GeoJSON: ${response.statusText}`)
+//   }
+//   return response.json()
+// }).then((geojson) => {
+//   countyGeojson = geojson
+// }).catch((error) => {
+//   console.error(error)
+// })
+
 let Hooks = {}
 
 Hooks.MapBox = {
   mounted() {
     console.log("mapbox container mounted")
-    this.handleEvent("map-data", ({ bounds, data }) => {
-      console.log("data", data)
-      const map = new mapboxgl.Map({
-        container: this.el,
-        style: 'mapbox://styles/mapbox/light-v10',
-        bounds: [[bounds.min_lon, bounds.min_lat], [bounds.max_lon, bounds.max_lat]]
-      })
+    const map = new mapboxgl.Map({
+      container: this.el,
+      trackResize: false,
+      style: 'mapbox://styles/mapbox/light-v10',
+      bounds: [[-125, 23], [-65, 43]]
+    })
 
-      map.on('load', () => {
-        map.addSource('counties', {
-          type: "geojson",
-          data: data
-        });
+    let tempData = { type: "FeatureCollection", features: [] };
 
-        map.addLayer({
-          'id': 'countyFill',
-          'type': 'fill',
-          'source': 'counties',
-          'layout': {},
-          'paint': {
-            'fill-color': [
-              'step',
-              ['get', 'observation_count'],
-              '#fcef72',
-              15,
-              '#e89c23',
-              30,
-              '#941510'
-            ],
-            'fill-opacity': 0.5
-          }
-        });
+    this.handleEvent("map-data", (data) => {
+      console.log("setting map data");
+      let source = map.getSource("counties");
+      // Hacky but it works for now
+      if (source) {
+        source.setData(data);
+      } else {
+        tempData = data;
+      }
+      map.resize();
+    })
 
-        map.addLayer({
-          'id': 'countyOutline',
-          'type': 'line',
-          'source': 'counties',
-          'layout': {},
-          'paint': {
-            'line-color': '#424242',
-            'line-width': 0.5
-          }
-        });
+    // this.handleEvent("map-data", (data) => {
+    // let features = countyGeojson.features.filter((county) => {
+    //   data[county.properties.id] != undefined;
+    // }).map((county) => {
+    //   county.properties.observationCount = data[county.properties.id]
+    //   return county
+    // })
 
-        const hover_popup = new mapboxgl.Popup({
-          closeButton: false,
-          closeOnClick: false
-        });
+    map.on('load', () => {
+      console.log('map loaded, settings data from temp variable');
+      map.addSource('counties', {
+        type: "geojson",
+        // data: data
+        data: tempData
+      });
 
-        const detail_popup = new mapboxgl.Popup({
-        });
 
-        map.on('mousemove', 'countyFill', (e) => {
-          map.getCanvas().style.cursor = 'pointer';
-          const props = e.features[0].properties
-          if (!detail_popup.isOpen()) {
 
-            hover_popup.setLngLat(e.lngLat)
-              .setHTML(`
+      map.addLayer({
+        'id': 'countyFill',
+        'type': 'fill',
+        'source': 'counties',
+        'layout': {},
+        'paint': {
+          'fill-color': [
+            'step',
+            ['get', 'observation_count'],
+            '#eeeeee',
+            1,
+            '#fcef72',
+            15,
+            '#e89c23',
+            30,
+            '#941510'
+          ],
+          'fill-opacity': 0.5
+        }
+      });
+
+      map.addLayer({
+        'id': 'countyOutline',
+        'type': 'line',
+        'source': 'counties',
+        'layout': {},
+        'paint': {
+          'line-color': '#424242',
+          'line-width': 0.5
+        }
+      });
+
+      const hover_popup = new mapboxgl.Popup({
+        closeButton: false,
+        closeOnClick: false
+      });
+
+      const detail_popup = new mapboxgl.Popup({
+      });
+
+      map.on('mousemove', 'countyFill', (e) => {
+        map.getCanvas().style.cursor = 'pointer';
+        const props = e.features[0].properties
+        if (!detail_popup.isOpen()) {
+
+          hover_popup.setLngLat(e.lngLat)
+            .setHTML(`
             <div>
-            <strong>${props.name}</strong>
-            <div>${props.observation_count} observations</div>
+            <strong>${props.name} ${props.category}, ${props.primary_subdivision}</strong>
             </div>
           ` )
-              .addTo(map);
-          }
-        });
+            .addTo(map);
+        }
+      });
 
-        map.on('mouseleave', 'countyFill', () => {
-          map.getCanvas().style.cursor = '';
-          hover_popup.remove();
-        });
+      map.on('mouseleave', 'countyFill', () => {
+        map.getCanvas().style.cursor = '';
+        hover_popup.remove();
+      });
 
-        map.on('click', 'countyFill', (e) => {
-          map.getCanvas().style.cursor = 'pointer';
-          const props = e.features[0].properties
-          detail_popup.setLngLat(e.lngLat)
-            .setHTML(`
+      map.on('click', 'countyFill', (e) => {
+        map.getCanvas().style.cursor = 'pointer';
+        const props = e.features[0].properties
+        detail_popup.setLngLat(e.lngLat)
+          .setHTML(`
             <h4>Detailed view</h4>
             <div>
             <strong>${props.name}</strong>
@@ -114,10 +153,10 @@ Hooks.MapBox = {
             <a href="#">More information</a>
             </div>
           ` )
-            .addTo(map);
-        });
-      })
+          .addTo(map);
+      });
     })
+    // })
   }
 }
 

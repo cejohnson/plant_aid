@@ -7,14 +7,48 @@
   </:actions>
 </.header>
 
+<Flop.Phoenix.table
+  items={@observations}
+  meta={@meta}
+  path={~p"/observations"}
+  row_click={&JS.navigate(~p"/observations/#{&1}")}
+>
+  <:col :let={observation} label="Observation date" field={:observation_date}><%= observation.observation_date %></:col>
+  <:col :let={observation} label="Location"><%= observation.location %></:col>
+  <:col :let={observation} label="Host"><%= observation.host && observation.host.common_name %></:col>
+  <:col :let={observation} label="Suspected Pathology"><%= observation.suspected_pathology && observation.suspected_pathology.common_name %></:col>
+  <:col :let={observation} label="Location Type"><%= observation.location_type.name %></:col>
+  <:col :let={observation} label="Organic"><%= observation.organic %></:col>
+  <:col :let={observation} label="Host other"><%= observation.host_other %></:col>
+  <:action :let={observation}>
+    <div class="sr-only">
+      <.link navigate={~p"/observations/#{observation}"}>Show</.link>
+    </div>
+    <.link patch={~p"/observations/#{observation}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={observation}>
+    <.link phx-click={JS.push("delete", value: %{id: observation.id})} data-confirm="Are you sure?">
+      Delete
+    </.link>
+  </:action>
+</Flop.Phoenix.table>
+
+<Flop.Phoenix.pagination meta={@meta} path={~p"/observations"} />
+
+<.filter_form
+  id="observations-filter"
+  meta={@meta}
+  fields={[:observation_date, :host_id, :country]}
+/>
+
 <.table id="observations" rows={@observations} row_click={&JS.navigate(~p"/observations/#{&1}")}>
   <:col :let={observation} label="Observation date"><%= observation.observation_date %></:col>
-  <:col :let={observation} label="Position"><%= observation.position %></:col>
+  <:col :let={observation} label="Location"><%= observation.location %></:col>
+  <:col :let={observation} label="Host"><%= observation.host && observation.host.common_name %></:col>
+  <:col :let={observation} label="Suspected Pathology"><%= observation.suspected_pathology && observation.suspected_pathology.common_name %></:col>
+  <:col :let={observation} label="Location Type"><%= observation.location_type.name %></:col>
   <:col :let={observation} label="Organic"><%= observation.organic %></:col>
-  <:col :let={observation} label="Control method"><%= observation.control_method %></:col>
   <:col :let={observation} label="Host other"><%= observation.host_other %></:col>
-  <:col :let={observation} label="Notes"><%= observation.notes %></:col>
-  <:col :let={observation} label="Metadata"><%= observation.metadata %></:col>
   <:action :let={observation}>
     <div class="sr-only">
       <.link navigate={~p"/observations/#{observation}"}>Show</.link>

@@ -6,7 +6,7 @@ defmodule PlantAidWeb.ObservationLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, :observations, list_observations())}
+    {:ok, socket}
   end
 
   @impl true
@@ -26,10 +26,30 @@ defmodule PlantAidWeb.ObservationLive.Index do
     |> assign(:observation, %Observation{})
   end
 
-  defp apply_action(socket, :index, _params) do
-    socket
-    |> assign(:page_title, "Listing Observations")
-    |> assign(:observation, nil)
+  defp apply_action(socket, :index, params) do
+    case Observations.list_observations(params) do
+      {:ok, {observations, meta}} ->
+        assign(socket, %{
+          page_title: "Listing Observations",
+          observation: nil,
+          observations: observations,
+          meta: meta
+        })
+
+      _ ->
+        socket
+        # push_navigate(socket, to: ~p"/observations")
+    end
+
+    # socket
+    # |> assign(:page_title, "Listing Observations")
+    # |> assign(:observation, nil)
+  end
+
+  @impl true
+  def handle_event("update-filter", %{"filter" => params}, socket) do
+    IO.inspect(params, label: "update-filter")
+    {:noreply, push_patch(socket, to: ~p"/observations?#{params}")}
   end
 
   @impl true
