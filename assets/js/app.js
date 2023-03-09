@@ -45,14 +45,19 @@ Hooks.MapBox = {
     const map = new mapboxgl.Map({
       container: this.el,
       trackResize: false,
-      style: 'mapbox://styles/mapbox/light-v10',
-      bounds: [[-125, 23], [-65, 43]]
+      style: 'mapbox://styles/mapbox/light-v10'
+      // bounds: [[-125, 23], [-65, 43]]
     })
 
     let tempData = { type: "FeatureCollection", features: [] };
 
-    this.handleEvent("map-data", (data) => {
-      console.log("setting map data");
+    this.handleEvent("map-data", ({ bounding_box, data }) => {
+      console.log("setting map data", data);
+      if (bounding_box) {
+        console.log("setting bounding box", bounding_box);
+        map.fitBounds(bounding_box, { padding: 20 });
+      }
+
       let source = map.getSource("counties");
       // Hacky but it works for now
       if (source) {
@@ -60,6 +65,7 @@ Hooks.MapBox = {
       } else {
         tempData = data;
       }
+
       map.resize();
     })
 

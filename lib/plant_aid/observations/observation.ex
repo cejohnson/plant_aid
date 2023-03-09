@@ -9,6 +9,12 @@ defmodule PlantAid.Observations.Observation do
     # join_fields: [
     #   host_id: {:host}
     # ],
+    # custom_fields: [
+    #   group_by: [
+    #     filter: {PlantAid.Observations.Filters, :group_by, []}
+    #   ]
+    # ]
+    # default_limit: 20,
     filterable: [
       :status,
       :observation_date,
@@ -35,7 +41,6 @@ defmodule PlantAid.Observations.Observation do
       :primary_subdivision_id,
       :secondary_subdivision_id
     ],
-    default_limit: 20,
     default_order: %{
       order_by: [:observation_date],
       order_directions: [:desc]

@@ -2,19 +2,39 @@ defmodule PlantAidWeb.SecondarySubdivisionLive.Index do
   use PlantAidWeb, :live_view
 
   alias PlantAid.Geography
+  alias PlantAid.Hosts
 
   @impl true
-  def mount(_params, _session, socket) do
-    countries = Geography.list_countries_for_filtering()
+  def mount(params, _session, socket) do
+    # countries = Geography.list_countries_for_filtering()
+    # hosts = Hosts.list_hosts()
 
-    country_options = Enum.map(countries, fn c -> {c.name, c.id} end)
+    # country_options = Enum.map(countries, fn c -> {c.name, c.id} end)
+    # host_options = Enum.map(hosts, fn h -> {h.common_name, h.id} end)
 
-    {:ok,
-     socket
-     |> assign(:countries, countries)
-     |> assign(:country_options, [{"Select", nil} | country_options])
-     |> assign(:primary_subdivision_options, [{"Select a country first", nil}])
-     |> assign(:secondary_subdivision_options, [{"Select a primary subdivision first", nil}])}
+    socket =
+      case Geography.list_secondary_subdivisions(params) do
+        {:ok, {secondary_subdivisions, meta}} ->
+          socket
+          |> assign(:secondary_subdivisions, secondary_subdivisions)
+          |> assign(:meta, meta)
+
+        error ->
+          IO.inspect(error, label: "error")
+          socket
+      end
+
+    {
+      :ok,
+      socket
+      #  |> assign(:countries, countries)
+      #  |> assign(:country_options, [{"Select", nil} | country_options])
+      #  |> assign(:primary_subdivision_options, [{"Select a country first", nil}])
+      #  |> assign(:secondary_subdivision_options, [{"Select a primary subdivision first", nil}])
+      #  |> assign(:host_options, [{"Select", nil} | host_options])
+      #  |> assign(:secondary_subdivisions, [])
+      #  |> assign(:meta, %Flop.Meta{})}
+    }
   end
 
   @impl true
@@ -25,28 +45,28 @@ defmodule PlantAidWeb.SecondarySubdivisionLive.Index do
   defp apply_action(socket, :index, params) do
     IO.inspect(params, label: "params")
 
-    socket =
+    if connected?(socket) do
       case Geography.list_secondary_subdivisions(params) do
         {:ok, {secondary_subdivisions, meta}} ->
           IO.inspect(meta, label: "new meta")
 
-          country_id =
-            Enum.find_value(meta.flop.filters, "", fn f ->
-              if f.field == :country_id, do: f.value || ""
-            end)
+          # country_id =
+          #   Enum.find_value(meta.flop.filters, "", fn f ->
+          #     if f.field == :country_id, do: f.value || ""
+          #   end)
 
-          IO.inspect(country_id, label: "country_id")
+          # IO.inspect(country_id, label: "country_id")
 
-          primary_subdivision_id =
-            Enum.find_value(meta.flop.filters, "", fn f ->
-              if f.field == :primary_subdivision_id, do: f.value || ""
-            end)
+          # primary_subdivision_id =
+          #   Enum.find_value(meta.flop.filters, "", fn f ->
+          #     if f.field == :primary_subdivision_id, do: f.value || ""
+          #   end)
 
-          IO.inspect(primary_subdivision_id, label: "primary_subdivision_id")
+          # IO.inspect(primary_subdivision_id, label: "primary_subdivision_id")
 
           socket
-          |> set_primary_subdivision_options(country_id)
-          |> set_secondary_subdivision_options(country_id, primary_subdivision_id)
+          # |> set_primary_subdivision_options(country_id)
+          # |> set_secondary_subdivision_options(country_id, primary_subdivision_id)
           |> assign(%{
             page_title: "Listing Secondary Subdivisions",
             secondary_subdivisions: secondary_subdivisions,
@@ -58,60 +78,60 @@ defmodule PlantAidWeb.SecondarySubdivisionLive.Index do
           socket
       end
 
-    if connected?(socket) do
-      IO.inspect("rerunning map query")
-      # secondary_subdivisions = Geography.list_secondary_subdivisions(params, paginate: false)
-      # IO.inspect(length(secondary_subdivisions), label: "map items")
+      # if connected?(socket) do
+      #   IO.inspect("rerunning map query")
+      #   # secondary_subdivisions = Geography.list_secondary_subdivisions(params, paginate: false)
+      #   # IO.inspect(length(secondary_subdivisions), label: "map items")
 
-      # socket
-      # |> push_event("map-data", %{
-      #   type: "FeatureCollection",
-      #   features:
-      #     secondary_subdivisions
-      #     |> Enum.map(fn ssd ->
-      #       %{
-      #         type: "Feature",
-      #         properties: %{
-      #           name: ssd.name,
-      #           category: ssd.category,
-      #           primary_subdivision:
-      #             String.split(ssd.primary_subdivision.iso3166_2, "-") |> List.last(),
-      #           observation_count: ssd.observation_count
-      #         },
-      #         geometry: ssd.geog
-      #       }
-      #     end)
-      # })
+      #   # socket
+      #   # |> push_event("map-data", %{
+      #   #   type: "FeatureCollection",
+      #   #   features:
+      #   #     secondary_subdivisions
+      #   #     |> Enum.map(fn ssd ->
+      #   #       %{
+      #   #         type: "Feature",
+      #   #         properties: %{
+      #   #           name: ssd.name,
+      #   #           category: ssd.category,
+      #   #           primary_subdivision:
+      #   #             String.split(ssd.primary_subdivision.iso3166_2, "-") |> List.last(),
+      #   #           observation_count: ssd.observation_count
+      #   #         },
+      #   #         geometry: ssd.geog
+      #   #       }
+      #   #     end)
+      #   # })
 
-      case Geography.list_secondary_subdivisions(params, paginate: false) do
-        {secondary_subdivisions, _meta} ->
-          IO.inspect(length(secondary_subdivisions), label: "map items")
+      #   case Geography.list_secondary_subdivisions(params, paginate: false) do
+      #     {secondary_subdivisions, _meta} ->
+      #       IO.inspect(length(secondary_subdivisions), label: "map items")
 
-          socket
-          |> push_event("map-data", %{
-            type: "FeatureCollection",
-            features:
-              secondary_subdivisions
-              |> Enum.map(fn ssd ->
-                %{
-                  type: "Feature",
-                  properties: %{
-                    name: ssd.name,
-                    category: ssd.category,
-                    primary_subdivision:
-                      String.split(ssd.primary_subdivision.iso3166_2, "-") |> List.last(),
-                    observation_count: ssd.observation_count
-                  },
-                  geometry: ssd.geog
-                }
-              end)
-          })
+      #       socket
+      #       |> push_event("map-data", %{
+      #         type: "FeatureCollection",
+      #         features:
+      #           secondary_subdivisions
+      #           |> Enum.map(fn ssd ->
+      #             %{
+      #               type: "Feature",
+      #               properties: %{
+      #                 name: ssd.name,
+      #                 category: ssd.category,
+      #                 primary_subdivision:
+      #                   String.split(ssd.primary_subdivision.iso3166_2, "-") |> List.last(),
+      #                 observation_count: ssd.observation_count
+      #               },
+      #               geometry: ssd.geog
+      #             }
+      #           end)
+      #       })
 
-        error ->
-          # IO.inspect(error, label: "error")
-          IO.puts("map error")
-          socket
-      end
+      #     error ->
+      #       # IO.inspect(error, label: "error")
+      #       IO.puts("map error")
+      #       socket
+      #   end
     else
       socket
     end
@@ -144,60 +164,60 @@ defmodule PlantAidWeb.SecondarySubdivisionLive.Index do
     IO.inspect(filters, label: "filters")
 
     # Clear the primary_subdivision_id if the country changed
-    current_country_id =
-      Enum.find_value(socket.assigns.meta.flop.filters, "", fn f ->
-        if f.field == :country_id, do: f.value
-      end)
+    # current_country_id =
+    #   Enum.find_value(socket.assigns.meta.flop.filters, "", fn f ->
+    #     if f.field == :country_id, do: f.value
+    #   end)
 
-    new_country_id =
-      Enum.find_value(filters, fn {_, f} ->
-        if f["field"] == "country_id", do: f["value"]
-      end)
+    # new_country_id =
+    #   Enum.find_value(filters, fn {_, f} ->
+    #     if f["field"] == "country_id", do: f["value"]
+    #   end)
 
-    filters =
-      if current_country_id != new_country_id do
-        Enum.map(filters, fn {k, v} ->
-          if v["field"] == "primary_subdivision_id" do
-            {k, Map.replace(v, "value", "")}
-          else
-            {k, v}
-          end
-        end)
-        |> Map.new()
-      else
-        filters
-      end
+    # filters =
+    #   if current_country_id != new_country_id do
+    #     Enum.map(filters, fn {k, v} ->
+    #       if v["field"] == "primary_subdivision_id" do
+    #         {k, Map.replace(v, "value", "")}
+    #       else
+    #         {k, v}
+    #       end
+    #     end)
+    #     |> Map.new()
+    #   else
+    #     filters
+    #   end
 
     IO.inspect(filters, label: "post psd clear")
 
     # Clear the (secondary_subdivision) id if the primary_subdivision_id changed
-    current_primary_subdivision_id =
-      Enum.find_value(socket.assigns.meta.flop.filters, "", fn f ->
-        if f.field == :primary_subdivision_id, do: f.value
-      end)
+    # current_primary_subdivision_id =
+    #   Enum.find_value(socket.assigns.meta.flop.filters, "", fn f ->
+    #     if f.field == :primary_subdivision_id, do: f.value
+    #   end)
 
-    new_primary_subdivision_id =
-      Enum.find_value(filters, fn {_, f} ->
-        if f["field"] == "primary_subdivision_id", do: f["value"]
-      end)
+    # new_primary_subdivision_id =
+    #   Enum.find_value(filters, fn {_, f} ->
+    #     if f["field"] == "primary_subdivision_id", do: f["value"]
+    #   end)
 
-    filters =
-      if current_primary_subdivision_id != new_primary_subdivision_id do
-        Enum.map(filters, fn {k, v} ->
-          if v["field"] == "id" do
-            {k, Map.replace(v, "value", "")}
-          else
-            {k, v}
-          end
-        end)
-        |> Map.new()
-      else
-        filters
-      end
+    # filters =
+    #   if current_primary_subdivision_id != new_primary_subdivision_id do
+    #     Enum.map(filters, fn {k, v} ->
+    #       if v["field"] == "id" do
+    #         {k, Map.replace(v, "value", "")}
+    #       else
+    #         {k, v}
+    #       end
+    #     end)
+    #     |> Map.new()
+    #   else
+    #     filters
+    #   end
 
-    IO.inspect(filters, label: "post ssd clear")
+    # IO.inspect(filters, label: "post ssd clear")
 
-    params = %{"filters" => filters}
+    # params = %{"filters" => filters}
 
     IO.inspect(params, label: "final-params")
 

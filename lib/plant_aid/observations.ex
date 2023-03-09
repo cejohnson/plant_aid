@@ -41,33 +41,232 @@ defmodule PlantAid.Observations do
     |> Enum.map(&maybe_populate_location/1)
   end
 
-  def list_observations(params) do
-    flop = Flop.validate(params, for: Observation)
+  # def list_observations(params) do
+  #   IO.inspect(params, label: "params")
+
+  #   case Flop.validate_and_run(Observation, params, for: Observation) do
+  #     {:ok, {observations, meta}} ->
+  #       observations =
+  #         observations
+  #         |> Repo.preload([
+  #           :user,
+  #           :host,
+  #           :host_variety,
+  #           :location_type,
+  #           :suspected_pathology,
+  #           :country,
+  #           :primary_subdivision,
+  #           :secondary_subdivision
+  #         ])
+  #         |> Enum.map(&maybe_populate_lat_long/1)
+  #         |> Enum.map(&maybe_populate_location/1)
+
+  #       {:ok, {observations, meta}}
+
+  #     error ->
+  #       IO.inspect(error)
+  #       error
+  #   end
+  # end
+
+  def list_observations(flop \\ %Flop{}, opts \\ []) do
+    Repo.list_all(Observation, flop, opts)
+  end
+
+  # def paginate_observations(flop \\ %Flop{}, opts \\ []) do
+  #   opts = opts |>
+  #   Keyword.put(:for, Observation)
+  #   Repo.paginate(Observation, flop, opts)
+  # end
+
+  def paginate_observations(flop \\ %Flop{}) do
+    secondary_subdivision_query = from(s in SecondarySubdivision, select: %{s | geog: nil})
+
+    query =
+      from(
+        o in Observation,
+        preload: [
+          :user,
+          :host,
+          :host_variety,
+          :location_type,
+          :suspected_pathology,
+          :country,
+          :primary_subdivision,
+          secondary_subdivision: ^secondary_subdivision_query
+        ]
+      )
+
+    observations =
+      query
+      |> Flop.all(flop)
+      |> Enum.map(&maybe_populate_lat_long/1)
+      |> Enum.map(&maybe_populate_location/1)
+
+    meta = Flop.meta(query, flop)
+
+    {observations, meta}
+  end
+
+  # def list_observations(flop \\ %Flop{}, opts \\ []) do
+  #   results =
+  #     from(o in Observation)
+  #     |> Flop.filter(flop)
+  #     |> Flop.order_by(flop)
+  #     |> Flop.paginate(flop)
+  #     |> Repo.all()
+
+  #   # |> Repo.preload([
+  #   #   :user,
+  #   #   :host,
+  #   #   :host_variety,
+  #   #   :location_type,
+  #   #   :suspected_pathology,
+  #   #   :country,
+  #   #   :primary_subdivision,
+  #   #   :secondary_subdivision
+  #   # ])
+  #   # |> Enum.map(&maybe_populate_lat_long/1)
+  #   # |> Enum.map(&maybe_populate_location/1)
+
+  #   meta =
+  #     results
+  #     |> Flop.meta(flop, repo: Repo)
+
+  #   {:ok, {results, meta}}
+  # end
+
+  def group_by_secondary_subdivision(flop \\ %Flop{}, opts \\ []) do
     IO.inspect(flop, label: "flop")
 
-    case Flop.validate_and_run(Observation, params, for: Observation) do
-      {:ok, {observations, meta}} ->
-        observations =
-          observations
-          |> Repo.preload([
-            :user,
-            :host,
-            :host_variety,
-            :location_type,
-            :suspected_pathology,
-            :country,
-            :primary_subdivision,
-            :secondary_subdivision
-          ])
-          |> Enum.map(&maybe_populate_lat_long/1)
-          |> Enum.map(&maybe_populate_location/1)
+    results =
+      from(
+        o in Observation,
+        inner_join: ssd in assoc(o, :secondary_subdivision),
+        group_by: ssd.id,
+        select: %{
+          ssd
+          | observation_count: count(o.id)
+        }
+      )
+      |> Flop.filter(flop)
+      |> Repo.all()
+      |> Repo.preload(primary_subdivision: :country)
 
-        {:ok, {observations, meta}}
+    observation_count =
+      from(
+        o in Observation,
+        inner_join: ssd in assoc(o, :secondary_subdivision)
+      )
+      |> Flop.count(flop)
 
-      error ->
-        IO.inspect(error)
-        error
-    end
+    meta = %Flop.Meta{
+      flop: flop,
+      schema: Observation,
+      total_count: observation_count
+    }
+
+    # observation_count_query =
+    #   from(
+    #     o in Observation,
+    #     where: parent_as(:ssd).id == o.secondary_subdivision_id,
+    #     select: %{count: count(o.id)}
+    #   )
+    #   |> Flop.filter(flop)
+
+    # query =
+    #   from(
+    #     ssd in SecondarySubdivision,
+    #     as: :ssd,
+    #     inner_lateral_join: oc in subquery(observation_count_query),
+    #     select: %{ssd | observation_count: oc.count},
+    #     preload: [primary_subdivision: :country]
+    #   )
+    #   |> Flop.order_by(flop)
+
+    # |> Flop.paginate(flop)
+
+    # results = Repo.all(query)
+
+    # count_query =
+    # meta = Flop.meta(query, flop, count_query: count_query)
+
+    {results, meta}
+
+    # from(
+    #   asdf in subquery(observation_count_query),
+    #   inner_join: ssd in SecondarySubdivision,
+    #   on: asdf.secondary_subdivision_id == ssd.id,
+    #   preload: [secondary_subdivision: [primary_subdivision: :country]]
+    # )
+
+    # from(
+    #   o in Observation,
+    #   inner_join: ssd in assoc(o, :secondary_subdivision),
+    #   select: ssd,
+    #   preload: [primary_subdivision: :country]
+    # )
+
+    # observation_count_query =
+    #   from(
+    #     o in Observation,
+    #     where: parent_as(:ssd).id == o.secondary_subdivision_id,
+    #     select: %{count: count(o.id)}
+    #   )
+
+    # result =
+    #   from(
+    #     ssd in SecondarySubdivision,
+    #     as: :ssd,
+    #     inner_lateral_join: oc in subquery(observation_count_query),
+    #     select: %{ssd | observation_count: oc.count},
+    #     where: oc.count > 0,
+    #     preload: [primary_subdivision: :country]
+    #   )
+
+    # from(
+    #   ssd in SecondarySubdivision,
+    #   inner_join: o in assoc(ssd, :observations),
+    #   select: %{ssd | observation_count: count(o.id)}
+    # )
+
+    # observation_count_query = from(
+    #   o in Observation,
+    #   inner_join: ssd in SecondarySubdivision,
+    #   where: o.secondary_subdivision_id == ssd.id,
+    #   select: %{ssd | observation_count: count(o.id)}
+    # )
+
+    # from(
+    #   ssd in subquery(observation_count_query)
+    # )
+
+    # from(
+    #   o in Observation,
+    #   as: :observation,
+    #   # inner_join: ssd in assoc(o, :secondary_subdivision),
+    #   inner_lateral_join: oc in subquery(observation_count_query)
+    #   # group_by: ssd.id,
+    #   select: %{ssd | observation_count: count(o.id)}
+    #   # preload: [primary_subdivision: :country]
+    # )
+    # # |> Flop.run(flop)
+
+    # |> Flop.run(%{
+    #   flop
+    #   | after: nil,
+    #     before: nil,
+    #     first: nil,
+    #     last: nil,
+    #     limit: nil,
+    #     offset: nil,
+    #     order_by: nil,
+    #     order_directions: nil,
+    #     page: nil,
+    #     page_size: nil
+    # })
+
+    #   |> Repo.preload(primary_subdivision: [:country])
   end
 
   def aggregate_observations(params) do

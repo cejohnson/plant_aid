@@ -2,4 +2,68 @@
   Listing Counties
 </.header>
 
-<div id="map" phx-hook="MapBox" phx-update="ignore" style="height: calc(100vh - 150px); max-height: calc(800px - 150px);"></div>
+<div>Matching Observations: <%= @meta.total_count %></div>
+
+<div
+  id="map"
+  phx-hook="MapBox"
+  phx-update="ignore"
+  style="height: calc(100vh - 150px); max-height: calc(800px - 150px);"
+>
+</div>
+
+<.filter_form
+  id="observations-filter-form"
+  meta={@meta}
+  fields={[
+    observation_date: [
+      label: "From",
+      op: :>=,
+      type: "date"
+    ],
+    observation_date: [
+      label: "To",
+      op: :<=,
+      type: "date"
+    ],
+    host_id: [
+      label: "Host",
+      type: "select",
+      options: @host_options
+    ],
+    suspected_pathology_id: [
+      label: "Suspected Pathology",
+      type: "select",
+      options: @pathology_options
+    ],
+    location_type_id: [
+      label: "Location Type",
+      type: "select",
+      options: @location_type_options
+    ],
+    organic: [
+      label: "Organic",
+      type: "select",
+      options: [
+        {"Any", nil},
+        {"Organic", true},
+        {"Not Organic", false}
+      ]
+    ],
+    country_id: [
+      label: "Country",
+      type: "select",
+      options: @country_options
+    ],
+    primary_subdivision_id: [
+      label: "Primary Subdivision",
+      type: "select",
+      options: @primary_subdivision_options
+    ],
+    secondary_subdivision_id: [
+      label: "Secondary Subdivision",
+      type: "select",
+      options: @secondary_subdivision_options
+    ]
+  ]}
+/>
