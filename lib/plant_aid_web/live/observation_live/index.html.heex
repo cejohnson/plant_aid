@@ -49,40 +49,10 @@
   </div>
 
   <div class="w-1/6 pt-20">
-    <h3>Filter</h3>
-    <.filter_form
-      id="observations-filter"
+    <.live_component
+      module={PlantAidWeb.ObservationFilter}
+      id="observation-filter-form"
       meta={@meta}
-      fields={[
-        :observation_date,
-        host_id: [
-          label: "Host",
-          type: "select",
-          options: @host_options
-        ],
-        location_type_id: [
-          label: "Location Type",
-          type: "select",
-          options: @location_type_options
-        ],
-        organic: [
-          label: "Organic",
-          type: "select",
-          options: [
-            {"Select", nil},
-            {"Organic", true},
-            {"Not Organic", false}
-          ]
-        ],
-        group_by: [
-          label: "Group By",
-          type: "select",
-          options: [
-            {"None", nil},
-            {"Secondary Subdivision", :secondary_subdivision_id}
-          ]
-        ]
-      ]}
     />
   </div>
 </div>

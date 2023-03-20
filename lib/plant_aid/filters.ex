@@ -15,6 +15,7 @@ defmodule PlantAid.Filters do
       order_by: c.name
     )
     |> Repo.all()
+    |> prepend_default()
   end
 
   def list_primary_subdivision_options do
@@ -24,10 +25,12 @@ defmodule PlantAid.Filters do
       order_by: p.name
     )
     |> Repo.all()
+    |> prepend_default()
   end
 
   def list_primary_subdivision_options(nil) do
     []
+    |> prepend_default()
   end
 
   def list_primary_subdivision_options(country_id) do
@@ -38,6 +41,7 @@ defmodule PlantAid.Filters do
       order_by: p.name
     )
     |> Repo.all()
+    |> prepend_default()
   end
 
   def list_secondary_subdivision_options do
@@ -47,10 +51,12 @@ defmodule PlantAid.Filters do
       order_by: s.name
     )
     |> Repo.all()
+    |> prepend_default()
   end
 
   def list_secondary_subdivision_options(nil) do
     []
+    |> prepend_default()
   end
 
   def list_secondary_subdivision_options(primary_subdivision_id) do
@@ -61,6 +67,7 @@ defmodule PlantAid.Filters do
       order_by: s.name
     )
     |> Repo.all()
+    |> prepend_default()
   end
 
   def list_host_options do
@@ -70,6 +77,7 @@ defmodule PlantAid.Filters do
       order_by: h.common_name
     )
     |> Repo.all()
+    |> prepend_default()
   end
 
   def list_location_type_options do
@@ -79,6 +87,7 @@ defmodule PlantAid.Filters do
       order_by: l.name
     )
     |> Repo.all()
+    |> prepend_default()
   end
 
   def list_pathology_options do
@@ -88,5 +97,10 @@ defmodule PlantAid.Filters do
       order_by: p.common_name
     )
     |> Repo.all()
+    |> prepend_default()
+  end
+
+  defp prepend_default(options) do
+    [{"Any", nil} | options]
   end
 end

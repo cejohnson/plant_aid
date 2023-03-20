@@ -248,14 +248,12 @@ defmodule PlantAidWeb.CoreComponents do
     assigns = assign(assigns, :form, Phoenix.Component.to_form(meta))
 
     ~H"""
-    <.form for={@form} id={@id} phx-target={@target} phx-change={@on_change} phx-submit={@on_change}>
+    <.form for={@form} id={@id} phx-target={@target} phx-change={@on_change} phx-submit={@on_reset}>
       <Flop.Phoenix.filter_fields :let={i} form={@form} fields={@fields}>
-        <.input field={i.field} label={i.label} type={i.type} phx-debounce={120} {i.rest} />
+        <.input field={i.field} label={i.label} type={i.type} phx-debounce={0} {i.rest} />
       </Flop.Phoenix.filter_fields>
 
-      <a href="#" class="button" phx-target={@target} phx-click={@on_reset}>
-        Reset
-      </a>
+      <.button>Reset Filters</.button>
     </.form>
     """
   end

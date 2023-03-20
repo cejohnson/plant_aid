@@ -1,28 +1,14 @@
 defmodule PlantAid.Mapping do
   import Ecto.Query
-  import Geo.PostGIS
 
   alias PlantAid.Repo
   alias PlantAid.Observations.Observation
-
-  def get_bounding_box() do
-  end
 
   def group_observations_by_secondary_subdivision do
     group_observations_by_secondary_subdivision(%Flop{})
   end
 
   def group_observations_by_secondary_subdivision(%Flop{} = flop) do
-    # query =
-    #   from(
-    #     o in Observation,
-    #     inner_join: s in assoc(o, :secondary_subdivision),
-    #     group_by: s.id,
-    #     select: %{s | observation_count: count(o.id)}
-    #   )
-
-    # query
-    # |> select([o, s], %{s | observation_count: count(o.id)})
     secondary_subdivisions =
       from(
         o in Observation,
@@ -37,7 +23,7 @@ defmodule PlantAid.Mapping do
       |> Repo.all()
       |> Repo.preload(primary_subdivision: :country)
 
-    bounding_box =
+    bounds =
       from(
         o in Observation,
         inner_join: s in assoc(o, :secondary_subdivision),
@@ -46,11 +32,17 @@ defmodule PlantAid.Mapping do
       |> Flop.filter(flop)
       |> Repo.one()
       |> (fn geom ->
-            coordinates = List.first(geom.coordinates)
-            southwest_point = Enum.at(coordinates, 0)
-            northeast_point = Enum.at(coordinates, 2)
+            case geom do
+              nil ->
+                [[-180, -70], [180, 70]]
 
-            [Tuple.to_list(southwest_point), Tuple.to_list(northeast_point)]
+              geom ->
+                coordinates = List.first(geom.coordinates)
+                southwest_point = Enum.at(coordinates, 0)
+                northeast_point = Enum.at(coordinates, 2)
+
+                [Tuple.to_list(southwest_point), Tuple.to_list(northeast_point)]
+            end
           end).()
 
     observation_count =
@@ -66,7 +58,7 @@ defmodule PlantAid.Mapping do
       total_count: observation_count
     }
 
-    map_data = %{
+    data = %{
       type: "FeatureCollection",
       features:
         secondary_subdivisions
@@ -85,6 +77,12 @@ defmodule PlantAid.Mapping do
         end)
     }
 
-    {map_data, bounding_box, meta}
+    {%{data: data, bounds: bounds}, meta}
+  end
+
+  def group_observations_by_secondary_subdivision(%{} = params) do
+    with {:ok, flop} <- Flop.validate(params, for: Observation) do
+      {:ok, group_observations_by_secondary_subdivision(flop)}
+    end
   end
 end

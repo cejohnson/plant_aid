@@ -4,17 +4,10 @@ defmodule PlantAid.Observations do
   """
 
   import Ecto.Query, warn: false
-  import Geo.PostGIS
-  alias PlantAid.Geography.SecondarySubdivision
   alias PlantAid.Repo
 
-  alias PlantAid.Geography.County
-  alias PlantAid.Geography.County2
+  alias PlantAid.Geography.SecondarySubdivision
   alias PlantAid.Observations.Observation
-
-  alias PlantAid.Geography.{
-    Country
-  }
 
   @doc """
   Returns the list of observations.
@@ -26,277 +19,36 @@ defmodule PlantAid.Observations do
 
   """
   def list_observations do
-    Repo.all(Observation)
-    |> Repo.preload([
-      :user,
-      :host,
-      :host_variety,
-      :location_type,
-      :suspected_pathology,
-      :country,
-      :primary_subdivision,
-      :secondary_subdivision
-    ])
-    |> Enum.map(&maybe_populate_lat_long/1)
-    |> Enum.map(&maybe_populate_location/1)
+    list_observations(%Flop{})
   end
 
-  # def list_observations(params) do
-  #   IO.inspect(params, label: "params")
-
-  #   case Flop.validate_and_run(Observation, params, for: Observation) do
-  #     {:ok, {observations, meta}} ->
-  #       observations =
-  #         observations
-  #         |> Repo.preload([
-  #           :user,
-  #           :host,
-  #           :host_variety,
-  #           :location_type,
-  #           :suspected_pathology,
-  #           :country,
-  #           :primary_subdivision,
-  #           :secondary_subdivision
-  #         ])
-  #         |> Enum.map(&maybe_populate_lat_long/1)
-  #         |> Enum.map(&maybe_populate_location/1)
-
-  #       {:ok, {observations, meta}}
-
-  #     error ->
-  #       IO.inspect(error)
-  #       error
-  #   end
-  # end
-
-  def list_observations(flop \\ %Flop{}, opts \\ []) do
-    Repo.list_all(Observation, flop, opts)
-  end
-
-  # def paginate_observations(flop \\ %Flop{}, opts \\ []) do
-  #   opts = opts |>
-  #   Keyword.put(:for, Observation)
-  #   Repo.paginate(Observation, flop, opts)
-  # end
-
-  def paginate_observations(flop \\ %Flop{}) do
-    secondary_subdivision_query = from(s in SecondarySubdivision, select: %{s | geog: nil})
-
-    query =
-      from(
-        o in Observation,
-        preload: [
-          :user,
-          :host,
-          :host_variety,
-          :location_type,
-          :suspected_pathology,
-          :country,
-          :primary_subdivision,
-          secondary_subdivision: ^secondary_subdivision_query
-        ]
-      )
-
+  def list_observations(%Flop{} = flop) do
     observations =
-      query
+      Observation
       |> Flop.all(flop)
+      |> Repo.preload([
+        :user,
+        :host,
+        :host_variety,
+        :location_type,
+        :suspected_pathology,
+        :country,
+        :primary_subdivision,
+        secondary_subdivision: from(s in SecondarySubdivision, select: %{s | geog: nil})
+      ])
       |> Enum.map(&maybe_populate_lat_long/1)
       |> Enum.map(&maybe_populate_location/1)
 
-    meta = Flop.meta(query, flop)
+    meta = Flop.meta(Observation, flop)
 
     {observations, meta}
   end
 
-  # def list_observations(flop \\ %Flop{}, opts \\ []) do
-  #   results =
-  #     from(o in Observation)
-  #     |> Flop.filter(flop)
-  #     |> Flop.order_by(flop)
-  #     |> Flop.paginate(flop)
-  #     |> Repo.all()
-
-  #   # |> Repo.preload([
-  #   #   :user,
-  #   #   :host,
-  #   #   :host_variety,
-  #   #   :location_type,
-  #   #   :suspected_pathology,
-  #   #   :country,
-  #   #   :primary_subdivision,
-  #   #   :secondary_subdivision
-  #   # ])
-  #   # |> Enum.map(&maybe_populate_lat_long/1)
-  #   # |> Enum.map(&maybe_populate_location/1)
-
-  #   meta =
-  #     results
-  #     |> Flop.meta(flop, repo: Repo)
-
-  #   {:ok, {results, meta}}
-  # end
-
-  def group_by_secondary_subdivision(flop \\ %Flop{}, opts \\ []) do
-    IO.inspect(flop, label: "flop")
-
-    results =
-      from(
-        o in Observation,
-        inner_join: ssd in assoc(o, :secondary_subdivision),
-        group_by: ssd.id,
-        select: %{
-          ssd
-          | observation_count: count(o.id)
-        }
-      )
-      |> Flop.filter(flop)
-      |> Repo.all()
-      |> Repo.preload(primary_subdivision: :country)
-
-    observation_count =
-      from(
-        o in Observation,
-        inner_join: ssd in assoc(o, :secondary_subdivision)
-      )
-      |> Flop.count(flop)
-
-    meta = %Flop.Meta{
-      flop: flop,
-      schema: Observation,
-      total_count: observation_count
-    }
-
-    # observation_count_query =
-    #   from(
-    #     o in Observation,
-    #     where: parent_as(:ssd).id == o.secondary_subdivision_id,
-    #     select: %{count: count(o.id)}
-    #   )
-    #   |> Flop.filter(flop)
-
-    # query =
-    #   from(
-    #     ssd in SecondarySubdivision,
-    #     as: :ssd,
-    #     inner_lateral_join: oc in subquery(observation_count_query),
-    #     select: %{ssd | observation_count: oc.count},
-    #     preload: [primary_subdivision: :country]
-    #   )
-    #   |> Flop.order_by(flop)
-
-    # |> Flop.paginate(flop)
-
-    # results = Repo.all(query)
-
-    # count_query =
-    # meta = Flop.meta(query, flop, count_query: count_query)
-
-    {results, meta}
-
-    # from(
-    #   asdf in subquery(observation_count_query),
-    #   inner_join: ssd in SecondarySubdivision,
-    #   on: asdf.secondary_subdivision_id == ssd.id,
-    #   preload: [secondary_subdivision: [primary_subdivision: :country]]
-    # )
-
-    # from(
-    #   o in Observation,
-    #   inner_join: ssd in assoc(o, :secondary_subdivision),
-    #   select: ssd,
-    #   preload: [primary_subdivision: :country]
-    # )
-
-    # observation_count_query =
-    #   from(
-    #     o in Observation,
-    #     where: parent_as(:ssd).id == o.secondary_subdivision_id,
-    #     select: %{count: count(o.id)}
-    #   )
-
-    # result =
-    #   from(
-    #     ssd in SecondarySubdivision,
-    #     as: :ssd,
-    #     inner_lateral_join: oc in subquery(observation_count_query),
-    #     select: %{ssd | observation_count: oc.count},
-    #     where: oc.count > 0,
-    #     preload: [primary_subdivision: :country]
-    #   )
-
-    # from(
-    #   ssd in SecondarySubdivision,
-    #   inner_join: o in assoc(ssd, :observations),
-    #   select: %{ssd | observation_count: count(o.id)}
-    # )
-
-    # observation_count_query = from(
-    #   o in Observation,
-    #   inner_join: ssd in SecondarySubdivision,
-    #   where: o.secondary_subdivision_id == ssd.id,
-    #   select: %{ssd | observation_count: count(o.id)}
-    # )
-
-    # from(
-    #   ssd in subquery(observation_count_query)
-    # )
-
-    # from(
-    #   o in Observation,
-    #   as: :observation,
-    #   # inner_join: ssd in assoc(o, :secondary_subdivision),
-    #   inner_lateral_join: oc in subquery(observation_count_query)
-    #   # group_by: ssd.id,
-    #   select: %{ssd | observation_count: count(o.id)}
-    #   # preload: [primary_subdivision: :country]
-    # )
-    # # |> Flop.run(flop)
-
-    # |> Flop.run(%{
-    #   flop
-    #   | after: nil,
-    #     before: nil,
-    #     first: nil,
-    #     last: nil,
-    #     limit: nil,
-    #     offset: nil,
-    #     order_by: nil,
-    #     order_directions: nil,
-    #     page: nil,
-    #     page_size: nil
-    # })
-
-    #   |> Repo.preload(primary_subdivision: [:country])
-  end
-
-  def aggregate_observations(params) do
+  def list_observations(%{} = params) do
     with {:ok, flop} <- Flop.validate(params, for: Observation) do
-      flop = %Flop{filters: flop.filters}
-
-      from(
-        o in Observation,
-        inner_join: ssd in SecondarySubdivision,
-        on: ssd.id == o.secondary_subdivision_id,
-        group_by: ssd.id,
-        select: {ssd, count(o.id)}
-      )
-      |> Flop.all(flop)
-      |> Enum.map(fn {ssd, count} ->
-        Map.merge(ssd, %{observation_count: count})
-      end)
-      |> Repo.preload(primary_subdivision: [preload: :country])
+      {:ok, list_observations(flop)}
     end
-
-    # Observation
-    # |> aggregate_by(params)
-    # |> Flop.validate_and_run(params, for: Observation)
   end
-
-  # defp aggregate_by(query, _params), do
-  #   from(o in query,
-  #   select:
-  #   )
-  # end
 
   @doc """
   Gets a single observation.
@@ -393,13 +145,12 @@ defmodule PlantAid.Observations do
     Observation.changeset(observation, attrs)
   end
 
-  defp maybe_populate_lat_long(%Observation{position: nil} = observation) do
-    observation
+  defp maybe_populate_lat_long(%Observation{position: %{coordinates: {long, lat}}} = observation) do
+    %{observation | latitude: lat, longitude: long}
   end
 
-  defp maybe_populate_lat_long(%Observation{position: position} = observation) do
-    {long, lat} = position.coordinates
-    %{observation | latitude: lat, longitude: long}
+  defp maybe_populate_lat_long(%Observation{} = observation) do
+    observation
   end
 
   defp maybe_populate_location(
@@ -439,151 +190,6 @@ defmodule PlantAid.Observations do
       observation
       | location:
           "#{secondary_subdivision.name} #{secondary_subdivision.category}, #{psd_abbreviation}, #{country.iso3166_1_alpha2}"
-    }
-  end
-
-  @doc """
-  select c.id, c.name, c.state, o.suspected_pathology_id, count(o.id) as ObservationCount from counties c inner join observations o on st_contains(c.geom, o.coordinates) group by c.id, o.suspected_pathology_id;
-  """
-  def get_county_aggregates() do
-    # IO.puts("calling get_county_aggregates")
-
-    from(c in County2,
-      inner_join: o in Observation,
-      on: st_covers(c.geom, o.position),
-      select: {%{c | id: nil}, count(o.id)},
-      group_by: [c.gid],
-      order_by: [desc: count(o.id)]
-    )
-    |> Repo.all()
-    |> Enum.map(fn {county, count} ->
-      Map.merge(county, %{observation_count: count})
-    end)
-  end
-
-  def get_county_aggregates_with_bounds() do
-    # IO.puts("calling get_county_aggregates_with_bounds")
-
-    # SELECT c0."id", c0."geometry", c0."name", c0."state", c0."sqmi", count(o1."id"), count(o1."id") / c0."sqmi", ST_Extent(c0."geometry"::geometry) OVER()::geometry AS bounds FROM "counties" AS c0 INNER JOIN "observations" AS o1 ON ST_Covers(c0."geometry",o1."position") GROUP BY c0."id" ORDER BY count(o1."id") / c0."sqmi" DESC
-    # results =
-    #   from(c in County,
-    #     inner_join: o in Observation,
-    #     on: st_covers(c.geometry, o.position),
-    #     select:
-    #       {c, count(o.id), count(o.id) / c.sqmi,
-    #        fragment("ST_Extent(?::geometry) OVER()::geometry AS bounds", c.geometry)},
-    #     group_by: [c.id],
-    #     order_by: [desc: count(o.id) / c.sqmi]
-    #   )
-    #   |> Repo.all()
-
-    # SELECT c1."id", c1."geometry", c1."name", c1."state", c1."sqmi", count(o0."id"), count(o0."id") / c1."sqmi", ST_Extent(c1."geometry"::geometry) OVER()::geometry AS bounds FROM "observations" AS o0 LEFT OUTER JOIN "counties" AS c1 ON ST_Covers(c1."geometry",o0."position") GROUP BY c1."id" ORDER BY count(o0."id") / c1."sqmi" DESC
-    # results =
-    #   from(o in Observation,
-    #     inner_join: c in County,
-    #     on: st_covers(c.geometry, o.position),
-    #     select:
-    #       {c, count(o.id), count(o.id) / c.sqmi,
-    #        fragment("ST_Extent(?::geometry) OVER()::geometry AS bounds", c.geometry)},
-    #     group_by: [c.id],
-    #     order_by: [desc: count(o.id) / c.sqmi]
-    #   )
-    #   |> Repo.all()
-
-    # results =
-    #   from(c in County,
-    #     select:
-    #       {c, nil, nil, fragment("ST_Extent(?::geometry) OVER()::geometry AS bounds", c.geometry)}
-    #   )
-    #   |> Repo.all()
-
-    results = from(c in County2, select: {%{c | id: nil}}) |> Repo.all()
-
-    # results =
-    #   from(c in County2,
-    #     select:
-    #       {%{c | id: nil}, nil, nil, fragment("ST_Extent(?) OVER()::geometry AS bounds", c.geom)}
-    #   )
-    #   |> Repo.all()
-
-    IO.inspect(length(results))
-    IO.inspect(List.first(results))
-
-    # {_, _, _,
-    #  %Geo.Polygon{
-    #    coordinates: [bounds_list]
-    #  }} = List.first(results)
-
-    # {longitudes, latitudes} = Enum.unzip(bounds_list)
-
-    # bounds = %{
-    #   min_lon: Enum.min(longitudes),
-    #   min_lat: Enum.min(latitudes),
-    #   max_lon: Enum.max(longitudes),
-    #   max_lat: Enum.max(latitudes)
-    # }
-
-    # lon_padding = abs(bounds.max_lon - bounds.min_lon) * 0.025
-    # lat_padding = abs(bounds.max_lat - bounds.min_lat) * 0.025
-
-    # padded_bounds = %{
-    #   min_lon: bounds.min_lon - lon_padding,
-    #   min_lat: bounds.min_lat - lat_padding,
-    #   max_lon: bounds.max_lon + lon_padding,
-    #   max_lat: bounds.max_lat + lat_padding
-    # }
-
-    # counties =
-    #   results
-    #   |> Enum.map(fn {county, count, density, _} ->
-    #     Map.merge(county, %{observation_count: count, density: density})
-    #   end)
-
-    counties =
-      results
-      |> Enum.map(fn {county} ->
-        county
-      end)
-
-    # {counties, padded_bounds}
-    {counties,
-     %{
-       min_lon: -179.231086,
-       min_lat: -14.601813,
-       max_lon: 179.859681,
-       max_lat: 71.439786
-     }}
-  end
-
-  def bounding_box() do
-    IO.puts("calling bounding_box")
-
-    # bb =
-    #   from(c in County,
-    #     inner_join: o in Observation,
-    #     on: st_covers(c.geometry, o.position),
-    #     select: {fragment("ST_Extent(?::geometry)::geometry", c.geometry)}
-    #   )
-    #   |> Repo.all()
-
-    # IO.inspect(bb, label: "bb")
-    # bb
-
-    [{%Geo.Polygon{coordinates: [coordinate_list]}}] =
-      from(c in County,
-        inner_join: o in Observation,
-        on: st_covers(c.geometry, o.position),
-        select: {fragment("ST_Extent(?::geometry)::geometry", c.geometry)}
-      )
-      |> Repo.all()
-
-    {longitudes, latitudes} = Enum.unzip(coordinate_list)
-
-    %{
-      min_lon: Enum.min(longitudes),
-      min_lat: Enum.min(latitudes),
-      max_lon: Enum.max(longitudes),
-      max_lat: Enum.max(latitudes)
     }
   end
 end

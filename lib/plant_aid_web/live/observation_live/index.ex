@@ -1,27 +1,12 @@
 defmodule PlantAidWeb.ObservationLive.Index do
   use PlantAidWeb, :live_view
 
-  alias PlantAid.{
-    Hosts,
-    LocationTypes,
-    Observations,
-    Pathologies
-  }
-
+  alias PlantAid.Observations
   alias PlantAid.Observations.Observation
 
   @impl true
   def mount(_params, _session, socket) do
-    hosts = Hosts.list_hosts()
-    location_types = LocationTypes.list_location_types()
-
-    host_options = Enum.map(hosts, fn h -> {h.common_name, h.id} end)
-    location_type_options = Enum.map(location_types, fn lt -> {lt.name, lt.id} end)
-
-    {:ok,
-     socket
-     |> assign(:host_options, [{"Select", nil} | host_options])
-     |> assign(:location_type_options, [{"Select", nil} | location_type_options])}
+    {:ok, socket}
   end
 
   @impl true
@@ -42,63 +27,36 @@ defmodule PlantAidWeb.ObservationLive.Index do
   end
 
   defp apply_action(socket, :index, params) do
-    with {:ok, flop} <- Flop.validate(params, for: Observation) do
-      case Observations.paginate_observations(flop) do
-        {observations, meta} ->
-          assign(socket, %{
-            page_title: "Listing Observations",
-            observation: nil,
-            observations: observations,
-            meta: meta
-          })
+    case Observations.list_observations(params) do
+      {:ok, {observations, meta}} ->
+        assign(socket, %{
+          page_title: "Listing Observations",
+          observation: nil,
+          observations: observations,
+          meta: meta
+        })
 
-        error ->
-          IO.inspect(error, label: "list observations error")
-          socket
-      end
+      {:error, meta} ->
+        IO.inspect(meta.errors, label: "list observations error")
+        socket
     end
-
-    # case Observations.list_observations(params) do
-    #   {:ok, {observations, meta}} ->
-    #     IO.inspect(meta, label: "meta")
-
-    #     assign(socket, %{
-    #       page_title: "Listing Observations",
-    #       observation: nil,
-    #       observations: observations,
-    #       meta: meta
-    #     })
-
-    #   _ ->
-    #     socket
-    #     # push_navigate(socket, to: ~p"/observations")
-    # end
-
-    # socket
-    # |> assign(:page_title, "Listing Observations")
-    # |> assign(:observation, nil)
   end
 
   @impl true
-  def handle_event("update-filter", %{"filter" => params}, socket) do
-    IO.inspect(params, label: "update-filter")
+  def handle_info({:updated_filters, params}, socket) do
     {:noreply, push_patch(socket, to: ~p"/observations?#{params}")}
-  end
-
-  @impl true
-  def handle_event("reset-filter", _, %{assigns: assigns} = socket) do
-    {:noreply, push_patch(socket, to: ~p"/observations")}
   end
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     observation = Observations.get_observation!(id)
     {:ok, _} = Observations.delete_observation(observation)
+    {observations, meta} = Observations.list_observations(socket.assigns.meta.flop)
 
-    {:noreply, assign(socket, :observations, list_observations())}
-  end
-
-  defp list_observations do
-    Observations.list_observations()
+    {:noreply,
+     assign(socket, %{
+       observations: observations,
+       meta: meta
+     })}
   end
 end

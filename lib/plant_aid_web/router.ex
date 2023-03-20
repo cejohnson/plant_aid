@@ -1,5 +1,4 @@
 defmodule PlantAidWeb.Router do
-  alias PlantAid.Geography.SecondarySubdivision
   use PlantAidWeb, :router
 
   import PlantAidWeb.UserAuth
@@ -105,21 +104,8 @@ defmodule PlantAidWeb.Router do
       on_mount: [{PlantAidWeb.UserAuth, :mount_current_user}] do
       live "/", HomeLive.Index, :index
 
-      live "/secondary_subdivisions", SecondarySubdivisionLive.Index, :index
-      live "/secondary_subdivisions/:id", SecondarySubdivisionLive.Show, :show
-
       live "/users/confirm/:token", UserConfirmationLive, :edit
       live "/users/confirm", UserConfirmationInstructionsLive, :new
-    end
-  end
-
-  scope "/api", PlantAidWeb, as: :api do
-    pipe_through [:api]
-
-    scope "/v1", Api.V1, as: :v1 do
-      scope "/geojson", GeoJSON, as: :geojson do
-        get "/counties", CountyController, :index
-      end
     end
   end
 end

@@ -6,15 +6,6 @@ defmodule PlantAid.Observations.Observation do
 
   @derive {
     Flop.Schema,
-    # join_fields: [
-    #   host_id: {:host}
-    # ],
-    # custom_fields: [
-    #   group_by: [
-    #     filter: {PlantAid.Observations.Filters, :group_by, []}
-    #   ]
-    # ]
-    # default_limit: 20,
     filterable: [
       :status,
       :observation_date,

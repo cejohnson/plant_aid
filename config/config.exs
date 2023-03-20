@@ -61,7 +61,10 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
-config :flop, repo: PlantAid.Repo
+config :geo_postgis,
+  json_library: Jason
+
+config :flop, repo: PlantAid.Repo, default_limit: 25
 
 config :flop_phoenix,
   pagination: [opts: {PlantAidWeb.Helpers, :pagination_opts}],

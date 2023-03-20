@@ -51,11 +51,11 @@ Hooks.MapBox = {
 
     let tempData = { type: "FeatureCollection", features: [] };
 
-    this.handleEvent("map-data", ({ bounding_box, data }) => {
+    this.handleEvent("map-data", ({ data, bounds }) => {
       console.log("setting map data", data);
-      if (bounding_box) {
-        console.log("setting bounding box", bounding_box);
-        map.fitBounds(bounding_box, { padding: 20 });
+      if (bounds) {
+        console.log("setting bounds", bounds);
+        map.fitBounds(bounds, { padding: 10 });
       }
 
       let source = map.getSource("counties");

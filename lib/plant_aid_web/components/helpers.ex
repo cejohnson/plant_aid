@@ -1,6 +1,4 @@
 defmodule PlantAidWeb.Helpers do
-  import Phoenix.HTML
-
   def table_opts do
     [
       container: true,
