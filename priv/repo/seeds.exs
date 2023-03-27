@@ -72,7 +72,7 @@ IO.puts("Inserted #{count} primary_subdivisions")
 IO.inspect(List.first(primary_subdivisions), label: "Example")
 
 secondary_subdivisions =
-  "/Users/cejohns2/Downloads/cb_2021_us_all_20m/cb_2021_us_county_20m/cb_2021_us_county_20m_dp4.geojson"
+  "priv/repo/data/geography/us.geojson"
   |> File.read!()
   |> Jason.decode!()
   |> (fn json -> json["features"] end).()
@@ -151,10 +151,8 @@ cdtypes_to_descriptions = %{
   "UC" => "United counties"
 }
 
-# "/Users/cejohns2/Downloads/lcd_000a21a_e/lcd_000a21a_e_dp6_s100.geojson"
 secondary_subdivisions =
-  "/Users/cejohns2/Downloads/canada_dp6.geojson"
-  # "/Users/cejohns2/Downloads/lcd_000b21a_e/lcd_000b21a_e_dp6_s10000.geojson"
+  "priv/repo/data/geography/ca.geojson"
   |> File.read!()
   |> Jason.decode!()
   |> (fn json -> json["features"] end).()
@@ -216,7 +214,7 @@ IO.puts("Inserted #{count} primary_subdivisions")
 IO.inspect(List.first(primary_subdivisions), label: "Example")
 
 secondary_subdivisions =
-  "/Users/cejohns2/Downloads/mexico_dp4-2.geojson"
+  "priv/repo/data/geography/mx.geojson"
   |> File.read!()
   |> Jason.decode!()
   |> (fn json -> json["features"] end).()
