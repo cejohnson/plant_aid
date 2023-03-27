@@ -81,6 +81,7 @@ defmodule PlantAidWeb.ObservationLive.FormComponent do
          |> push_navigate(to: socket.assigns.navigate)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
+        IO.inspect(changeset, label: "changeset error")
         {:noreply, assign(socket, changeset: changeset)}
     end
   end

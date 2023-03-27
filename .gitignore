@@ -34,3 +34,6 @@ npm-debug.log
 
 # Python
 *.venv
+
+.elixir_ls
+**/*.secret.exs

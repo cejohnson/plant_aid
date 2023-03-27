@@ -1,0 +1,96 @@
+<div>
+  <.header>
+    <%= @page_title %>
+  </.header>
+
+  <.simple_form for={@form} id="observation-form" phx-change="validate" phx-submit="save">
+    <.input field={@form[:observation_date]} type="date" label="observation_date" />
+    <.input field={@form[:organic]} type="checkbox" label="organic" />
+    <.input field={@form[:control_method]} type="text" label="control_method" />
+    <.input field={@form[:notes]} type="text" label="notes" />
+    <.input
+      field={@form[:suspected_pathology_id]}
+      type="select"
+      options={@pathology_options}
+      label="Suspected Pathology"
+    />
+    <.input field={@form[:host_id]} type="select" options={@host_options} label="Host" />
+    <.input
+      field={@form[:location_type_id]}
+      type="select"
+      options={@location_type_options}
+      label="Location Type"
+    />
+
+    <.button id="get-position" type="button" phx-hook="GetCurrentPosition">
+      Use Current Position
+    </.button>
+    <div>This may take several seconds and accuracy will vary based on your device.</div>
+    <.input field={@form[:latitude]} type="text" inputmode="decimal" label="Latitude" />
+    <.input field={@form[:longitude]} type="text" inputmode="decimal" label="Longitude" />
+
+    <.button type="button" phx-click="set_geography" phx-disable-with="Finding Regions...">
+      Set Geographic Regions From Coordinates
+    </.button>
+    <.input field={@form[:country_id]} type="select" options={@country_options} label="Country" />
+    <.input
+      field={@form[:primary_subdivision_id]}
+      type="select"
+      options={@primary_subdivision_options}
+      label="Primary Subdivision"
+    />
+    <.input
+      field={@form[:secondary_subdivision_id]}
+      type="select"
+      options={@secondary_subdivision_options}
+      label="Secondary Subdivision"
+    />
+
+    <div>
+      <label>General Images</label>
+      <%= if length(@observation.image_urls) > 0 do %>
+        <div>Uploaded Images</div>
+        <div>
+          <%= for url <- @observation.image_urls do %>
+            <img src={url} height="200" />
+          <% end %>
+        </div>
+      <% end %>
+
+      <.live_file_input upload={@uploads.image} />
+      <section phx-drop-target={@uploads.image.ref}>
+        <%= for entry <- @uploads.image.entries do %>
+          <article>
+            <figure>
+              <.live_img_preview entry={entry} width={200} />
+              <figcaption><%= entry.client_name %></figcaption>
+            </figure>
+
+            <progress value={entry.progress} max="100"><%= entry.progress %>%</progress>
+
+            <.button
+              type="button"
+              phx-click="cancel-upload"
+              phx-value-ref={entry.ref}
+              aria-label="cancel"
+            >
+              &times;
+            </.button>
+
+            <%= for err <- upload_errors(@uploads.image, entry) do %>
+              <p><%= error_to_string(err) %></p>
+            <% end %>
+          </article>
+        <% end %>
+
+        <%= for err <- upload_errors(@uploads.image) do %>
+          <p><%= error_to_string(err) %></p>
+        <% end %>
+      </section>
+    </div>
+
+    <:actions>
+      <.button phx-disable-with="Saving...">Save Observation</.button>
+    </:actions>
+  </.simple_form>
+</div>

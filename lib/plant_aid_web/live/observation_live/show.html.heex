@@ -2,7 +2,7 @@
   Observation <%= @observation.id %>
   <:subtitle>This is an observation record from your database.</:subtitle>
   <:actions>
-    <.link patch={~p"/observations/#{@observation}/show/edit"} phx-click={JS.push_focus()}>
+    <.link navigate={~p"/observations/#{@observation}/edit"} phx-click={JS.push_focus()}>
       <.button>Edit observation</.button>
     </.link>
   </:actions>
@@ -11,23 +11,47 @@
 <.list>
   <:item title="Observation date"><%= @observation.observation_date %></:item>
   <:item title="Host"><%= @observation.host && @observation.host.common_name %></:item>
-  <:item title="Host Variety"><%= @observation.host_variety && @observation.host_variety.common_name %></:item>
-  <:item title="Suspected Pathology"><%= @observation.suspected_pathology && @observation.suspected_pathology.common_name %></:item>
-  <:item title="Location Type"><%= @observation.location_type && @observation.location_type.name %></:item>
-  <:item title="Position"><%= @observation.position && "#{@observation.latitude}, #{@observation.longitude}" %></:item>
-  <:item title="Secondary Subdivision"><%= @observation.secondary_subdivision && @observation.secondary_subdivision.name %></:item>
-  <:item title="Primary Subdivision"><%= @observation.primary_subdivision && @observation.primary_subdivision.name %></:item>
+  <:item title="Host Variety">
+    <%= @observation.host_variety && @observation.host_variety.common_name %>
+  </:item>
+  <:item title="Suspected Pathology">
+    <%= @observation.suspected_pathology && @observation.suspected_pathology.common_name %>
+  </:item>
+  <:item title="Location Type">
+    <%= @observation.location_type && @observation.location_type.name %>
+  </:item>
+  <:item title="Position">
+    <%= @observation.position && "#{@observation.latitude}, #{@observation.longitude}" %>
+  </:item>
+  <:item title="Secondary Subdivision">
+    <%= @observation.secondary_subdivision && @observation.secondary_subdivision.name %>
+  </:item>
+  <:item title="Primary Subdivision">
+    <%= @observation.primary_subdivision && @observation.primary_subdivision.name %>
+  </:item>
   <:item title="Country"><%= @observation.country && @observation.country.name %></:item>
   <:item title="Organic"><%= @observation.organic %></:item>
   <:item title="Control method"><%= @observation.control_method %></:item>
   <:item title="Host other"><%= @observation.host_other %></:item>
   <:item title="Notes"><%= @observation.notes %></:item>
-  <:item title="Metadata"><%= @observation.metadata && Jason.encode!(@observation.metadata) %></:item>
+  <:item title="Images">
+    <%= for url <- @observation.image_urls do %>
+      <img src={url} height="200" width="200" />
+    <% end %>
+  </:item>
+  <:item title="Metadata">
+    <%= @observation.metadata && Jason.encode!(@observation.metadata) %>
+  </:item>
 </.list>
 
 <.back navigate={~p"/observations"}>Back to observations</.back>
 
-<.modal :if={@live_action == :edit} id="observation-modal" show on_cancel={JS.patch(~p"/observations/#{@observation}")}>
+<.modal
+  :if={@live_action == :edit}
+  id="observation-modal"
+  show
+  on_cancel={JS.patch(~p"/observations/#{@observation}")}
+>
   <.live_component
     module={PlantAidWeb.ObservationLive.FormComponent}
     id={@observation.id}

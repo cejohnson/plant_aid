@@ -4,6 +4,7 @@ defmodule PlantAid.Geography do
   """
 
   import Ecto.Query, warn: false
+  alias PlantAid.Repo
 
   alias PlantAid.Geography.{
     Country,
@@ -55,5 +56,15 @@ defmodule PlantAid.Geography do
     with {:ok, flop} <- Flop.validate(params, for: SecondarySubdivision) do
       {:ok, list_secondary_subdivisions(flop)}
     end
+  end
+
+  def find_secondary_subdivision_containing_point(%Geo.Point{} = point) do
+    from(
+      s in SecondarySubdivision,
+      where: fragment("ST_Covers(?, ?)", s.geog, ^point),
+      select: %{s | geog: nil}
+    )
+    |> Repo.one()
+    |> Repo.preload(primary_subdivision: :country)
   end
 end

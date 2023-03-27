@@ -19,7 +19,11 @@ defmodule PlantAidWeb.HomeLive.Index do
     >
     </div>
 
-    <.live_component module={PlantAidWeb.ObservationFilter} id="observation-form" meta={@meta} />
+    <.live_component
+      module={PlantAidWeb.ObservationFilterForm}
+      id="observation-filter-form"
+      meta={@meta}
+    />
     """
   end
 

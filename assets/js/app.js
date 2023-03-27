@@ -39,6 +39,42 @@ mapboxgl.accessToken = "pk.eyJ1Ijoic2hhbmtqNjg3IiwiYSI6ImNsNHlneGluejFqaDkzam5rN
 
 let Hooks = {}
 
+Hooks.GetCurrentPosition = {
+  mounted() {
+    console.log("getCurrentPosition hook mounted");
+    this.el.addEventListener("click", e => {
+      console.log("onclick this", this)
+      console.log("onclick e", e)
+      e.target.textContent = "Retrieving Position...";
+      e.target.disabled = true;
+
+      let options = {
+        enableHighAccuracy: true,
+        timeout: 15000
+      }
+
+      let onComplete = () => {
+        e.target.textContent = "Use Current Position"
+        e.target.disabled = false;
+      }
+
+      let success = (position) => {
+        console.log('setting values in dom');
+        console.log("sending position to server?")
+        this.pushEvent("set_position", { latitude: position.coords.latitude, longitude: position.coords.longitude });
+        onComplete()
+      }
+
+      let error = (error) => {
+        this.pushEvent("on_get_current_position_error", { message: error.message });
+        onComplete()
+      }
+
+      navigator.geolocation.getCurrentPosition(success, error, options);
+    });
+  }
+}
+
 Hooks.MapBox = {
   mounted() {
     console.log("mapbox container mounted")
@@ -84,8 +120,6 @@ Hooks.MapBox = {
         // data: data
         data: tempData
       });
-
-
 
       map.addLayer({
         'id': 'countyFill',
@@ -166,16 +200,78 @@ Hooks.MapBox = {
   }
 }
 
+let Uploaders = {}
+
+Uploaders.S3 = function (entries, onViewError) {
+  entries.forEach(entry => {
+    let formData = new FormData()
+    let { url, fields } = entry.meta
+    Object.entries(fields).forEach(([key, val]) => formData.append(key, val))
+    formData.append("file", entry.file)
+    let xhr = new XMLHttpRequest()
+    onViewError(() => xhr.abort())
+    xhr.onload = () => xhr.status === 204 ? entry.progress(100) : entry.error()
+    xhr.onerror = () => entry.error()
+    xhr.upload.addEventListener("progress", (event) => {
+      if (event.lengthComputable) {
+        let percent = Math.round((event.loaded / event.total) * 100)
+        if (percent < 100) { entry.progress(percent) }
+      }
+    })
+
+    xhr.open("POST", url, true)
+    xhr.send(formData)
+  })
+}
+
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {
   params: { _csrf_token: csrfToken },
-  hooks: Hooks
+  hooks: Hooks,
+  uploaders: Uploaders
 })
 
 // Show progress bar on live navigation and form submits
 topbar.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" })
 window.addEventListener("phx:page-loading-start", info => topbar.delayedShow(200))
 window.addEventListener("phx:page-loading-stop", info => topbar.hide())
+
+// Populate coordinates
+// window.addEventListener("plantaid:populate-coordinates", (event) => {
+//   console.log("plantaid:populate-coordinates", event)
+//   let button = event.target.querySelector("#get-position");
+//   button.disabled = true;
+//   button.textContent = "Getting Current Position...";
+//   event.target.querySelector("#latitude").focus();
+
+//   let options = {
+//     enableHighAccuracy: true,
+//     timeout: 15000
+//   }
+
+//   let onComplete = () => {
+//     button.textContent = "Use Current Position"
+//     button.disabled = false;
+//   }
+
+//   let success = (position) => {
+//     console.log('sending position to server');
+//     console.log(window);
+//     console.log(document);
+//     // event.target.querySelector("#latitude").value = position.coords.latitude;
+//     // event.target.querySelector("#longitude").value = position.coords.longitude;
+//     window.push("current_position", { latitude: position.coords.latitude, longitude: position.coords.longitude })
+//     // event.target.querySelector("#latitude").blur();
+//     onComplete()
+//   }
+
+//   let error = (error) => {
+//     this.pushEvent("current_position_error", { message: error.message });
+//     onComplete()
+//   }
+
+//   navigator.geolocation.getCurrentPosition(success, error, options);
+// })
 
 // connect if there are any LiveViews on the page
 liveSocket.connect()

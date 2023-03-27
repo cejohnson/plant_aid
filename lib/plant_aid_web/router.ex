@@ -88,10 +88,10 @@ defmodule PlantAidWeb.Router do
       live "/pathologies/:id/show/edit", PathologyLive.Show, :edit
 
       live "/observations", ObservationLive.Index, :index
-      live "/observations/new", ObservationLive.Index, :new
-      live "/observations/:id/edit", ObservationLive.Index, :edit
+      live "/observations/new", ObservationLive.Form, :new
+      live "/observations/:id/edit", ObservationLive.Form, :edit
       live "/observations/:id", ObservationLive.Show, :show
-      live "/observations/:id/show/edit", ObservationLive.Show, :edit
+      # live "/observations/:id/show/edit", ObservationLive.Show, :edit
     end
   end
 

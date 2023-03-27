@@ -1,7 +1,7 @@
-defmodule PlantAidWeb.ObservationFilter do
+defmodule PlantAidWeb.ObservationFilterForm do
   use PlantAidWeb, :live_component
 
-  alias PlantAid.Filters
+  alias PlantAid.FormHelpers
   alias PlantAid.Observations.Observation
 
   @impl true
@@ -70,12 +70,12 @@ defmodule PlantAidWeb.ObservationFilter do
 
   @impl true
   def mount(socket) do
-    host_options = Filters.list_host_options()
-    location_type_options = Filters.list_location_type_options()
-    pathology_options = Filters.list_pathology_options()
-    country_options = Filters.list_country_options()
-    primary_subdivision_options = Filters.list_primary_subdivision_options(nil)
-    secondary_subdivision_options = Filters.list_secondary_subdivision_options(nil)
+    host_options = FormHelpers.list_host_options() |> prepend_default_option()
+    location_type_options = FormHelpers.list_location_type_options() |> prepend_default_option()
+    pathology_options = FormHelpers.list_pathology_options() |> prepend_default_option()
+    country_options = FormHelpers.list_country_options() |> prepend_default_option()
+    primary_subdivision_options = prepend_default_option()
+    secondary_subdivision_options = prepend_default_option()
 
     {:ok,
      socket
@@ -92,8 +92,7 @@ defmodule PlantAidWeb.ObservationFilter do
     {:ok,
      socket
      |> maybe_assign_geographic_subdivision_options(assigns.meta.flop)
-     |> assign(:id, assigns.id)
-     |> assign(:meta, assigns.meta)}
+     |> assign(assigns)}
   end
 
   @impl true
@@ -161,17 +160,19 @@ defmodule PlantAidWeb.ObservationFilter do
         primary_subdivision_options =
           new_flop
           |> get_filter_value(:country_id)
-          |> Filters.list_primary_subdivision_options()
+          |> FormHelpers.list_primary_subdivision_options()
+          |> prepend_default_option()
 
         socket
         |> assign(:primary_subdivision_options, primary_subdivision_options)
-        |> assign(:secondary_subdivision_options, Filters.list_secondary_subdivision_options(nil))
+        |> assign(:secondary_subdivision_options, prepend_default_option())
 
       filter_changed?(:primary_subdivision_id, current_flop, new_flop) ->
         secondary_subdivision_options =
           new_flop
           |> get_filter_value(:primary_subdivision_id)
-          |> Filters.list_secondary_subdivision_options()
+          |> FormHelpers.list_secondary_subdivision_options()
+          |> prepend_default_option()
 
         socket
         |> assign(:secondary_subdivision_options, secondary_subdivision_options)
@@ -192,5 +193,9 @@ defmodule PlantAidWeb.ObservationFilter do
   defp get_filter_value(flop, field) do
     filter = Flop.Filter.get(flop.filters, field)
     if filter, do: filter.value, else: nil
+  end
+
+  defp prepend_default_option(options \\ []) do
+    [{'Any', nil}] ++ options
   end
 end

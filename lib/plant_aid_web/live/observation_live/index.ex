@@ -37,7 +37,6 @@ defmodule PlantAidWeb.ObservationLive.Index do
         })
 
       {:error, meta} ->
-        IO.inspect(meta.errors, label: "list observations error")
         socket
     end
   end

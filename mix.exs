@@ -53,7 +53,7 @@ defmodule PlantAid.MixProject do
       {:gettext, "~> 0.20"},
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
-      # Explicitly added
+      # Specific project dependencies
       {:geo_postgis, "~> 3.4"},
       {:nimble_csv, "~> 1.2"},
       {:petal_components, "~> 0.19"},

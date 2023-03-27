@@ -92,10 +92,11 @@ defmodule PlantAid.Observations do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_observation(attrs \\ %{}) do
+  def create_observation(attrs \\ %{}, after_save \\ &{:ok, &1}) do
     %Observation{}
     |> Observation.changeset(attrs)
     |> Repo.insert()
+    |> after_save(after_save)
   end
 
   @doc """
@@ -110,11 +111,18 @@ defmodule PlantAid.Observations do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_observation(%Observation{} = observation, attrs) do
+  def update_observation(%Observation{} = observation, attrs, after_save \\ &{:ok, &1}) do
     observation
     |> Observation.changeset(attrs)
     |> Repo.update()
+    |> after_save(after_save)
   end
+
+  defp after_save({:ok, observation}, func) do
+    {:ok, _observation} = func.(observation)
+  end
+
+  defp after_save(error, _func), do: error
 
   @doc """
   Deletes a observation.

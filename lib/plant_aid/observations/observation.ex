@@ -73,17 +73,84 @@ defmodule PlantAid.Observations.Observation do
       :organic,
       :control_method,
       :host_other,
+      :image_urls,
       :notes,
-      :metadata
+      :latitude,
+      :longitude,
+      :host_id,
+      :location_type_id,
+      :suspected_pathology_id,
+      :country_id,
+      :primary_subdivision_id,
+      :secondary_subdivision_id
     ])
-    |> validate_required([
-      :observation_date,
-      :position,
-      :organic,
-      :control_method,
-      :host_other,
-      :notes,
-      :metadata
-    ])
+    |> validate_number(:latitude, greater_than_or_equal_to: -90, less_than_or_equal_to: 90)
+    |> validate_number(:longitude, greater_than_or_equal_to: -180, less_than_or_equal_to: 180)
+    |> maybe_put_position()
+    |> validate_geography()
+    |> clear_host_variety_id_or_host_other()
+
+    # |> validate_required([
+    #   :observation_date,
+    #   :position,
+    #   :organic,
+    #   :control_method,
+    #   :host_other,
+    #   :notes,
+    #   :metadata
+    # ])
+  end
+
+  def put_coordinates(%Ecto.Changeset{} = changeset, latitude, longitude) do
+    changeset
+    |> put_change(:latitude, latitude)
+    |> put_change(:longitude, longitude)
+    |> maybe_put_position()
+  end
+
+  def maybe_put_position(%Ecto.Changeset{} = changeset) do
+    latitude = get_field(changeset, :latitude)
+    longitude = get_field(changeset, :longitude)
+
+    if latitude && longitude do
+      changeset
+      |> put_change(:position, %Geo.Point{coordinates: {longitude, latitude}, srid: 4326})
+    else
+      changeset
+    end
+  end
+
+  def maybe_put_geography_from_position(%Ecto.Changeset{} = changeset) do
+    IO.inspect(changeset, label: "changeset")
+
+    with %Geo.Point{} = position <- get_field(changeset, :position),
+         %PlantAid.Geography.SecondarySubdivision{} = s <-
+           PlantAid.Geography.find_secondary_subdivision_containing_point(position) do
+      IO.inspect(position, label: "position")
+      IO.inspect(s, label: "ssd")
+
+      changeset
+      |> put_change(:country_id, s.primary_subdivision.country.id)
+      |> put_change(:primary_subdivision_id, s.primary_subdivision.id)
+      |> put_change(:secondary_subdivision_id, s.id)
+    else
+      e ->
+        IO.inspect(e, label: "error?")
+        changeset
+    end
+  end
+
+  def clear_host_variety_id_or_host_other(changeset) do
+    if get_field(changeset, :host) && get_field(changeset, :host).common_name == "Other" do
+      changeset
+      |> put_change(:host_variety_id, nil)
+    else
+      changeset
+      |> put_change(:host_other, nil)
+    end
+  end
+
+  def validate_geography(changeset) do
+    changeset
   end
 end

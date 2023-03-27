@@ -61,7 +61,6 @@ defmodule PlantAidWeb do
 
   def live_component do
     quote do
-      use Phoenix.HTML
       use Phoenix.LiveComponent
 
       unquote(html_helpers())

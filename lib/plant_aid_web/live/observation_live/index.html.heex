@@ -3,7 +3,7 @@
     <.header>
       Listing Observations
       <:actions>
-        <.link patch={~p"/observations/new"}>
+        <.link navigate={~p"/observations/new"}>
           <.button>New Observation</.button>
         </.link>
       </:actions>
@@ -26,7 +26,9 @@
       <:col :let={observation} label="Suspected Pathology">
         <%= observation.suspected_pathology && observation.suspected_pathology.common_name %>
       </:col>
-      <:col :let={observation} label="Location Type"><%= observation.location_type.name %></:col>
+      <:col :let={observation} label="Location Type">
+        <%= observation.location_type && observation.location_type.name %>
+      </:col>
       <:col :let={observation} label="Organic"><%= observation.organic %></:col>
       <:col :let={observation} label="Host other"><%= observation.host_other %></:col>
       <:action :let={observation}>
@@ -50,7 +52,7 @@
 
   <div class="w-1/6 pt-20">
     <.live_component
-      module={PlantAidWeb.ObservationFilter}
+      module={PlantAidWeb.ObservationFilterForm}
       id="observation-filter-form"
       meta={@meta}
     />
