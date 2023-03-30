@@ -3,11 +3,58 @@ defmodule PlantAid.Observations do
   The Observations context.
   """
 
+  @behaviour Bodyguard.Policy
+
   import Ecto.Query, warn: false
   alias PlantAid.Repo
 
+  alias PlantAid.Accounts.User
   alias PlantAid.Geography.SecondarySubdivision
   alias PlantAid.Observations.Observation
+
+  def authorize(:list_user_observations, %User{}, _), do: :ok
+
+  def authorize(:list_observations, %User{} = user, _) do
+    User.has_role?(user, [:superuser, :admin, :researcher])
+  end
+
+  def authorize(:get_observation, %User{id: user_id}, %Observation{user_id: user_id}), do: :ok
+
+  def authorize(:get_observation, %User{} = user, _) do
+    User.has_role?(user, [:superuser, :admin, :researcher])
+  end
+
+  def authorize(:create_observation, %User{}, _), do: :ok
+
+  def authorize(:update_observation, %User{id: user_id}, %Observation{user_id: user_id}), do: :ok
+
+  def authorize(:update_observation, %User{} = user, _) do
+    User.has_role?(user, [:superuser, :admin])
+  end
+
+  def authorize(:delete_observation, %User{id: user_id}, %Observation{user_id: user_id}), do: :ok
+
+  def authorize(:delete_observation, %User{} = user, _) do
+    User.has_role?(user, [:superuser, :admin])
+  end
+
+  def authorize(_, _, _), do: false
+
+  def list_user_observations(%User{} = user) do
+    list_user_observations(user, %Flop{})
+  end
+
+  def list_user_observations(%User{} = user, %Flop{} = flop) do
+    Observation
+    |> Bodyguard.scope(user)
+    |> list_observations(flop)
+  end
+
+  def list_user_observations(%User{} = user, %{} = params) do
+    with {:ok, flop} <- Flop.validate(params, for: Observation) do
+      {:ok, list_user_observations(user, flop)}
+    end
+  end
 
   @doc """
   Returns the list of observations.
@@ -23,8 +70,18 @@ defmodule PlantAid.Observations do
   end
 
   def list_observations(%Flop{} = flop) do
+    list_observations(from(o in Observation), flop)
+  end
+
+  def list_observations(%{} = params) do
+    with {:ok, flop} <- Flop.validate(params, for: Observation) do
+      {:ok, list_observations(flop)}
+    end
+  end
+
+  def list_observations(%Ecto.Query{} = query, %Flop{} = flop) do
     observations =
-      Observation
+      query
       |> Flop.all(flop)
       |> Repo.preload([
         :user,
@@ -39,15 +96,9 @@ defmodule PlantAid.Observations do
       |> Enum.map(&maybe_populate_lat_long/1)
       |> Enum.map(&maybe_populate_location/1)
 
-    meta = Flop.meta(Observation, flop)
+    meta = Flop.meta(query, flop)
 
     {observations, meta}
-  end
-
-  def list_observations(%{} = params) do
-    with {:ok, flop} <- Flop.validate(params, for: Observation) do
-      {:ok, list_observations(flop)}
-    end
   end
 
   @doc """
@@ -92,9 +143,10 @@ defmodule PlantAid.Observations do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_observation(attrs \\ %{}, after_save \\ &{:ok, &1}) do
+  def create_observation(%User{} = user, attrs \\ %{}, after_save \\ &{:ok, &1}) do
     %Observation{}
     |> Observation.changeset(attrs)
+    |> Observation.put_user(user)
     |> Repo.insert()
     |> after_save(after_save)
   end

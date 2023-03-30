@@ -1,9 +1,6 @@
 defmodule PlantAidWeb.ObservationLive.Form do
   use PlantAidWeb, :live_view
 
-  alias PlantAid.Accounts
-  # alias PlantAid.Admin
-  # alias PlantAid.ObjectStorage
   alias PlantAid.ObjectStorage
   alias PlantAid.Observations
   alias PlantAid.Observations.Observation
@@ -12,9 +9,7 @@ defmodule PlantAidWeb.ObservationLive.Form do
   alias PlantAid.FormHelpers
 
   @impl true
-  def mount(_params, %{"user_token" => user_token}, socket) do
-    user = Accounts.get_user_by_session_token(user_token)
-
+  def mount(_params, _session, socket) do
     host_options = FormHelpers.list_host_options() |> prepend_default_option()
 
     location_type_options = FormHelpers.list_location_type_options() |> prepend_default_option()
@@ -26,7 +21,6 @@ defmodule PlantAidWeb.ObservationLive.Form do
 
     {:ok,
      socket
-     |> assign(:current_user, user)
      |> assign(:host_options, host_options)
      |> assign(:location_type_options, location_type_options)
      |> assign(:pathology_options, pathology_options)
@@ -75,7 +69,7 @@ defmodule PlantAidWeb.ObservationLive.Form do
   defp assign_observation(socket, :new, _) do
     socket
     |> assign(:observation, %Observation{
-      user: socket.assigns.current_user
+      # user: socket.assigns.current_user
       # lamp_details: nil,
       # voc_details: nil
     })
@@ -155,7 +149,7 @@ defmodule PlantAidWeb.ObservationLive.Form do
 
   def handle_event(
         "set_position",
-        %{"latitude" => latitude, "longitude" => longitude} = position,
+        %{"latitude" => latitude, "longitude" => longitude},
         socket
       ) do
     # IO.inspect(position, label: "current position")
@@ -175,9 +169,10 @@ defmodule PlantAidWeb.ObservationLive.Form do
      |> assign_form(changeset)}
   end
 
-  def handle_event("on_current_position_error", %{"message" => message} = error, socket) do
-    IO.inspect(error, label: "current position error")
-    {:noreply, socket}
+  def handle_event("on_current_position_error", %{"message" => message}, socket) do
+    {:noreply,
+     socket
+     |> put_flash(:error, message)}
   end
 
   def handle_event("set_geography", _, socket) do
@@ -236,7 +231,11 @@ defmodule PlantAidWeb.ObservationLive.Form do
   defp save_observation(socket, :new, observation_params) do
     observation_params = put_upload_urls(observation_params, socket)
 
-    case Observations.create_observation(observation_params, &consume_images(socket, &1)) do
+    case Observations.create_observation(
+           socket.assigns.current_user,
+           observation_params,
+           &consume_images(socket, &1)
+         ) do
       {:ok, observation} ->
         {:noreply,
          socket

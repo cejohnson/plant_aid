@@ -9,22 +9,12 @@
       <ul>
         <%= if @current_user do %>
           <li>
-            <%= @current_user.email %>
-          </li>
-          <li><.link href={~p"/"}>Home</.link></li>
-          <li><.link href={~p"/observations"}>Observations</.link></li>
-          <li>
-            <.link href={~p"/users/settings"}>Settings</.link>
-          </li>
-          <li>
-            <.link href={~p"/users/log_out"} method="delete">Log out</.link>
-          </li>
-        <% else %>
-          <li>
-            <.link href={~p"/users/register"}>Register</.link>
-          </li>
-          <li>
-            <.link href={~p"/users/log_in"}>Log in</.link>
+            <.link
+              navigate={~p"/observations"}
+              class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+            >
+              Observations
+            </.link>
           </li>
         <% end %>
       </ul>
@@ -33,19 +23,7 @@
 </header>
 <main class="px-4 py-20 sm:px-6 lg:px-8">
   <div class="mx-auto">
-    <.flash kind={:info} title="Success!" flash={@flash} />
-    <.flash kind={:error} title="Error!" flash={@flash} />
-    <.flash
-      id="disconnected"
-      kind={:error}
-      title="We can't find the internet"
-      close={false}
-      autoshow={false}
-      phx-disconnected={show("#disconnected")}
-      phx-connected={hide("#disconnected")}
-    >
-      Attempting to reconnect <Heroicons.arrow_path class="ml-1 w-3 h-3 inline animate-spin" />
-    </.flash>
+    <.flash_group flash={@flash} />
     <%= @inner_content %>
   </div>
 </main>

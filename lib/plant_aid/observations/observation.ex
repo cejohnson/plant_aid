@@ -1,6 +1,9 @@
 defmodule PlantAid.Observations.Observation do
   use Ecto.Schema
   import Ecto.Changeset
+  import Ecto.Query, only: [from: 2]
+  alias PlantAid.Accounts.User
+  @behaviour Bodyguard.Schema
 
   @timestamps_opts [type: :utc_datetime]
 
@@ -52,7 +55,7 @@ defmodule PlantAid.Observations.Observation do
     field :longitude, :float, virtual: true
     field :location, :string, virtual: true
 
-    belongs_to :user, PlantAid.Accounts.User
+    belongs_to :user, User
     belongs_to :host, PlantAid.Hosts.Host
     belongs_to :host_variety, PlantAid.Hosts.HostVariety
     belongs_to :location_type, PlantAid.LocationTypes.LocationType
@@ -99,6 +102,15 @@ defmodule PlantAid.Observations.Observation do
     #   :notes,
     #   :metadata
     # ])
+  end
+
+  def scope(query, %User{id: user_id}, _) do
+    from row in query, where: row.user_id == ^user_id
+  end
+
+  def put_user(%Ecto.Changeset{} = changeset, %PlantAid.Accounts.User{} = user) do
+    changeset
+    |> put_assoc(:user, user)
   end
 
   def put_coordinates(%Ecto.Changeset{} = changeset, latitude, longitude) do

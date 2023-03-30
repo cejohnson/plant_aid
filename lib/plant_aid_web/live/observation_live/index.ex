@@ -26,18 +26,52 @@ defmodule PlantAidWeb.ObservationLive.Index do
     |> assign(:observation, %Observation{})
   end
 
-  defp apply_action(socket, :index, params) do
-    case Observations.list_observations(params) do
-      {:ok, {observations, meta}} ->
-        assign(socket, %{
-          page_title: "Listing Observations",
-          observation: nil,
-          observations: observations,
-          meta: meta
-        })
+  defp apply_action(socket, :index, %{"all" => "true"} = params) do
+    user = socket.assigns.current_user
 
-      {:error, meta} ->
+    with :ok <- Bodyguard.permit(Observations, :list_observations, user) do
+      case Observations.list_observations(params) do
+        {:ok, {observations, meta}} ->
+          assign(socket, %{
+            page_title: "Listing Observations",
+            params: params,
+            observation: nil,
+            observations: observations,
+            user_observations: false,
+            meta: meta
+          })
+
+        {:error, _meta} ->
+          socket
+      end
+    else
+      _ ->
+        params = Map.delete(params, "all")
+
         socket
+        |> put_flash(:error, "Unauthorized")
+        |> push_patch(to: ~p"/observations?#{params}")
+    end
+  end
+
+  defp apply_action(socket, :index, %{} = params) do
+    user = socket.assigns.current_user
+
+    with :ok <- Bodyguard.permit(Observations, :list_user_observations, user) do
+      case Observations.list_user_observations(user, params) do
+        {:ok, {observations, meta}} ->
+          assign(socket, %{
+            page_title: "Listing Observations",
+            params: params,
+            observation: nil,
+            observations: observations,
+            user_observations: true,
+            meta: meta
+          })
+
+        {:error, _meta} ->
+          socket
+      end
     end
   end
 
@@ -57,5 +91,17 @@ defmodule PlantAidWeb.ObservationLive.Index do
        observations: observations,
        meta: meta
      })}
+  end
+
+  @impl true
+  def handle_event("show-all-observations", _, socket) do
+    params = Map.put(socket.assigns.params, "all", "true")
+    {:noreply, push_patch(socket, to: ~p"/observations?#{params}")}
+  end
+
+  @impl true
+  def handle_event("show-user-observations", _, socket) do
+    params = Map.delete(socket.assigns.params, "all")
+    {:noreply, push_patch(socket, to: ~p"/observations?#{params}")}
   end
 end

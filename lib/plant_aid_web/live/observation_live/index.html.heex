@@ -7,6 +7,10 @@
           <.button>New Observation</.button>
         </.link>
       </:actions>
+      <%= if Bodyguard.permit?(PlantAid.Observations, :list_observations, @current_user) do %>
+        <.button type="button" phx-click="show-all-observations">Show All</.button>
+        <.button type="button" phx-click="show-user-observations">Show Mine</.button>
+      <% end %>
       <div class="text-sm font-normal"><%= @meta.total_count %> matching filter</div>
     </.header>
 

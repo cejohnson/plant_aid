@@ -54,6 +54,7 @@ defmodule PlantAid.MixProject do
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
       # Specific project dependencies
+      {:bodyguard, "~> 2.4"},
       {:geo_postgis, "~> 3.4"},
       {:nimble_csv, "~> 1.2"},
       {:petal_components, "~> 0.19"},

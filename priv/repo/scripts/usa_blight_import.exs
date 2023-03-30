@@ -1,4 +1,4 @@
-# Usage: mix run priv/scripts/usa_blight_import.exs <folder>
+# Usage: mix run priv/repo/scripts/usa_blight_import.exs <folder>
 
 import Ecto.Query
 import Geo.PostGIS
@@ -40,7 +40,7 @@ alert_users =
       updated_at: timestamp,
       metadata: %{"source" => "usa_blight", "alert" => true},
       roles: [],
-      # No password can ever match this value
+      # No password can hash to this value
       hashed_password: "INVALID"
     }
   end)

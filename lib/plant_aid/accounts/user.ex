@@ -1,6 +1,7 @@
 defmodule PlantAid.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
+  alias __MODULE__
 
   @timestamps_opts [type: :utc_datetime]
 
@@ -155,5 +156,13 @@ defmodule PlantAid.Accounts.User do
     else
       add_error(changeset, :current_password, "is not valid")
     end
+  end
+
+  def has_role?(%User{} = user, roles) when is_list(roles) do
+    Enum.any?(roles, &has_role?(user, &1))
+  end
+
+  def has_role?(%User{} = user, role) when is_atom(role) do
+    Enum.member?(user.roles, role)
   end
 end
