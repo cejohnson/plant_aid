@@ -7,7 +7,7 @@ defmodule PlantAidWeb.ObservationFilterForm do
   @impl true
   def render(assigns) do
     ~H"""
-    <div>
+    <div class="overflow-auto bg-stone-100" style="height: calc(100vh - 200px); ">
       <.filter_form
         id="observation-filter-form"
         meta={@meta}
