@@ -26,46 +26,18 @@ defmodule PlantAidWeb.ObservationLive.Index do
     |> assign(:observation, %Observation{})
   end
 
-  defp apply_action(socket, :index, %{"all" => "true"} = params) do
+  defp apply_action(socket, :index, params) do
     user = socket.assigns.current_user
 
     with :ok <- Bodyguard.permit(Observations, :list_observations, user) do
-      case Observations.list_observations(params) do
+      case Observations.list_observations(user, params) do
         {:ok, {observations, meta}} ->
           assign(socket, %{
             page_title: "Listing Observations",
-            params: params,
+            # params: params,
             observation: nil,
             observations: observations,
             user_observations: false,
-            meta: meta
-          })
-
-        {:error, _meta} ->
-          socket
-      end
-    else
-      _ ->
-        params = Map.delete(params, "all")
-
-        socket
-        |> put_flash(:error, "Unauthorized")
-        |> push_patch(to: ~p"/observations?#{params}")
-    end
-  end
-
-  defp apply_action(socket, :index, %{} = params) do
-    user = socket.assigns.current_user
-
-    with :ok <- Bodyguard.permit(Observations, :list_user_observations, user) do
-      case Observations.list_user_observations(user, params) do
-        {:ok, {observations, meta}} ->
-          assign(socket, %{
-            page_title: "Listing Observations",
-            params: params,
-            observation: nil,
-            observations: observations,
-            user_observations: true,
             meta: meta
           })
 
@@ -82,15 +54,30 @@ defmodule PlantAidWeb.ObservationLive.Index do
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
+    user = socket.assigns.current_user
     observation = Observations.get_observation!(id)
-    {:ok, _} = Observations.delete_observation(observation)
-    {observations, meta} = Observations.list_observations(socket.assigns.meta.flop)
 
-    {:noreply,
-     assign(socket, %{
-       observations: observations,
-       meta: meta
-     })}
+    with :ok <-
+           Bodyguard.permit(
+             Observations,
+             :delete_observation,
+             user,
+             observation
+           ) do
+      {:ok, _} = Observations.delete_observation(observation)
+      {observations, meta} = Observations.list_observations(user, socket.assigns.meta.flop)
+
+      {:noreply,
+       assign(socket, %{
+         observations: observations,
+         meta: meta
+       })}
+    else
+      _ ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "Unauthorized")}
+    end
   end
 
   @impl true

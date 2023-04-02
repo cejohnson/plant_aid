@@ -8,62 +8,7 @@ defmodule PlantAidWeb.ObservationFilterForm do
   def render(assigns) do
     ~H"""
     <div>
-      <.filter_form
-        id="observation-filter-form"
-        meta={@meta}
-        target={@myself}
-        fields={[
-          observation_date: [
-            label: "From",
-            op: :>=,
-            type: "date"
-          ],
-          observation_date: [
-            label: "To",
-            op: :<=,
-            type: "date"
-          ],
-          host_id: [
-            label: "Host",
-            type: "select",
-            options: @host_options
-          ],
-          suspected_pathology_id: [
-            label: "Suspected Pathology",
-            type: "select",
-            options: @pathology_options
-          ],
-          location_type_id: [
-            label: "Location Type",
-            type: "select",
-            options: @location_type_options
-          ],
-          organic: [
-            label: "Organic",
-            type: "select",
-            options: [
-              {"Any", nil},
-              {"Organic", true},
-              {"Not Organic", false}
-            ]
-          ],
-          country_id: [
-            label: "Country",
-            type: "select",
-            options: @country_options
-          ],
-          primary_subdivision_id: [
-            label: "Primary Subdivision",
-            type: "select",
-            options: @primary_subdivision_options
-          ],
-          secondary_subdivision_id: [
-            label: "Secondary Subdivision",
-            type: "select",
-            options: @secondary_subdivision_options
-          ]
-        ]}
-      />
+      <.filter_form id="observation-filter-form" meta={@meta} target={@myself} fields={@fields} />
     </div>
     """
   end
@@ -77,20 +22,68 @@ defmodule PlantAidWeb.ObservationFilterForm do
     primary_subdivision_options = prepend_default_option()
     secondary_subdivision_options = prepend_default_option()
 
+    fields = [
+      observation_date: [
+        label: "From",
+        op: :>=,
+        type: "date"
+      ],
+      observation_date: [
+        label: "To",
+        op: :<=,
+        type: "date"
+      ],
+      host_id: [
+        label: "Host",
+        type: "select",
+        options: host_options
+      ],
+      suspected_pathology_id: [
+        label: "Suspected Pathology",
+        type: "select",
+        options: pathology_options
+      ],
+      location_type_id: [
+        label: "Location Type",
+        type: "select",
+        options: location_type_options
+      ],
+      organic: [
+        label: "Organic",
+        type: "select",
+        options: [
+          {"Any", nil},
+          {"Organic", true},
+          {"Not Organic", false}
+        ]
+      ],
+      country_id: [
+        label: "Country",
+        type: "select",
+        options: country_options
+      ],
+      primary_subdivision_id: [
+        label: "Primary Subdivision",
+        type: "select",
+        options: primary_subdivision_options
+      ],
+      secondary_subdivision_id: [
+        label: "Secondary Subdivision",
+        type: "select",
+        options: secondary_subdivision_options
+      ]
+    ]
+
     {:ok,
      socket
-     |> assign(:host_options, host_options)
-     |> assign(:location_type_options, location_type_options)
-     |> assign(:pathology_options, pathology_options)
-     |> assign(:country_options, country_options)
-     |> assign(:primary_subdivision_options, primary_subdivision_options)
-     |> assign(:secondary_subdivision_options, secondary_subdivision_options)}
+     |> assign(:fields, fields)}
   end
 
   @impl true
   def update(assigns, socket) do
     {:ok,
      socket
+     |> maybe_add_user_field(assigns)
      |> maybe_assign_geographic_subdivision_options(assigns.meta.flop)
      |> assign(assigns)}
   end
@@ -109,6 +102,15 @@ defmodule PlantAidWeb.ObservationFilterForm do
     params = Map.drop(params, ["page", "filters"])
     send(self(), {:updated_filters, params})
     {:noreply, socket}
+  end
+
+  defp maybe_add_user_field(socket, %{filter_users: true}) do
+    fields = Keyword.put_new(socket.assigns.fields, :user_email, label: "User", op: :ilike)
+    assign(socket, :fields, fields)
+  end
+
+  defp maybe_add_user_field(socket, _assigns) do
+    socket
   end
 
   defp maybe_reset_geographic_filters(socket, params) do

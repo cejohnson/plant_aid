@@ -12,11 +12,7 @@ defmodule PlantAid.Observations do
   alias PlantAid.Geography.SecondarySubdivision
   alias PlantAid.Observations.Observation
 
-  def authorize(:list_user_observations, %User{}, _), do: :ok
-
-  def authorize(:list_observations, %User{} = user, _) do
-    User.has_role?(user, [:superuser, :admin, :researcher])
-  end
+  def authorize(:list_observations, %User{}, _), do: :ok
 
   def authorize(:get_observation, %User{id: user_id}, %Observation{user_id: user_id}), do: :ok
 
@@ -32,7 +28,9 @@ defmodule PlantAid.Observations do
     User.has_role?(user, [:superuser, :admin])
   end
 
-  def authorize(:delete_observation, %User{id: user_id}, %Observation{user_id: user_id}), do: :ok
+  def authorize(:delete_observation, %User{id: user_id}, %Observation{user_id: user_id}) do
+    :ok
+  end
 
   def authorize(:delete_observation, %User{} = user, _) do
     User.has_role?(user, [:superuser, :admin])
@@ -40,21 +38,21 @@ defmodule PlantAid.Observations do
 
   def authorize(_, _, _), do: false
 
-  def list_user_observations(%User{} = user) do
-    list_user_observations(user, %Flop{})
-  end
+  # def list_user_observations(%User{} = user) do
+  #   list_user_observations(user, %Flop{})
+  # end
 
-  def list_user_observations(%User{} = user, %Flop{} = flop) do
-    Observation
-    |> Bodyguard.scope(user)
-    |> list_observations(flop)
-  end
+  # def list_user_observations(%User{} = user, %Flop{} = flop) do
+  #   Observation
+  #   |> Bodyguard.scope(user)
+  #   |> list_observations(flop)
+  # end
 
-  def list_user_observations(%User{} = user, %{} = params) do
-    with {:ok, flop} <- Flop.validate(params, for: Observation) do
-      {:ok, list_user_observations(user, flop)}
-    end
-  end
+  # def list_user_observations(%User{} = user, %{} = params) do
+  #   with {:ok, flop} <- Flop.validate(params, for: Observation) do
+  #     {:ok, list_user_observations(user, flop)}
+  #   end
+  # end
 
   @doc """
   Returns the list of observations.
@@ -65,25 +63,16 @@ defmodule PlantAid.Observations do
       [%Observation{}, ...]
 
   """
-  def list_observations do
-    list_observations(%Flop{})
+  def list_observations(%User{} = user) do
+    list_observations(user, %Flop{})
   end
 
-  def list_observations(%Flop{} = flop) do
-    list_observations(from(o in Observation), flop)
-  end
+  def list_observations(%User{} = user, %Flop{} = flop) do
+    opts = [for: Observation]
 
-  def list_observations(%{} = params) do
-    with {:ok, flop} <- Flop.validate(params, for: Observation) do
-      {:ok, list_observations(flop)}
-    end
-  end
-
-  def list_observations(%Ecto.Query{} = query, %Flop{} = flop) do
-    observations =
-      query
-      |> Flop.all(flop)
-      |> Repo.preload([
+    from(
+      o in Observation,
+      preload: [
         :user,
         :host,
         :host_variety,
@@ -91,14 +80,41 @@ defmodule PlantAid.Observations do
         :suspected_pathology,
         :country,
         :primary_subdivision,
-        secondary_subdivision: from(s in SecondarySubdivision, select: %{s | geog: nil})
-      ])
-      |> Enum.map(&maybe_populate_lat_long/1)
-      |> Enum.map(&maybe_populate_location/1)
+        secondary_subdivision: ^from(s in SecondarySubdivision, select: %{s | geog: nil})
+      ]
+    )
+    |> scope(user)
+    |> Flop.with_named_bindings(flop, &join_user_assoc/2, opts)
+    |> Flop.run(flop, opts)
+    |> then(fn {observations, meta} ->
+      {observations
+       |> Enum.map(&maybe_populate_lat_long/1)
+       |> Enum.map(&maybe_populate_location/1), meta}
+    end)
+  end
 
-    meta = Flop.meta(query, flop)
+  def list_observations(%User{} = user, %{} = params) do
+    with {:ok, flop} <- Flop.validate(params, for: Observation) do
+      {:ok, list_observations(user, flop)}
+    end
+  end
 
-    {observations, meta}
+  defp scope(query, %User{} = user) do
+    case User.has_role?(user, [:superuser, :admin, :researcher]) do
+      true ->
+        query
+
+      _ ->
+        where(query, user_id: ^user.id)
+    end
+  end
+
+  defp join_user_assoc(query, :user) do
+    from(
+      o in query,
+      left_join: u in assoc(o, :user),
+      as: :user
+    )
   end
 
   @doc """

@@ -4,7 +4,7 @@
       Listing Observations
       <:actions>
         <.link navigate={~p"/observations/new"}>
-          <.button>New Observation</.button>
+          <.button class="bg-red-500">New Observation</.button>
         </.link>
       </:actions>
       <%= if Bodyguard.permit?(PlantAid.Observations, :list_observations, @current_user) do %>
@@ -23,11 +23,14 @@
       <:col :let={observation} label="Observation date" field={:observation_date}>
         <%= observation.observation_date %>
       </:col>
+      <:col :let={observation} label="Reporter">
+        <%= observation.user && observation.user.email %>
+      </:col>
       <:col :let={observation} label="Location"><%= observation.location %></:col>
       <:col :let={observation} label="Host">
         <%= observation.host && observation.host.common_name %>
       </:col>
-      <:col :let={observation} label="Suspected Pathology">
+      <:col :let={observation} label="Suspected Pathologys">
         <%= observation.suspected_pathology && observation.suspected_pathology.common_name %>
       </:col>
       <:col :let={observation} label="Location Type">
@@ -59,6 +62,7 @@
       module={PlantAidWeb.ObservationFilterForm}
       id="observation-filter-form"
       meta={@meta}
+      filter_users={true}
     />
   </div>
 </div>

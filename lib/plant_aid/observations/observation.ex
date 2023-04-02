@@ -20,20 +20,19 @@ defmodule PlantAid.Observations.Observation do
       :suspected_pathology_id,
       :country_id,
       :primary_subdivision_id,
-      :secondary_subdivision_id
+      :secondary_subdivision_id,
+      :user_email
     ],
     sortable: [
       :status,
-      :observation_date,
-      :organic,
-      :user_id,
-      :host_id,
-      :host_variety_id,
-      :location_type_id,
-      :suspected_pathology_id,
-      :country_id,
-      :primary_subdivision_id,
-      :secondary_subdivision_id
+      :observation_date
+    ],
+    join_fields: [
+      user_email: [
+        binding: :user,
+        field: :email,
+        ecto_type: :string
+      ]
     ],
     default_order: %{
       order_by: [:observation_date],
