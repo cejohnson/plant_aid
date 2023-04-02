@@ -14,6 +14,10 @@ defmodule PlantAid.Observations do
 
   def authorize(:list_observations, %User{}, _), do: :ok
 
+  def authorize(:list_all_observations, %User{} = user, _) do
+    User.has_role?(user, [:superuser, :admin, :researcher])
+  end
+
   def authorize(:get_observation, %User{id: user_id}, %Observation{user_id: user_id}), do: :ok
 
   def authorize(:get_observation, %User{} = user, _) do
@@ -37,22 +41,6 @@ defmodule PlantAid.Observations do
   end
 
   def authorize(_, _, _), do: false
-
-  # def list_user_observations(%User{} = user) do
-  #   list_user_observations(user, %Flop{})
-  # end
-
-  # def list_user_observations(%User{} = user, %Flop{} = flop) do
-  #   Observation
-  #   |> Bodyguard.scope(user)
-  #   |> list_observations(flop)
-  # end
-
-  # def list_user_observations(%User{} = user, %{} = params) do
-  #   with {:ok, flop} <- Flop.validate(params, for: Observation) do
-  #     {:ok, list_user_observations(user, flop)}
-  #   end
-  # end
 
   @doc """
   Returns the list of observations.

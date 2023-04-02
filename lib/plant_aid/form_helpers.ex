@@ -41,6 +41,17 @@ defmodule PlantAid.FormHelpers do
     |> Repo.all()
   end
 
+  def list_primary_subdivision_categories(country_id) do
+    from(
+      p in PrimarySubdivision,
+      where: p.country_id == ^country_id,
+      group_by: p.category,
+      order_by: [desc: count(p.category)],
+      select: p.category
+    )
+    |> Repo.all()
+  end
+
   def list_secondary_subdivision_options do
     from(
       s in SecondarySubdivision,
@@ -60,6 +71,17 @@ defmodule PlantAid.FormHelpers do
       where: s.primary_subdivision_id == ^primary_subdivision_id,
       select: {s.name, s.id},
       order_by: s.name
+    )
+    |> Repo.all()
+  end
+
+  def list_secondary_subdivision_categories(primary_subdivision_id) do
+    from(
+      s in SecondarySubdivision,
+      where: s.primary_subdivision_id == ^primary_subdivision_id,
+      group_by: s.category,
+      order_by: [desc: count(s.category)],
+      select: s.category
     )
     |> Repo.all()
   end

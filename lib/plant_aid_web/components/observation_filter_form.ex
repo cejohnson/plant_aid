@@ -19,8 +19,6 @@ defmodule PlantAidWeb.ObservationFilterForm do
     location_type_options = FormHelpers.list_location_type_options() |> prepend_default_option()
     pathology_options = FormHelpers.list_pathology_options() |> prepend_default_option()
     country_options = FormHelpers.list_country_options() |> prepend_default_option()
-    primary_subdivision_options = prepend_default_option()
-    secondary_subdivision_options = prepend_default_option()
 
     fields = [
       observation_date: [
@@ -61,16 +59,6 @@ defmodule PlantAidWeb.ObservationFilterForm do
         label: "Country",
         type: "select",
         options: country_options
-      ],
-      primary_subdivision_id: [
-        label: "Primary Subdivision",
-        type: "select",
-        options: primary_subdivision_options
-      ],
-      secondary_subdivision_id: [
-        label: "Secondary Subdivision",
-        type: "select",
-        options: secondary_subdivision_options
       ]
     ]
 
@@ -84,7 +72,8 @@ defmodule PlantAidWeb.ObservationFilterForm do
     {:ok,
      socket
      |> maybe_add_user_field(assigns)
-     |> maybe_assign_geographic_subdivision_options(assigns.meta.flop)
+     |> maybe_add_primary_subdivision_id_field(assigns.meta.flop)
+     |> maybe_add_secondary_subdivision_id_field(assigns.meta.flop)
      |> assign(assigns)}
   end
 
@@ -111,6 +100,78 @@ defmodule PlantAidWeb.ObservationFilterForm do
 
   defp maybe_add_user_field(socket, _assigns) do
     socket
+  end
+
+  defp maybe_add_primary_subdivision_id_field(
+         %{assigns: %{fields: fields}} = socket,
+         %Flop{} = flop
+       ) do
+    case Flop.Filter.get_value(flop.filters, :country_id) do
+      nil ->
+        fields = Keyword.drop(fields, [:primary_subdivision_id])
+        assign(socket, :fields, fields)
+
+      country_id ->
+        primary_subdivision_options =
+          country_id
+          |> FormHelpers.list_primary_subdivision_options()
+          |> prepend_default_option()
+
+        primary_subdivision_label =
+          FormHelpers.list_primary_subdivision_categories(country_id)
+          |> join_with_or()
+
+        fields =
+          Keyword.drop(fields, [:primary_subdivision_id]) ++
+            [
+              primary_subdivision_id: [
+                label: primary_subdivision_label,
+                type: "select",
+                options: primary_subdivision_options
+              ]
+            ]
+
+        assign(socket, :fields, fields)
+    end
+  end
+
+  defp maybe_add_secondary_subdivision_id_field(
+         %{assigns: %{fields: fields}} = socket,
+         %Flop{} = flop
+       ) do
+    case Flop.Filter.get_value(flop.filters, :primary_subdivision_id) do
+      nil ->
+        fields = Keyword.drop(fields, [:secondary_subdivision_id])
+        assign(socket, :fields, fields)
+
+      primary_subdivision_id ->
+        secondary_subdivision_options =
+          primary_subdivision_id
+          |> FormHelpers.list_secondary_subdivision_options()
+          |> prepend_default_option()
+
+        fields =
+          case length(secondary_subdivision_options) do
+            1 ->
+              Keyword.drop(fields, [:secondary_subdivision_id])
+
+            _ ->
+              secondary_subdivision_label =
+                FormHelpers.list_secondary_subdivision_categories(primary_subdivision_id)
+                |> join_with_or()
+
+              Keyword.drop(fields, [:secondary_subdivision_id]) ++
+                [
+                  secondary_subdivision_id: [
+                    label: secondary_subdivision_label,
+                    type: "select",
+                    options: secondary_subdivision_options
+                  ]
+                ]
+          end
+
+        assign(socket, :fields, fields)
+    end
   end
 
   defp maybe_reset_geographic_filters(socket, params) do
@@ -153,51 +214,27 @@ defmodule PlantAidWeb.ObservationFilterForm do
     end
   end
 
-  defp maybe_assign_geographic_subdivision_options(
-         %{assigns: %{meta: %Flop.Meta{flop: current_flop}}} = socket,
-         new_flop
-       ) do
-    cond do
-      filter_changed?(:country_id, current_flop, new_flop) ->
-        primary_subdivision_options =
-          new_flop
-          |> get_filter_value(:country_id)
-          |> FormHelpers.list_primary_subdivision_options()
-          |> prepend_default_option()
-
-        socket
-        |> assign(:primary_subdivision_options, primary_subdivision_options)
-        |> assign(:secondary_subdivision_options, prepend_default_option())
-
-      filter_changed?(:primary_subdivision_id, current_flop, new_flop) ->
-        secondary_subdivision_options =
-          new_flop
-          |> get_filter_value(:primary_subdivision_id)
-          |> FormHelpers.list_secondary_subdivision_options()
-          |> prepend_default_option()
-
-        socket
-        |> assign(:secondary_subdivision_options, secondary_subdivision_options)
-
-      true ->
-        socket
-    end
-  end
-
-  defp maybe_assign_geographic_subdivision_options(socket, _) do
-    socket
-  end
-
   defp filter_changed?(field, flop1, flop2) do
     Flop.Filter.get(flop1.filters, field) != Flop.Filter.get(flop2.filters, field)
   end
 
-  defp get_filter_value(flop, field) do
-    filter = Flop.Filter.get(flop.filters, field)
-    if filter, do: filter.value, else: nil
+  defp prepend_default_option(options) do
+    [{'Any', nil}] ++ options
   end
 
-  defp prepend_default_option(options \\ []) do
-    [{'Any', nil}] ++ options
+  defp join_with_or([]) do
+    "Region"
+  end
+
+  defp join_with_or([first | []]) do
+    first
+  end
+
+  defp join_with_or([first | [last]]) do
+    first <> " or " <> last
+  end
+
+  defp join_with_or([first | [second | _]]) do
+    first <> ", " <> second <> ", or Equivalent"
   end
 end

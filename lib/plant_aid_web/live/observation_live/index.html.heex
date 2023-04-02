@@ -9,12 +9,6 @@
       </:actions>
       <div class="text-sm font-normal"><%= @meta.total_count %> matching filter</div>
     </.header>
-    <label class="inline-flex items-center mt-3">
-      <input type="checkbox" class="form-checkbox h-5 w-5 text-stone-600" checked />
-      <span class="ml-2 text-stone-700">
-        Show data from all users
-      </span>
-    </label>
     <div class="flex flex-row">
       <div class="basis-5/6 pr-4">
         <.table
@@ -66,15 +60,13 @@
           module={PlantAidWeb.ObservationFilterForm}
           id="observation-filter-form"
           meta={@meta}
-          filter_users={true}
+          filter_users={
+            Bodyguard.permit?(PlantAid.Observations, :list_all_observations, @current_user)
+          }
         />
       </div>
     </div>
   </div>
-  <%= if Bodyguard.permit?(PlantAid.Observations, :list_observations, @current_user) do %>
-    <.button type="button" phx-click="show-all-observations">Show All</.button>
-    <.button type="button" phx-click="show-user-observations">Show Mine</.button>
-  <% end %>
 </div>
 
 <.modal
