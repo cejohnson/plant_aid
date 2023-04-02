@@ -6,24 +6,24 @@ defmodule PlantAidWeb.HomeLive.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <div>
-      This map shows suspected pathogen observations aggregated by secondary geographic subdivision (county, parish, district, municipality, etc.). These observations can be filtered using the accompanying form; for geographic filtering, first select a country, then primary subdivision, and finally a secondary subdivision.
+    <div class="text-xl">
+      Suspected Pathogen Observations
     </div>
     <div><%= @meta.total_count %> observations match the current filter.</div>
 
-    <div
-      id="map"
-      phx-hook="MapBox"
-      phx-update="ignore"
-      style="height: calc(100vh - 150px); max-height: calc(800px - 150px);"
-    >
+    <div class="flex flex-row">
+      <div class="basis-5/6">
+        <div id="map" phx-hook="MapBox" phx-update="ignore" style="height: calc(100vh - 200px);">
+        </div>
+      </div>
+      <div class="basis-1/6 bg-slate-500">
+        <.live_component
+          module={PlantAidWeb.ObservationFilterForm}
+          id="observation-filter-form"
+          meta={@meta}
+        />
+      </div>
     </div>
-
-    <.live_component
-      module={PlantAidWeb.ObservationFilterForm}
-      id="observation-filter-form"
-      meta={@meta}
-    />
     """
   end
 

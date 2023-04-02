@@ -1,70 +1,80 @@
-<div class="flex flex-row">
-  <div class="flex-col w-5/6">
+<div>
+  <div>
     <.header>
       Listing Observations
       <:actions>
         <.link navigate={~p"/observations/new"}>
-          <.button class="bg-red-500">New Observation</.button>
+          <.button class="bg-lime-600">New Observation</.button>
         </.link>
       </:actions>
-      <%= if Bodyguard.permit?(PlantAid.Observations, :list_observations, @current_user) do %>
-        <.button type="button" phx-click="show-all-observations">Show All</.button>
-        <.button type="button" phx-click="show-user-observations">Show Mine</.button>
-      <% end %>
       <div class="text-sm font-normal"><%= @meta.total_count %> matching filter</div>
     </.header>
-
-    <Flop.Phoenix.table
-      items={@observations}
-      meta={@meta}
-      path={~p"/observations"}
-      row_click={&JS.navigate(~p"/observations/#{&1}")}
-    >
-      <:col :let={observation} label="Observation date" field={:observation_date}>
-        <%= observation.observation_date %>
-      </:col>
-      <:col :let={observation} label="Reporter">
-        <%= observation.user && observation.user.email %>
-      </:col>
-      <:col :let={observation} label="Location"><%= observation.location %></:col>
-      <:col :let={observation} label="Host">
-        <%= observation.host && observation.host.common_name %>
-      </:col>
-      <:col :let={observation} label="Suspected Pathologys">
-        <%= observation.suspected_pathology && observation.suspected_pathology.common_name %>
-      </:col>
-      <:col :let={observation} label="Location Type">
-        <%= observation.location_type && observation.location_type.name %>
-      </:col>
-      <:col :let={observation} label="Organic"><%= observation.organic %></:col>
-      <:col :let={observation} label="Host other"><%= observation.host_other %></:col>
-      <:action :let={observation}>
-        <div class="sr-only">
-          <.link navigate={~p"/observations/#{observation}"}>Show</.link>
-        </div>
-        <.link patch={~p"/observations/#{observation}/edit"}>Edit</.link>
-      </:action>
-      <:action :let={observation}>
-        <.link
-          phx-click={JS.push("delete", value: %{id: observation.id})}
-          data-confirm="Are you sure?"
+    <label class="inline-flex items-center mt-3">
+      <input type="checkbox" class="form-checkbox h-5 w-5 text-stone-600" checked />
+      <span class="ml-2 text-stone-700">
+        Show data from all users
+      </span>
+    </label>
+    <div class="flex flex-row">
+      <div class="basis-5/6 pr-4">
+        <.table
+          id="observations"
+          rows={@observations}
+          row_click={&JS.navigate(~p"/observations/#{&1}")}
         >
-          Delete
-        </.link>
-      </:action>
-    </Flop.Phoenix.table>
+          <:col :let={observation} label="Observation Date">
+            <%= observation.observation_date %>
+          </:col>
+          <:col :let={observation} label="Pathology">
+            <%= observation.suspected_pathology && observation.suspected_pathology.common_name %>
+          </:col>
+          <:col :let={observation} label="Location"><%= observation.location %></:col>
+          <:col :let={observation} label="Host">
+            <%= observation.host && observation.host.common_name %>
+          </:col>
+          <:col :let={observation} label="Location Type">
+            <%= observation.location_type && observation.location_type.name %>
+          </:col>
 
-    <Flop.Phoenix.pagination meta={@meta} path={~p"/observations"} />
-  </div>
+          <:col :let={observation} label="Organic">
+            <%= if observation.organic do %>
+              <i class="fa-solid fa-circle-check text-lime-600"></i>
+            <% end %>
+          </:col>
+          <:action :let={observation}>
+            <div class="sr-only">
+              <.link navigate={~p"/observations/#{observation}"}>Show</.link>
+            </div>
+            <.link patch={~p"/observations/#{observation}/edit"}>
+              <i class="fa-solid fa-pen text-stone-400"></i>
+            </.link>
+          </:action>
+          <:action :let={observation}>
+            <.link
+              phx-click={JS.push("delete", value: %{id: observation.id})}
+              data-confirm="Are you sure?"
+            >
+              <i class="fa-solid fa-trash text-stone-600"></i>
+            </.link>
+          </:action>
+        </.table>
 
-  <div class="w-1/6 pt-20">
-    <.live_component
-      module={PlantAidWeb.ObservationFilterForm}
-      id="observation-filter-form"
-      meta={@meta}
-      filter_users={true}
-    />
+        <Flop.Phoenix.pagination meta={@meta} path={~p"/observations"} />
+      </div>
+      <div class="basis-1/6 bg-stone-100">
+        <.live_component
+          module={PlantAidWeb.ObservationFilterForm}
+          id="observation-filter-form"
+          meta={@meta}
+          filter_users={true}
+        />
+      </div>
+    </div>
   </div>
+  <%= if Bodyguard.permit?(PlantAid.Observations, :list_observations, @current_user) do %>
+    <.button type="button" phx-click="show-all-observations">Show All</.button>
+    <.button type="button" phx-click="show-user-observations">Show Mine</.button>
+  <% end %>
 </div>
 
 <.modal
