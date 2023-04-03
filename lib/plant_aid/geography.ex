@@ -13,7 +13,7 @@ defmodule PlantAid.Geography do
   }
 
   def list_countries do
-    list_countries(%Flop{})
+    Repo.all(Country)
   end
 
   def list_countries(%Flop{} = flop) do
@@ -27,7 +27,7 @@ defmodule PlantAid.Geography do
   end
 
   def list_primary_subdivisions do
-    list_primary_subdivisions(%Flop{})
+    Repo.all(PrimarySubdivision)
   end
 
   def list_primary_subdivisions(%Flop{} = flop) do
@@ -41,7 +41,7 @@ defmodule PlantAid.Geography do
   end
 
   def list_secondary_subdivisions do
-    list_secondary_subdivisions(%Flop{})
+    Repo.all(SecondarySubdivision)
   end
 
   def list_secondary_subdivisions(%Flop{} = flop) do

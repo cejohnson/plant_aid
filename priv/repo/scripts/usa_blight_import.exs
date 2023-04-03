@@ -357,25 +357,25 @@ obs =
       o.ob
       |> Date.from_iso8601!()
 
-    inserted_at =
-      case NaiveDateTime.from_iso8601(o.received) do
-        {:ok, inserted_at} ->
-          inserted_at
+    inserted_at = timestamp
+      # case NaiveDateTime.from_iso8601(o.received) do
+      #   {:ok, inserted_at} ->
+      #     inserted_at
 
-        {:error, _} ->
-          observation_date
-      end
-      |> DateTime.from_naive!("Etc/UTC")
+      #   {:error, _} ->
+      #     observation_date
+      # end
+      # |> DateTime.from_naive!("Etc/UTC")
 
-    updated_at =
-      case NaiveDateTime.from_iso8601(o.last_edit) do
-        {:ok, updated_at} ->
-          updated_at
+    updated_at = timestamp
+      # case NaiveDateTime.from_iso8601(o.last_edit) do
+      #   {:ok, updated_at} ->
+      #     updated_at
 
-        {:error, _} ->
-          inserted_at
-      end
-      |> DateTime.from_naive!("Etc/UTC")
+      #   {:error, _} ->
+      #     inserted_at
+      # end
+      # |> DateTime.from_naive!("Etc/UTC")
 
     country =
       if o.dm_country do
@@ -386,13 +386,16 @@ obs =
       if country && o.dm_state do
         Enum.find(country.primary_subdivisions, fn psd ->
           String.contains?(psd.iso3166_2, o.dm_state)
+          || String.contains?(psd.name, o.dm_state)
         end)
       end
 
     secondary_subdivision =
       if primary_subdivision && o.dm_county do
         Enum.find(primary_subdivision.secondary_subdivisions, fn ssd ->
-          ssd.name == o.fips_name
+          String.contains?(String.downcase(o.fips_name), String.downcase(ssd.name))
+          || String.contains?(String.downcase(o.dm_county), String.downcase(ssd.name))
+          # ssd.name == o.fips_name
         end)
       end
 
@@ -407,6 +410,7 @@ obs =
 
     %{
       status: :submitted,
+      source: :usa_blight,
       user_id: user_id,
       control_method: o.control_products_used,
       notes: o.narrative_description,

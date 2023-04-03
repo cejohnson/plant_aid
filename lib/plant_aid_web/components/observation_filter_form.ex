@@ -21,6 +21,18 @@ defmodule PlantAidWeb.ObservationFilterForm do
     country_options = FormHelpers.list_country_options() |> prepend_default_option()
 
     fields = [
+      source: [
+        label: "Data Source",
+        type: "select",
+        options:
+          [
+            {"PlantAid", :plant_aid},
+            {"USA Blight", :usa_blight},
+            {"National Plant Diagnostic Network", :npdn},
+            {"Cucurbit Sentinel Network", :cucurbit_sentinel_network}
+          ]
+          |> prepend_default_option()
+      ],
       observation_date: [
         label: "From",
         op: :>=,

@@ -11,6 +11,7 @@ defmodule PlantAid.Observations.Observation do
     Flop.Schema,
     filterable: [
       :status,
+      :source,
       :observation_date,
       :organic,
       :user_id,
@@ -49,10 +50,16 @@ defmodule PlantAid.Observations.Observation do
     field :observation_date, :date
     field :organic, :boolean, default: false
     field :position, Geo.PostGIS.Geometry
+
+    field :source, Ecto.Enum,
+      values: [:plant_aid, :usa_blight, :npdn, :cucurbit_sentinel_network],
+      default: :plant_aid
+
     field :status, Ecto.Enum, values: [:unsubmitted, :submitted], default: :unsubmitted
     field :latitude, :float, virtual: true
     field :longitude, :float, virtual: true
     field :location, :string, virtual: true
+    field :data_source, :string, virtual: true
 
     belongs_to :user, User
     belongs_to :host, PlantAid.Hosts.Host

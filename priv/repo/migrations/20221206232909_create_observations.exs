@@ -11,6 +11,7 @@ defmodule PlantAid.Repo.Migrations.CreateObservations do
       add :host_other, :string
       add :notes, :text
       add :image_urls, {:array, :string}, default: [], null: false
+      add :source, :string, default: "plant_aid"
       add :metadata, :map, default: %{}, null: false
 
       add :user_id, references(:users, on_delete: :nothing)

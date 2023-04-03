@@ -77,7 +77,8 @@ defmodule PlantAid.Observations do
     |> then(fn {observations, meta} ->
       {observations
        |> Enum.map(&maybe_populate_lat_long/1)
-       |> Enum.map(&maybe_populate_location/1), meta}
+       |> Enum.map(&maybe_populate_location/1)
+       |> Enum.map(&add_data_source/1), meta}
     end)
   end
 
@@ -255,5 +256,21 @@ defmodule PlantAid.Observations do
       | location:
           "#{secondary_subdivision.name} #{secondary_subdivision.category}, #{psd_abbreviation}, #{country.iso3166_1_alpha2}"
     }
+  end
+
+  defp add_data_source(%Observation{source: :plant_aid} = observation) do
+    %{observation | data_source: "PlantAid"}
+  end
+
+  defp add_data_source(%Observation{source: :usa_blight} = observation) do
+    %{observation | data_source: "USA Blight"}
+  end
+
+  defp add_data_source(%Observation{source: :npdn} = observation) do
+    %{observation | data_source: "National Plant Diagnostic Network"}
+  end
+
+  defp add_data_source(%Observation{source: :cucurbit_sentinel_network} = observation) do
+    %{observation | data_source: "Cucurbit Sentinel Network"}
   end
 end

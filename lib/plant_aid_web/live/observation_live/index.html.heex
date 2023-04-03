@@ -19,16 +19,22 @@
           <:col :let={observation} label="Observation Date">
             <%= observation.observation_date %>
           </:col>
+          <:col :let={observation} label="User">
+            <%= observation.user && observation.user.email %>
+          </:col>
           <:col :let={observation} label="Pathology">
             <%= observation.suspected_pathology && observation.suspected_pathology.common_name %>
           </:col>
-          <:col :let={observation} label="Location"><%= observation.location %></:col>
           <:col :let={observation} label="Host">
-            <%= observation.host && observation.host.common_name %>
+            <%= (observation.host && observation.host.common_name) || observation.host_other %>
           </:col>
+          <:col :let={observation} label="Location"><%= observation.location %></:col>
+
           <:col :let={observation} label="Location Type">
             <%= observation.location_type && observation.location_type.name %>
           </:col>
+
+          <:col :let={observation} label="Data Source"><%= observation.data_source %></:col>
 
           <:col :let={observation} label="Organic">
             <%= if observation.organic do %>
