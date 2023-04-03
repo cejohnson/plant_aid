@@ -69,23 +69,23 @@ defmodule PlantAidWeb.Router do
       live "/users/settings", UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
 
-      live "/location_types", LocationTypeLive.Index, :index
-      live "/location_types/new", LocationTypeLive.Index, :new
-      live "/location_types/:id/edit", LocationTypeLive.Index, :edit
-      live "/location_types/:id", LocationTypeLive.Show, :show
-      live "/location_types/:id/show/edit", LocationTypeLive.Show, :edit
+      # live "/location_types", LocationTypeLive.Index, :index
+      # live "/location_types/new", LocationTypeLive.Index, :new
+      # live "/location_types/:id/edit", LocationTypeLive.Index, :edit
+      # live "/location_types/:id", LocationTypeLive.Show, :show
+      # live "/location_types/:id/show/edit", LocationTypeLive.Show, :edit
 
-      live "/hosts", HostLive.Index, :index
-      live "/hosts/new", HostLive.Index, :new
-      live "/hosts/:id/edit", HostLive.Index, :edit
-      live "/hosts/:id", HostLive.Show, :show
-      live "/hosts/:id/show/edit", HostLive.Show, :edit
+      # live "/hosts", HostLive.Index, :index
+      # live "/hosts/new", HostLive.Index, :new
+      # live "/hosts/:id/edit", HostLive.Index, :edit
+      # live "/hosts/:id", HostLive.Show, :show
+      # live "/hosts/:id/show/edit", HostLive.Show, :edit
 
-      live "/pathologies", PathologyLive.Index, :index
-      live "/pathologies/new", PathologyLive.Index, :new
-      live "/pathologies/:id/edit", PathologyLive.Index, :edit
-      live "/pathologies/:id", PathologyLive.Show, :show
-      live "/pathologies/:id/show/edit", PathologyLive.Show, :edit
+      # live "/pathologies", PathologyLive.Index, :index
+      # live "/pathologies/new", PathologyLive.Index, :new
+      # live "/pathologies/:id/edit", PathologyLive.Index, :edit
+      # live "/pathologies/:id", PathologyLive.Show, :show
+      # live "/pathologies/:id/show/edit", PathologyLive.Show, :edit
 
       live "/observations", ObservationLive.Index, :index
       live "/observations/new", ObservationLive.Form, :new
