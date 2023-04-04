@@ -31,7 +31,7 @@ if config_env() == :prod do
   maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
 
   config :plant_aid, PlantAid.Repo,
-    # ssl: true,
+    ssl: true,
     url: database_url,
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
     socket_options: maybe_ipv6
@@ -48,7 +48,7 @@ if config_env() == :prod do
       You can generate one by calling: mix phx.gen.secret
       """
 
-  host = System.get_env("PHX_HOST") || "example.com"
+  host = System.get_env("PHX_HOST") || "plant-aid.org"
   port = String.to_integer(System.get_env("PORT") || "4000")
 
   config :plant_aid, PlantAidWeb.Endpoint,
@@ -62,6 +62,31 @@ if config_env() == :prod do
       port: port
     ],
     secret_key_base: secret_key_base
+
+  # Object storage
+  raise_object_storage_config_error = fn variable ->
+    raise """
+    environment variable #{variable} is missing.
+    Make sure all OBJECT_STORAGE environment variables are present in the environment
+    """
+  end
+
+  config :plant_aid, PlantAid.ObjectStorage,
+    domain:
+      System.get_env("OBJECT_STORAGE_DOMAIN") ||
+        raise_object_storage_config_error.("OBJECT_STORAGE_DOMAIN"),
+    region:
+      System.get_env("OBJECT_STORAGE_REGION") ||
+        raise_object_storage_config_error.("OBJECT_STORAGE_REGION"),
+    bucket:
+      System.get_env("OBJECT_STORAGE_BUCKET") ||
+        raise_object_storage_config_error.("OBJECT_STORAGE_BUCKET"),
+    access_key_id:
+      System.get_env("OBJECT_STORAGE_ACCESS_KEY_ID") ||
+        raise_object_storage_config_error.("OBJECT_STORAGE_ACCESS_KEY_ID"),
+    secret_access_key:
+      System.get_env("OBJECT_STORAGE_SECRET_ACCESS_KEY") ||
+        raise_object_storage_config_error.("OBJECT_STORAGE_SECRET_ACCESS_KEY")
 
   # ## SSL Support
   #

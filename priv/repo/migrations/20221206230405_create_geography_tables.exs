@@ -28,14 +28,6 @@ defmodule PlantAid.Repo.Migrations.CreateCounties do
       add :primary_subdivision_id, references(:primary_subdivisions)
     end
 
-    # create table(:counties) do
-    #   add :name, :string, null: false
-    #   add :state, :string, null: false
-    #   add :sqmi, :float, null: false
-    #   add :geometry, :"geography(MultiPolygon, 4326)", null: false
-    # end
-
-    # create index(:counties, [:geometry], using: :gist)
-    # create unique_index(:counties, [:name, :state])
+    create index(:secondary_subdivisions, [:geog], using: :gist)
   end
 end

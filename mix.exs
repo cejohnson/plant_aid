@@ -57,7 +57,6 @@ defmodule PlantAid.MixProject do
       {:bodyguard, "~> 2.4"},
       {:geo_postgis, "~> 3.4"},
       {:nimble_csv, "~> 1.2"},
-      {:petal_components, "~> 0.19"},
       {:ecto_psql_extras, "~> 0.6"},
       {:flop, "~> 0.19"},
       {:flop_phoenix, "~> 0.18"}

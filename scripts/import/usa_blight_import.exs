@@ -1,4 +1,4 @@
-# Usage: mix run priv/repo/scripts/usa_blight_import.exs <folder>
+# Usage: mix run scripts/usa_blight_import.exs <folder>
 
 import Ecto.Query
 import Geo.PostGIS

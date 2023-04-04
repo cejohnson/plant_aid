@@ -74,8 +74,8 @@ defmodule PlantAid.Accounts do
       {:error, %Ecto.Changeset{}}
 
   """
-  def register_user(attrs) do
-    %User{}
+  def register_user(attrs, roles \\ []) do
+    %User{roles: roles}
     |> User.registration_changeset(attrs)
     |> Repo.insert()
   end
