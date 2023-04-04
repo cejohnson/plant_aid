@@ -87,6 +87,10 @@ Hooks.MapBox = {
 
     let tempData = { type: "FeatureCollection", features: [] };
 
+    window.addEventListener("resize", (event) => {
+      map.resize();
+    });
+
     this.handleEvent("map-data", ({ data, bounds }) => {
       console.log("setting map data", data);
       if (bounds) {
@@ -105,19 +109,12 @@ Hooks.MapBox = {
       map.resize();
     })
 
-    // this.handleEvent("map-data", (data) => {
-    // let features = countyGeojson.features.filter((county) => {
-    //   data[county.properties.id] != undefined;
-    // }).map((county) => {
-    //   county.properties.observationCount = data[county.properties.id]
-    //   return county
-    // })
+
 
     map.on('load', () => {
       console.log('map loaded, settings data from temp variable');
       map.addSource('counties', {
         type: "geojson",
-        // data: data
         data: tempData
       });
 
@@ -132,11 +129,15 @@ Hooks.MapBox = {
             ['get', 'observation_count'],
             '#eeeeee',
             1,
-            '#fcef72',
-            15,
-            '#e89c23',
+            '#f5f087',
+            5,
+            '#e3c749',
+            10,
+            '#c78a28',
+            20,
+            "#b54f14",
             30,
-            '#941510'
+            "#8a0000",
           ],
           'fill-opacity': 0.5
         }
@@ -169,7 +170,8 @@ Hooks.MapBox = {
           hover_popup.setLngLat(e.lngLat)
             .setHTML(`
             <div>
-            <strong>${props.name} ${props.category}, ${props.primary_subdivision}</strong>
+            <strong>${props.name}</strong>
+            <div>${props.observation_count} observations</div>
             </div>
           ` )
             .addTo(map);
@@ -186,11 +188,9 @@ Hooks.MapBox = {
         const props = e.features[0].properties
         detail_popup.setLngLat(e.lngLat)
           .setHTML(`
-            <h4>Detailed view</h4>
             <div>
             <strong>${props.name}</strong>
             <div>${props.observation_count} observations</div>
-            <a href="#">More information</a>
             </div>
           ` )
           .addTo(map);

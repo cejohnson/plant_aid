@@ -249,8 +249,8 @@ defmodule PlantAidWeb.CoreComponents do
 
     ~H"""
     <.form for={@form} id={@id} phx-target={@target} phx-change={@on_change} phx-submit={@on_reset}>
-      <div class="bg-stone-100 p-4 ">
-        <.button class="bg-stone-400">Reset Filters</.button>
+      <div class="bg-stone-300 p-4 ">
+        <.button class="bg-neutral-500">Reset Filters</.button>
         <Flop.Phoenix.filter_fields :let={i} form={@form} fields={@fields}>
           <.input field={i.field} label={i.label} type={i.type} phx-debounce={0} {i.rest} />
         </Flop.Phoenix.filter_fields>

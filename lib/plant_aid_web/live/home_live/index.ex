@@ -11,7 +11,7 @@ defmodule PlantAidWeb.HomeLive.Index do
     </div>
     <div><%= @meta.total_count %> observations match the current filter.</div>
 
-    <div class="flex flex-row">
+    <div class="md:flex md:flex-row">
       <div class="basis-5/6">
         <div id="map" phx-hook="MapBox" phx-update="ignore" style="height: calc(100vh - 200px);">
         </div>
