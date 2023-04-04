@@ -39,3 +39,4 @@ npm-debug.log
 **/*.secret.exs
 .vscode
 *.env
+**/.DS_Store
