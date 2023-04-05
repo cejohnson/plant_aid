@@ -1,67 +1,114 @@
 <div>
   <div>
     <.header>
-      Listing Observations
+      Observations
       <:actions>
         <.link navigate={~p"/observations/new"}>
           <.button class="bg-lime-600">New Observation</.button>
         </.link>
       </:actions>
-      <div class="text-sm font-normal"><%= @meta.total_count %> matching filter</div>
     </.header>
-    <div class="flex flex-row">
-      <div class="basis-5/6 pr-4">
-        <.table
-          id="observations"
-          rows={@observations}
-          row_click={&JS.navigate(~p"/observations/#{&1}")}
+
+    <ul class="flex flex-wrap text-sm font-medium text-center text-gray-500 border-b-2 border-stone-300 dark:border-stone-700 dark:text-gray-400">
+      <li class="mr-2">
+        <.link
+          patch={~p"/observations?#{Map.put(@params, "view", "list")}"}
+          class={
+            if @view == :list do
+              "inline-block p-4 rounded-t-lg text-stone-700 bg-stone-300"
+            else
+              "inline-block p-4 text-stone-500 bg-stone-100 rounded-t-lg active dark:bg-gray-800 dark:text-blue-500 hover:text-stone-600 hover:bg-stone-200 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+            end
+          }
         >
-          <:col :let={observation} label="Observation Date">
-            <%= observation.observation_date %>
-          </:col>
-          <:col :let={observation} label="User">
-            <%= observation.user && observation.user.email %>
-          </:col>
-          <:col :let={observation} label="Pathology">
-            <%= observation.suspected_pathology && observation.suspected_pathology.common_name %>
-          </:col>
-          <:col :let={observation} label="Host">
-            <%= (observation.host && observation.host.common_name) || observation.host_other %>
-          </:col>
-          <:col :let={observation} label="Location"><%= observation.location %></:col>
+          <i class="mr-2 fa-solid fa-list"></i>List
+        </.link>
+      </li>
+      <li class="mr-2">
+        <.link
+          patch={~p"/observations?#{Map.put(@params, "view", "map")}"}
+          class={
+            if @view == :map do
+              "inline-block p-4 rounded-t-lg text-stone-700 bg-stone-300"
+            else
+              "inline-block p-4 text-stone-500 bg-stone-100 rounded-t-lg active dark:bg-gray-800 dark:text-blue-500   hover:text-stone-600 hover:bg-stone-200 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+            end
+          }
+        >
+          <i class="mr-2 fa-solid fa-location-dot"></i>Map
+        </.link>
+      </li>
+    </ul>
 
-          <:col :let={observation} label="Location Type">
-            <%= observation.location_type && observation.location_type.name %>
-          </:col>
-
-          <:col :let={observation} label="Data Source"><%= observation.data_source %></:col>
-
-          <:col :let={observation} label="Organic">
-            <%= if observation.organic do %>
-              <i class="fa-solid fa-circle-check text-lime-600"></i>
-            <% end %>
-          </:col>
-          <:action :let={observation}>
-            <div class="sr-only">
-              <.link navigate={~p"/observations/#{observation}"}>Show</.link>
-            </div>
-            <.link patch={~p"/observations/#{observation}/edit"}>
-              <i class="fa-solid fa-pen text-stone-400"></i>
-            </.link>
-          </:action>
-          <:action :let={observation}>
-            <.link
-              phx-click={JS.push("delete", value: %{id: observation.id})}
-              data-confirm="Are you sure?"
+    <div class="flex flex-row">
+      <div class="basis-5/6">
+        <%= if @view == :map do %>
+          <div
+            id="point-map"
+            phx-hook="MapBoxPointData"
+            phx-update="ignore"
+            style="height: calc(100vh - 200px);"
+          >
+          </div>
+        <% else %>
+          <div class="pr-4">
+            <.table
+              id="observations"
+              rows={@observations}
+              row_click={&JS.navigate(~p"/observations/#{&1}")}
             >
-              <i class="fa-solid fa-trash text-stone-600"></i>
-            </.link>
-          </:action>
-        </.table>
+              <:col :let={observation} label="Observation Date">
+                <%= observation.observation_date %>
+              </:col>
+              <:col :let={observation} label="User">
+                <%= observation.user && observation.user.email %>
+              </:col>
+              <:col :let={observation} label="Pathology">
+                <%= observation.suspected_pathology && observation.suspected_pathology.common_name %>
+              </:col>
+              <:col :let={observation} label="Host">
+                <%= (observation.host && observation.host.common_name) || observation.host_other %>
+              </:col>
+              <:col :let={observation} label="Location"><%= observation.location %></:col>
 
-        <Flop.Phoenix.pagination meta={@meta} path={~p"/observations"} />
+              <:col :let={observation} label="Location Type">
+                <%= observation.location_type && observation.location_type.name %>
+              </:col>
+
+              <:col :let={observation} label="Data Source"><%= observation.data_source %></:col>
+
+              <:col :let={observation} label="Organic">
+                <%= if observation.organic do %>
+                  <i class="fa-solid fa-circle-check text-lime-600"></i>
+                <% end %>
+              </:col>
+              <:action :let={observation}>
+                <div class="sr-only">
+                  <.link navigate={~p"/observations/#{observation}"}>Show</.link>
+                </div>
+                <.link patch={~p"/observations/#{observation}/edit"}>
+                  <i class="fa-solid fa-pen text-stone-400"></i>
+                </.link>
+              </:action>
+              <:action :let={observation}>
+                <.link
+                  phx-click={JS.push("delete", value: %{id: observation.id})}
+                  data-confirm="Are you sure?"
+                >
+                  <i class="fa-solid fa-trash text-stone-600"></i>
+                </.link>
+              </:action>
+            </.table>
+
+            <Flop.Phoenix.pagination meta={@meta} path={~p"/observations"} />
+          </div>
+        <% end %>
       </div>
+
       <div class="basis-1/6 bg-stone-300">
+        <div class="p-2 text-md font-normal">
+          <%= @meta.total_count %> observations match filters
+        </div>
         <.live_component
           module={PlantAidWeb.ObservationFilterForm}
           id="observation-filter-form"

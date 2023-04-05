@@ -6,17 +6,23 @@ defmodule PlantAidWeb.HomeLive.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="text-xl">
+    <div class="text-xl p-2">
       Suspected Pathogen Observations
     </div>
-    <div><%= @meta.total_count %> observations match the current filter.</div>
 
     <div class="md:flex md:flex-row">
       <div class="basis-5/6">
-        <div id="map" phx-hook="MapBox" phx-update="ignore" style="height: calc(100vh - 200px);">
+        <div
+          id="aggregate-map"
+          phx-hook="MapBoxAggregateData"
+          phx-update="ignore"
+          style="height: calc(100vh - 200px);"
+        >
         </div>
       </div>
-      <div class="basis-1/6 bg-slate-500">
+      <div class="basis-1/6 bg-stone-300 p-2">
+        <div><%= @meta.total_count %> observations match filters</div>
+
         <.live_component
           module={PlantAidWeb.ObservationFilterForm}
           id="observation-filter-form"
@@ -31,7 +37,8 @@ defmodule PlantAidWeb.HomeLive.Index do
   def mount(_params, _session, socket) do
     {:ok,
      socket
-     |> assign(:meta, %Flop.Meta{})}
+     |> assign(:meta, %Flop.Meta{})
+     |> assign(:page_title, "Home")}
   end
 
   @impl true

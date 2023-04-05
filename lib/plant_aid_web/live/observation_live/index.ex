@@ -1,6 +1,7 @@
 defmodule PlantAidWeb.ObservationLive.Index do
   use PlantAidWeb, :live_view
 
+  alias PlantAid.Mapping
   alias PlantAid.Observations
   alias PlantAid.Observations.Observation
 
@@ -26,6 +27,36 @@ defmodule PlantAidWeb.ObservationLive.Index do
     |> assign(:observation, %Observation{})
   end
 
+  defp apply_action(socket, :index, %{"view" => "map"} = params) do
+    if connected?(socket) do
+      user = socket.assigns.current_user
+
+      with :ok <- Bodyguard.permit(Mapping, :list_observations, user) do
+        case Mapping.list_observations(user, params) do
+          {:ok, {data, meta}} ->
+            push_event(
+              socket
+              |> assign(page_title: "Mapping Observations")
+              |> assign(:view, :map)
+              |> assign(:params, params)
+              |> assign(:meta, meta),
+              "map-data",
+              data
+            )
+
+          {:error, _meta} ->
+            socket
+        end
+      end
+    else
+      socket
+      |> assign(page_title: "Mapping Observations")
+      |> assign(:view, :map)
+      |> assign(:params, params)
+      |> assign(:meta, %Flop.Meta{})
+    end
+  end
+
   defp apply_action(socket, :index, params) do
     user = socket.assigns.current_user
 
@@ -34,10 +65,10 @@ defmodule PlantAidWeb.ObservationLive.Index do
         {:ok, {observations, meta}} ->
           assign(socket, %{
             page_title: "Listing Observations",
-            # params: params,
+            params: params,
+            view: :list,
             observation: nil,
             observations: observations,
-            user_observations: false,
             meta: meta
           })
 
@@ -49,6 +80,7 @@ defmodule PlantAidWeb.ObservationLive.Index do
 
   @impl true
   def handle_info({:updated_filters, params}, socket) do
+    params = Map.put(params, :view, socket.assigns.view)
     {:noreply, push_patch(socket, to: ~p"/observations?#{params}")}
   end
 

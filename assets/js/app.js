@@ -75,14 +75,13 @@ Hooks.GetCurrentPosition = {
   }
 }
 
-Hooks.MapBox = {
+Hooks.MapBoxAggregateData = {
   mounted() {
     console.log("mapbox container mounted")
     const map = new mapboxgl.Map({
       container: this.el,
       trackResize: false,
       style: 'mapbox://styles/mapbox/light-v10'
-      // bounds: [[-125, 23], [-65, 43]]
     })
 
     let tempData = { type: "FeatureCollection", features: [] };
@@ -98,7 +97,7 @@ Hooks.MapBox = {
         map.fitBounds(bounds, { padding: 10 });
       }
 
-      let source = map.getSource("counties");
+      let source = map.getSource("regions");
       // Hacky but it works for now
       if (source) {
         source.setData(data);
@@ -109,19 +108,17 @@ Hooks.MapBox = {
       map.resize();
     })
 
-
-
     map.on('load', () => {
       console.log('map loaded, settings data from temp variable');
-      map.addSource('counties', {
+      map.addSource('regions', {
         type: "geojson",
         data: tempData
       });
 
       map.addLayer({
-        'id': 'countyFill',
+        'id': 'regionFill',
         'type': 'fill',
-        'source': 'counties',
+        'source': 'regions',
         'layout': {},
         'paint': {
           'fill-color': [
@@ -144,12 +141,12 @@ Hooks.MapBox = {
       });
 
       map.addLayer({
-        'id': 'countyOutline',
+        'id': 'regionOutline',
         'type': 'line',
-        'source': 'counties',
+        'source': 'regions',
         'layout': {},
         'paint': {
-          'line-color': '#424242',
+          'line-color': '#8D8D8D',
           'line-width': 0.5
         }
       });
@@ -162,7 +159,7 @@ Hooks.MapBox = {
       const detail_popup = new mapboxgl.Popup({
       });
 
-      map.on('mousemove', 'countyFill', (e) => {
+      map.on('mousemove', 'regionFill', (e) => {
         map.getCanvas().style.cursor = 'pointer';
         const props = e.features[0].properties
         if (!detail_popup.isOpen()) {
@@ -178,12 +175,12 @@ Hooks.MapBox = {
         }
       });
 
-      map.on('mouseleave', 'countyFill', () => {
+      map.on('mouseleave', 'regionFill', () => {
         map.getCanvas().style.cursor = '';
         hover_popup.remove();
       });
 
-      map.on('click', 'countyFill', (e) => {
+      map.on('click', 'regionFill', (e) => {
         map.getCanvas().style.cursor = 'pointer';
         const props = e.features[0].properties
         detail_popup.setLngLat(e.lngLat)
@@ -197,6 +194,156 @@ Hooks.MapBox = {
       });
     })
     // })
+  }
+}
+
+Hooks.MapBoxPointData = {
+  mounted() {
+    console.log("mapbox container mounted")
+    const map = new mapboxgl.Map({
+      container: this.el,
+      trackResize: false,
+      style: 'mapbox://styles/mapbox/light-v10'
+    })
+
+    let tempData = { type: "FeatureCollection", features: [] };
+
+    window.addEventListener("resize", (event) => {
+      map.resize();
+    });
+
+    this.handleEvent("map-data", ({ data, bounds }) => {
+      console.log("setting map data", data);
+      if (bounds) {
+        console.log("setting bounds", bounds);
+        map.fitBounds(bounds, { padding: 10 });
+      }
+
+      let source = map.getSource("observations");
+      // Hacky but it works for now
+      if (source) {
+        source.setData(data);
+      } else {
+        tempData = data;
+      }
+
+      map.resize();
+    })
+
+    map.on('load', () => {
+      console.log('map loaded, settings data from temp variable');
+      map.addSource('observations', {
+        type: "geojson",
+        // cluster: true,
+        // clusterMaxZoom: 16,
+        // clusterRadius: 50,
+        data: tempData
+      });
+
+      map.addLayer({
+        'id': 'clusters',
+        'type': 'circle',
+        'source': 'observations',
+        filter: ['has', 'point_count'],
+        paint: {
+          // Use step expressions (https://docs.mapbox.com/mapbox-gl-js/style-spec/#expressions-step)
+          // with three steps to implement three types of circles:
+          //   * Blue, 20px circles when point count is less than 100
+          //   * Yellow, 30px circles when point count is between 100 and 750
+          //   * Pink, 40px circles when point count is greater than or equal to 750
+          'circle-color': [
+            'step',
+            ['get', 'point_count'],
+            '#51bbd6',
+            100,
+            '#f1f075',
+            750,
+            '#f28cb1'
+          ],
+          'circle-radius': [
+            'step',
+            ['get', 'point_count'],
+            20,
+            100,
+            30,
+            750,
+            40
+          ]
+        }
+      });
+
+      map.addLayer({
+        id: 'cluster-count',
+        type: 'symbol',
+        source: 'observations',
+        filter: ['has', 'point_count'],
+        layout: {
+          'text-field': '{point_count_abbreviated}',
+          'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+          'text-size': 12
+        }
+      });
+
+      map.addLayer({
+        id: 'unclustered-point',
+        type: 'circle',
+        source: 'observations',
+        filter: ['!', ['has', 'point_count']],
+        paint: {
+          'circle-color': [
+            'match',
+            ['get', 'p'],
+            'Late Blight',
+            '#FA7633',
+            'Cucurbit Downy Mildew',
+            '#8E55D5',
+            // 'Cucumber',
+            // '#73af59',
+        /* other */ '#cccc00'
+          ],
+          'circle-radius': 6,
+          'circle-stroke-width': 1,
+          'circle-stroke-color': '#fff'
+        }
+      });
+
+      const hover_popup = new mapboxgl.Popup({
+        closeButton: false,
+        closeOnClick: false
+      });
+
+      const detail_popup = new mapboxgl.Popup({
+      });
+
+      map.on('mousemove', 'unclustered-point', (e) => {
+        map.getCanvas().style.cursor = 'pointer';
+        const props = e.features[0].properties
+        if (!detail_popup.isOpen()) {
+
+          hover_popup.setLngLat(e.lngLat)
+            .setHTML(`
+            <div>
+            <strong>${props.p}</strong>
+            <div>Host: ${props.h} </div>
+            <div>Date: ${props.d} </div>
+            <div>Location: ${props.l} </div>
+            </div>
+          ` )
+            .addTo(map);
+        }
+      });
+
+      map.on('mouseleave', 'unclustered-point', () => {
+        map.getCanvas().style.cursor = '';
+        hover_popup.remove();
+      });
+
+      map.on('click', 'unclustered-point', (e) => {
+        map.getCanvas().style.cursor = 'pointer';
+        const props = e.features[0].properties;
+        window.location.href = `/observations/${props.id}`;
+      });
+    })
   }
 }
 

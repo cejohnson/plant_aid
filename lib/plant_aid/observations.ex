@@ -134,6 +134,7 @@ defmodule PlantAid.Observations do
     ])
     |> maybe_populate_lat_long()
     |> maybe_populate_location()
+    |> add_data_source()
   end
 
   @doc """
