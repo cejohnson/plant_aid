@@ -40,7 +40,7 @@ defmodule PlantAidWeb.Router do
     scope "/dev" do
       pipe_through :browser
 
-      live_dashboard "/dashboard", metrics: PlantAidWeb.Telemetry
+      # live_dashboard "/dashboard", metrics: PlantAidWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
   end
@@ -107,5 +107,13 @@ defmodule PlantAidWeb.Router do
       live "/users/confirm/:token", UserConfirmationLive, :edit
       live "/users/confirm", UserConfirmationInstructionsLive, :new
     end
+  end
+
+  scope "/admin", PlantAidWeb do
+    import Phoenix.LiveDashboard.Router
+
+    pipe_through [:browser, :require_authenticated_user, :require_superuser]
+
+    live_dashboard "/dashboard", metrics: PlantAidWeb.Telemetry
   end
 end

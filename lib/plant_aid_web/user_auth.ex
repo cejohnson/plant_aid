@@ -5,6 +5,7 @@ defmodule PlantAidWeb.UserAuth do
   import Phoenix.Controller
 
   alias PlantAid.Accounts
+  alias PlantAid.Accounts.User
 
   # Make the remember me cookie valid for 60 days.
   # If you want bump or reduce this value, also change
@@ -211,6 +212,17 @@ defmodule PlantAidWeb.UserAuth do
       |> put_flash(:error, "You must log in to access this page.")
       |> maybe_store_return_to()
       |> redirect(to: ~p"/users/log_in")
+      |> halt()
+    end
+  end
+
+  def require_superuser(conn, _opts) do
+    if conn.assigns[:current_user] && User.has_role?(conn.assigns[:current_user], :superuser) do
+      conn
+    else
+      conn
+      |> put_flash(:error, "Unauthorized")
+      |> redirect(to: ~p"/")
       |> halt()
     end
   end
