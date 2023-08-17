@@ -28,32 +28,27 @@ defmodule PlantAidWeb.ObservationLive.Index do
   end
 
   defp apply_action(socket, :index, %{"view" => "map"} = params) do
-    if connected?(socket) do
-      user = socket.assigns.current_user
+    user = socket.assigns.current_user
 
-      with :ok <- Bodyguard.permit(Mapping, :list_observations, user) do
-        case Mapping.list_observations(user, params) do
-          {:ok, {data, meta}} ->
-            push_event(
-              socket
-              |> assign(page_title: "Mapping Observations")
-              |> assign(:view, :map)
-              |> assign(:params, params)
-              |> assign(:meta, meta),
-              "map-data",
-              data
-            )
+    with :ok <- Bodyguard.permit(Mapping, :list_observations, user) do
+      case Mapping.list_observations(user, params) do
+        {:ok, {data, meta}} ->
+          push_event(
+            assign(socket, %{
+              page_title: "Mapping Observations",
+              params: params,
+              view: :map,
+              observation: nil,
+              meta: meta
+            }),
+            "map-data",
+            data
+          )
 
-          {:error, _meta} ->
-            socket
-        end
+        {:error, _meta} ->
+          socket
+          |> put_flash(:error, "Something went wrong")
       end
-    else
-      socket
-      |> assign(page_title: "Mapping Observations")
-      |> assign(:view, :map)
-      |> assign(:params, params)
-      |> assign(:meta, %Flop.Meta{})
     end
   end
 
@@ -74,6 +69,7 @@ defmodule PlantAidWeb.ObservationLive.Index do
 
         {:error, _meta} ->
           socket
+          |> put_flash(:error, "Something went wrong")
       end
     end
   end

@@ -5,15 +5,45 @@ defmodule PlantAid.Accounts.User do
 
   @timestamps_opts [type: :utc_datetime]
 
+  @derive {
+    Flop.Schema,
+    filterable: [
+      :email,
+      :name,
+      :roles,
+      :confirmed_at,
+      :last_seen
+    ],
+    sortable: [
+      :email,
+      :name,
+      :last_seen
+    ],
+    default_order: %{
+      order_by: [:last_seen],
+      order_directions: [:desc_nulls_last]
+    },
+    adapter_opts: [
+      join_fields: [
+        last_seen: [
+          binding: :last_seen,
+          field: :last_seen,
+          ecto_type: :date
+        ]
+      ]
+    ]
+  }
+
   schema "users" do
     field :email, :string
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
-    field :confirmed_at, :naive_datetime
+    field :confirmed_at, :utc_datetime
     field :roles, {:array, Ecto.Enum}, values: [:superuser, :admin, :researcher], default: []
     field :name, :string
     field :preferred_name, :string
     field :metadata, :map
+    field :last_seen, :date, virtual: true
 
     timestamps()
   end
@@ -127,7 +157,7 @@ defmodule PlantAid.Accounts.User do
   Confirms the account by setting `confirmed_at`.
   """
   def confirm_changeset(user) do
-    now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+    now = DateTime.utc_now(:second)
     change(user, confirmed_at: now)
   end
 
@@ -156,6 +186,12 @@ defmodule PlantAid.Accounts.User do
     else
       add_error(changeset, :current_password, "is not valid")
     end
+  end
+
+  def changeset(user, attrs, opts \\ []) do
+    user
+    |> cast(attrs, [:name, :preferred_name, :email, :roles])
+    |> validate_email(opts)
   end
 
   def has_role?(%User{} = user, roles) when is_list(roles) do

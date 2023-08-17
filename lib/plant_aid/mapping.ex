@@ -148,6 +148,10 @@ defmodule PlantAid.Mapping do
               nil ->
                 [[-180, -70], [180, 70]]
 
+              %Geo.Point{coordinates: {long, lat}} ->
+                # Single point, arbitrarily bound it 0.1 degrees in all directions
+                [[long - 0.1, lat - 0.1], [long + 0.1, lat + 0.1]]
+
               geom ->
                 coordinates = List.first(geom.coordinates)
                 southwest_point = Enum.at(coordinates, 0)

@@ -1,0 +1,38 @@
+<.header>
+  User <%= @user.id %>
+
+  <:actions>
+    <.link patch={~p"/admin/users/#{@user}/show/edit"} phx-click={JS.push_focus()}>
+      <.button>Edit user</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Name"><%= @user.name %></:item>
+  <:item title="Email"><%= @user.email %></:item>
+  <:item title="Roles"><%= @user.roles |> Enum.map(fn r -> 
+                  r |> Atom.to_string() |> String.capitalize()
+                end) |> Enum.join(", ") %></:item>
+       <:item title="Last Seen"><%= @user.last_seen %></:item>
+       <:item title="Confirmed At"><%= @user.confirmed_at %></:item>
+</.list>
+
+<.back navigate={~p"/admin/users"}>Back to users</.back>
+
+<.modal
+  :if={@live_action == :edit}
+  id="user-modal"
+  show
+  on_cancel={JS.patch(~p"/admin/users/#{@user}")}
+>
+  <.live_component
+    module={PlantAidWeb.UserLive.FormComponent}
+    id={@user.id}
+    title={@page_title}
+    action={@live_action}
+    current_user={@current_user}
+    user={@user}
+    patch={~p"/admin/users/#{@user}"}
+  />
+</.modal>

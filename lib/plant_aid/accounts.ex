@@ -3,12 +3,78 @@ defmodule PlantAid.Accounts do
   The Accounts context.
   """
 
+  @behaviour Bodyguard.Policy
+
   import Ecto.Query, warn: false
   alias PlantAid.Repo
 
-  alias PlantAid.Accounts.{User, UserToken, UserNotifier}
+  alias PlantAid.Accounts.{User, UserToken, UserNotifier, UserConnectionEvent}
+
+  def authorize(:list_users, %User{} = user, _) do
+    User.has_role?(user, [:superuser, :admin])
+  end
+
+  def authorize(:create_user, %User{} = user, _) do
+    User.has_role?(user, [:superuser, :admin])
+  end
+
+  def authorize(:get_user, %User{} = user, _) do
+    User.has_role?(user, [:superuser, :admin])
+  end
+
+  def authorize(:update_user, %User{id: id}, %User{id: id}), do: :ok
+
+  def authorize(:update_user, %User{} = current_user, %User{} = user) do
+    cond do
+      User.has_role?(current_user, :superuser) ->
+        :ok
+
+      User.has_role?(current_user, :admin) ->
+        !User.has_role?(user, :superuser)
+
+      true ->
+        :error
+    end
+  end
+
+  def authorize(:delete_user, %User{} = user, _) do
+    User.has_role?(user, [:superuser])
+  end
 
   ## Database getters
+
+  def list_users() do
+    list_users(%Flop{})
+  end
+
+  def list_users(%Flop{} = flop) do
+    opts = [for: User]
+
+    last_seen_query =
+      from(
+        e in UserConnectionEvent,
+        where: parent_as(:user).id == e.user_id,
+        order_by: [desc: :timestamp],
+        limit: 1,
+        select: %{last_seen: type(e.timestamp, :date)}
+      )
+
+    from(
+      u in User,
+      as: :user,
+      left_lateral_join: q in subquery(last_seen_query),
+      on: true,
+      as: :last_seen,
+      select: %{u | last_seen: subquery(last_seen_query)}
+    )
+    |> Flop.run(flop, opts)
+  end
+
+  def list_users(%{} = params) do
+    with {:ok, flop} <- Flop.validate(params, for: User) do
+      {:ok, list_users(flop)}
+    end
+  end
 
   @doc """
   Gets a user by email.
@@ -58,7 +124,26 @@ defmodule PlantAid.Accounts do
       ** (Ecto.NoResultsError)
 
   """
-  def get_user!(id), do: Repo.get!(User, id)
+  def get_user!(id) do
+    last_seen_query =
+      from(
+        e in UserConnectionEvent,
+        where: parent_as(:user).id == e.user_id,
+        order_by: [desc: :timestamp],
+        limit: 1,
+        select: %{last_seen: type(e.timestamp, :date)}
+      )
+
+    from(
+      u in User,
+      as: :user,
+      left_lateral_join: q in subquery(last_seen_query),
+      on: true,
+      as: :last_seen,
+      select: %{u | last_seen: subquery(last_seen_query)}
+    )
+    |> Repo.get!(id)
+  end
 
   ## User registration
 
@@ -78,6 +163,26 @@ defmodule PlantAid.Accounts do
     %User{roles: roles}
     |> User.registration_changeset(attrs)
     |> Repo.insert()
+  end
+
+  def create_user(attrs) do
+    %User{}
+    |> User.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def update_user(%User{} = user, attrs) do
+    user
+    |> User.changeset(attrs)
+    |> Repo.update()
+  end
+
+  def delete_user(%User{} = user) do
+    Repo.delete(user)
+  end
+
+  def change_user(%User{} = user, attrs \\ %{}) do
+    User.changeset(user, attrs)
   end
 
   @doc """

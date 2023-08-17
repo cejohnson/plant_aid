@@ -1,0 +1,95 @@
+<div>
+  <div>
+    <.header>
+      Users
+      <:actions>
+        <.link patch={~p"/admin/users/new"}>
+          <.button class="bg-lime-600">New User</.button>
+        </.link>
+      </:actions>
+    </.header>
+
+    <%!-- <ul class="flex flex-wrap text-sm font-medium text-center text-gray-500 border-b-2 border-stone-300 dark:border-stone-700 dark:text-gray-400">
+    </ul> --%>
+
+    <%!-- <div class="py-4"></div> --%>
+
+    <div class="flex flex-row">
+      <div class="basis-5/6">
+          <div class="pr-4">
+            <.table
+              id="users"
+              rows={@streams.users}
+              row_click={fn {_id, user} -> JS.navigate(~p"/admin/users/#{user}") end}
+            >
+              <:col :let={{_id, user}} label="Name">
+                <%= user.name %>
+              </:col>
+              <:col :let={{_id, user}} label="Email">
+                <%= user.email %>
+              </:col>
+              <:col :let={{_id, user}} label="Roles">
+                <%= user.roles |> Enum.map(fn r -> 
+                  r |> Atom.to_string() |> String.capitalize()
+                end) |> Enum.join(", ") %>
+              </:col>
+              <:col :let={{_id, user}} label="Last Seen">
+                <%= user.last_seen %>
+              </:col>
+              <:col :let={{_id, user}} label="Confirmed">
+                <%= if user.confirmed_at do %>
+                  <i class="fa-solid fa-circle-check text-lime-600"></i>
+                <% end %>
+              </:col>
+              
+              <:action :let={{_id, user}}>
+                <div class="sr-only">
+                  <.link navigate={~p"/admin/users/#{user}"}>Show</.link>
+                </div>
+                <%= if Bodyguard.permit?(PlantAid.Accounts, :update_user, @current_user, user) do %>
+                  <.link patch={~p"/admin/users/#{user}/edit"}>
+                    <i class="fa-solid fa-pen text-stone-400"></i>
+                  </.link>
+                <% end %>
+              </:action>
+            </.table>
+
+            <Flop.Phoenix.pagination meta={@meta} path={~p"/admin/users"} />
+          </div>
+      </div>
+
+      <div class="basis-1/6 bg-stone-300 mt-11">
+        <div class="p-2 text-md font-normal">
+          <%= case @meta.total_count do %>
+            <% 1  -> %>
+              1 user matches filters
+            <% count -> %>
+              <%= count %> users match filters
+          <% end %>
+        </div>
+        <.live_component
+          module={PlantAidWeb.UserFilterForm}
+          id="user-filter-form"
+          meta={@meta}
+        />
+      </div>
+    </div>
+  </div>
+</div>
+
+<.modal
+  :if={@live_action in [:new, :edit]}
+  id="user-modal"
+  show
+  on_cancel={JS.navigate(~p"/admin/users")}
+>
+  <.live_component
+    module={PlantAidWeb.UserLive.FormComponent}
+    id={@user.id || :new}
+    title={@page_title}
+    action={@live_action}
+    current_user={@current_user}
+    user={@user}
+    patch={~p"/admin/users"}
+  />
+</.modal>

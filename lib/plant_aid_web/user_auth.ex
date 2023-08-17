@@ -82,7 +82,7 @@ defmodule PlantAidWeb.UserAuth do
     conn
     |> renew_session()
     |> delete_resp_cookie(@remember_me_cookie)
-    |> redirect(to: "/")
+    |> redirect(to: ~p"/")
   end
 
   @doc """
@@ -212,6 +212,18 @@ defmodule PlantAidWeb.UserAuth do
       |> put_flash(:error, "You must log in to access this page.")
       |> maybe_store_return_to()
       |> redirect(to: ~p"/users/log_in")
+      |> halt()
+    end
+  end
+
+  def require_admin(conn, _opts) do
+    if conn.assigns[:current_user] &&
+         User.has_role?(conn.assigns[:current_user], [:admin, :superuser]) do
+      conn
+    else
+      conn
+      |> put_flash(:error, "Unauthorized")
+      |> redirect(to: ~p"/")
       |> halt()
     end
   end

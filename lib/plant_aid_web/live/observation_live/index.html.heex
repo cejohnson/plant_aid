@@ -8,7 +8,6 @@
         </.link>
       </:actions>
     </.header>
-
     <ul class="flex flex-wrap text-sm font-medium text-center text-gray-500 border-b-2 border-stone-300 dark:border-stone-700 dark:text-gray-400">
       <li class="mr-2">
         <.link
@@ -107,7 +106,12 @@
 
       <div class="basis-1/6 bg-stone-300">
         <div class="p-2 text-md font-normal">
-          <%= @meta.total_count %> observations match filters
+          <%= case @meta.total_count do %>
+            <% 1  -> %>
+              1 observation matches filters
+            <% count -> %>
+              <%= count %> observations match filters
+          <% end %>
         </div>
         <.live_component
           module={PlantAidWeb.ObservationFilterForm}

@@ -17,9 +17,10 @@ defmodule PlantAid.Application do
       # Start Finch
       {Finch, name: PlantAid.Finch},
       # Start the Endpoint (http/https)
-      PlantAidWeb.Endpoint
+      PlantAidWeb.Endpoint,
       # Start a worker by calling: PlantAid.Worker.start_link(arg)
       # {PlantAid.Worker, arg}
+      PlantAid.ConnectionMonitor
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
