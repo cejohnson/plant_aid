@@ -153,6 +153,11 @@ defmodule PlantAid.Accounts.User do
     |> validate_password(opts)
   end
 
+  def name_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:name, :preferred_name])
+  end
+
   @doc """
   Confirms the account by setting `confirmed_at`.
   """

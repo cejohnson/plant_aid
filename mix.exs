@@ -53,11 +53,12 @@ defmodule PlantAid.MixProject do
       {:gettext, "~> 0.20"},
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
-      # Specific project dependencies
+      # General additional dependencies
       {:bodyguard, "~> 2.4"},
+      {:ecto_psql_extras, "~> 0.6"},
+      # Specific project dependencies
       {:geo_postgis, "~> 3.4"},
       {:nimble_csv, "~> 1.2"},
-      {:ecto_psql_extras, "~> 0.6"},
       {:flop, "~> 0.19"},
       {:flop_phoenix, "~> 0.18"}
     ]

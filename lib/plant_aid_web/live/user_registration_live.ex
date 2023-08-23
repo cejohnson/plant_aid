@@ -1,6 +1,8 @@
 defmodule PlantAidWeb.UserRegistrationLive do
   use PlantAidWeb, :live_view
 
+  require Logger
+
   alias PlantAid.Accounts
   alias PlantAid.Accounts.User
 
@@ -33,6 +35,8 @@ defmodule PlantAidWeb.UserRegistrationLive do
 
         <.input field={@form[:email]} type="email" label="Email" required />
         <.input field={@form[:password]} type="password" label="Password" required />
+        <.input field={@form[:name]} type="text" label="Name" />
+        <.input field={@form[:preferred_name]} type="text" label="Preferred Name" />
 
         <:actions>
           <.button phx-disable-with="Creating account..." class="w-full">Create an account</.button>
@@ -56,6 +60,8 @@ defmodule PlantAidWeb.UserRegistrationLive do
   def handle_event("save", %{"user" => user_params}, socket) do
     case Accounts.register_user(user_params) do
       {:ok, user} ->
+        Logger.info("New user: #{user.email}")
+
         {:ok, _} =
           Accounts.deliver_user_confirmation_instructions(
             user,
@@ -63,7 +69,11 @@ defmodule PlantAidWeb.UserRegistrationLive do
           )
 
         changeset = Accounts.change_user_registration(user)
-        {:noreply, socket |> assign(trigger_submit: true) |> assign_form(changeset)}
+
+        {:noreply,
+         socket
+         |> assign(trigger_submit: true)
+         |> assign_form(changeset)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, socket |> assign(check_errors: true) |> assign_form(changeset)}

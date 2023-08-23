@@ -5,7 +5,11 @@ defmodule PlantAidWeb.UserSessionController do
   alias PlantAidWeb.UserAuth
 
   def create(conn, %{"_action" => "registered"} = params) do
-    create(conn, params, "Account created successfully!")
+    create(
+      conn,
+      params,
+      "Account created successfully! Please confirm your email address to ensure you don't lose access to your account."
+    )
   end
 
   def create(conn, %{"_action" => "password_updated"} = params) do

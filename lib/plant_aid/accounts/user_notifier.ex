@@ -8,7 +8,7 @@ defmodule PlantAid.Accounts.UserNotifier do
     email =
       new()
       |> to(recipient)
-      |> from({"PlantAid", "contact@example.com"})
+      |> from({"PlantAid", "noreply@plant-aid.org"})
       |> subject(subject)
       |> text_body(body)
 

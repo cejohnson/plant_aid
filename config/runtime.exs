@@ -138,4 +138,7 @@ if config_env() == :prod do
   #     config :swoosh, :api_client, Swoosh.ApiClient.Hackney
   #
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
+  config :plant_aid, PlantAid.Mailer,
+    adapter: Swoosh.Adapters.Brevo,
+    api_key: System.get_env("EMAIL_BREVO_API_KEY")
 end

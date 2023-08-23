@@ -320,6 +320,17 @@ defmodule PlantAid.Accounts do
     end
   end
 
+  def change_user_name(user, attrs \\ %{}) do
+    User.name_changeset(user, attrs)
+  end
+
+  def update_user_name(user, password, attrs) do
+    user
+    |> User.name_changeset(attrs)
+    |> User.validate_current_password(password)
+    |> Repo.update()
+  end
+
   ## Session
 
   @doc """

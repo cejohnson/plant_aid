@@ -217,8 +217,7 @@ defmodule PlantAidWeb.UserAuth do
   end
 
   def require_admin(conn, _opts) do
-    if conn.assigns[:current_user] &&
-         User.has_role?(conn.assigns[:current_user], [:admin, :superuser]) do
+    if User.has_role?(conn.assigns[:current_user], [:admin, :superuser]) do
       conn
     else
       conn
@@ -229,7 +228,7 @@ defmodule PlantAidWeb.UserAuth do
   end
 
   def require_superuser(conn, _opts) do
-    if conn.assigns[:current_user] && User.has_role?(conn.assigns[:current_user], :superuser) do
+    if User.has_role?(conn.assigns[:current_user], :superuser) do
       conn
     else
       conn
