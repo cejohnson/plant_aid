@@ -75,6 +75,7 @@ defmodule PlantAid.MixProject do
       setup: ["deps.get", "ecto.setup"],
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup", "run priv/repo/seeds/users.exs"],
+      "ecto.import": [&import_data/1],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       "assets.deploy": [
         "tailwind default --minify",
@@ -82,5 +83,24 @@ defmodule PlantAid.MixProject do
         "phx.digest"
       ]
     ]
+  end
+
+  defp import_data(path) do
+    IO.inspect(path, label: "Importing data from")
+
+    Mix.Task.run(
+      :run,
+      ["scripts/import/usa_blight_import.exs", Path.join(path, "usa_blight")]
+    )
+
+    Mix.Task.run(
+      :run,
+      ["scripts/import/npdn_import.exs", Path.join(path, "NPDNLBDataDump")]
+    )
+
+    Mix.Task.run(
+      :run,
+      ["scripts/import/cucurbit_import.exs", Path.join(path, "cucurbit_downy_mildew")]
+    )
   end
 end
