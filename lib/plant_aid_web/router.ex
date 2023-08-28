@@ -114,6 +114,8 @@ defmodule PlantAidWeb.Router do
 
       live "/users/confirm/:token", UserConfirmationLive, :edit
       live "/users/confirm", UserConfirmationInstructionsLive, :new
+
+      live "/users/invite/:token", UserAcceptInviteLive, :edit
     end
   end
 

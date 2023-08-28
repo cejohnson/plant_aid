@@ -64,7 +64,6 @@ defmodule PlantAidWeb.UserSettingsLive do
 
     <.simple_form for={@name_form} id="name_form" phx-submit="update_name" phx-change="validate_name">
       <.input field={@name_form[:name]} type="text" label="Name" />
-      <.input field={@name_form[:preferred_name]} type="text" label="Preferred Name" />
       <.input
         field={@name_form[:current_password]}
         name="current_password"

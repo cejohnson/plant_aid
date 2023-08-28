@@ -2,6 +2,14 @@
   User <%= @user.id %>
 
   <:actions>
+    <.button
+      type="button"
+      class="bg-stone-500"
+      phx-click="send_invitation"
+      phx-disable-with="Sending Invitation..."
+    >
+      Send Invitation Email
+    </.button>
     <.link patch={~p"/admin/users/#{@user}/show/edit"} phx-click={JS.push_focus()}>
       <.button>Edit user</.button>
     </.link>
@@ -11,11 +19,19 @@
 <.list>
   <:item title="Name"><%= @user.name %></:item>
   <:item title="Email"><%= @user.email %></:item>
-  <:item title="Roles"><%= @user.roles |> Enum.map(fn r -> 
-                  r |> Atom.to_string() |> String.capitalize()
-                end) |> Enum.join(", ") %></:item>
-       <:item title="Last Seen"><%= @user.last_seen %></:item>
-       <:item title="Confirmed At"><%= @user.confirmed_at %></:item>
+  <:item title="Roles">
+    <%= @user.roles
+    |> Enum.map(fn r ->
+      r |> Atom.to_string() |> String.capitalize()
+    end)
+    |> Enum.join(", ") %>
+  </:item>
+  <:item title="Invited At"><%= @user.invited_at %></:item>
+  <:item title="Confirmed At"><%= @user.confirmed_at %></:item>
+  <:item title="Last Seen"><%= @user.last_seen %></:item>
+  <:item title="Metadata">
+    <%= @user.metadata && Jason.encode!(@user.metadata) %>
+  </:item>
 </.list>
 
 <.back navigate={~p"/admin/users"}>Back to users</.back>

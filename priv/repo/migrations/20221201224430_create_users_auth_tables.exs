@@ -7,9 +7,9 @@ defmodule PlantAid.Repo.Migrations.CreateUsersAuthTables do
     create table(:users) do
       add :email, :citext, null: false
       add :hashed_password, :string
-      add :confirmed_at, :naive_datetime
+      add :invited_at, :utc_datetime
+      add :confirmed_at, :utc_datetime
       add :name, :string
-      add :preferred_name, :string
       add :roles, {:array, :string}, null: false, default: []
       add :metadata, :map, null: false, default: %{}
       timestamps()

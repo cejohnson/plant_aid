@@ -466,4 +466,59 @@ defmodule PlantAid.Accounts do
       {:error, :user, changeset, _} -> {:error, changeset}
     end
   end
+
+  ## User invites
+
+  @doc ~S"""
+  Delivers the invite email to the given user.
+
+  ## Examples
+
+      iex> deliver_user_invite(user, &url(~p"/users/invite/#{&1}"))
+      {:ok, %{to: ..., body: ...}}
+
+  """
+  def deliver_user_invite(%User{} = user, %User{} = invited_by, accept_invite_url_fun)
+      when is_function(accept_invite_url_fun, 1) do
+    {encoded_token, user_token} = UserToken.build_email_token(user, "invite")
+
+    changeset = Ecto.Changeset.change(user, %{invited_at: DateTime.utc_now(:second)})
+
+    Ecto.Multi.new()
+    |> Ecto.Multi.update(:user, changeset)
+    |> Ecto.Multi.insert(:tokens, user_token)
+    |> Repo.transaction()
+
+    UserNotifier.deliver_invite_instructions(
+      user,
+      invited_by,
+      accept_invite_url_fun.(encoded_token)
+    )
+  end
+
+  def get_user_by_invite_token(token) do
+    with {:ok, query} <- UserToken.verify_email_token_query(token, "invite"),
+         %User{} = user <- Repo.one(query) do
+      user
+    else
+      _ -> nil
+    end
+  end
+
+  @doc """
+  Accepts an invitation by the given token.
+
+  If the token matches, the user account is marked as confirmed
+  and the token is deleted.
+  """
+  def accept_user_invite(user, attrs) do
+    Ecto.Multi.new()
+    |> Ecto.Multi.update(:user, User.accept_invite_changeset(user, attrs))
+    |> Ecto.Multi.delete_all(:tokens, UserToken.user_and_contexts_query(user, ["invite"]))
+    |> Repo.transaction()
+    |> case do
+      {:ok, %{user: user}} -> {:ok, user}
+      {:error, :user, changeset, _} -> {:error, changeset}
+    end
+  end
 end

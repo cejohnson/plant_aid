@@ -20,8 +20,8 @@ defmodule PlantAid.Accounts.User do
       :last_seen
     ],
     default_order: %{
-      order_by: [:last_seen],
-      order_directions: [:desc_nulls_last]
+      order_by: [:last_seen, :name],
+      order_directions: [:desc_nulls_last, :asc_nulls_last]
     },
     adapter_opts: [
       join_fields: [
@@ -38,10 +38,10 @@ defmodule PlantAid.Accounts.User do
     field :email, :string
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
+    field :invited_at, :utc_datetime
     field :confirmed_at, :utc_datetime
     field :roles, {:array, Ecto.Enum}, values: [:superuser, :admin, :researcher], default: []
     field :name, :string
-    field :preferred_name, :string
     field :metadata, :map
     field :last_seen, :date, virtual: true
 
@@ -73,7 +73,7 @@ defmodule PlantAid.Accounts.User do
   """
   def registration_changeset(user, attrs, opts \\ []) do
     user
-    |> cast(attrs, [:email, :password, :name, :preferred_name])
+    |> cast(attrs, [:email, :password, :name])
     |> validate_email(opts)
     |> validate_password(opts)
   end
@@ -155,7 +155,7 @@ defmodule PlantAid.Accounts.User do
 
   def name_changeset(user, attrs) do
     user
-    |> cast(attrs, [:name, :preferred_name])
+    |> cast(attrs, [:name])
   end
 
   @doc """
@@ -164,6 +164,15 @@ defmodule PlantAid.Accounts.User do
   def confirm_changeset(user) do
     now = DateTime.utc_now(:second)
     change(user, confirmed_at: now)
+  end
+
+  def accept_invite_changeset(user, attrs, opts \\ []) do
+    now = DateTime.utc_now(:second)
+
+    user
+    |> cast(attrs, [:password, :name])
+    |> validate_password(opts)
+    |> put_change(:confirmed_at, now)
   end
 
   @doc """
@@ -195,7 +204,7 @@ defmodule PlantAid.Accounts.User do
 
   def changeset(user, attrs, opts \\ []) do
     user
-    |> cast(attrs, [:name, :preferred_name, :email, :roles])
+    |> cast(attrs, [:name, :email, :roles])
     |> validate_email(opts)
   end
 

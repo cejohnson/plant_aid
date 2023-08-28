@@ -18,6 +18,14 @@ defmodule PlantAidWeb.UserSessionController do
     |> create(params, "Password updated successfully!")
   end
 
+  def create(conn, %{"_action" => "invitation_accepted"} = params) do
+    create(
+      conn,
+      params,
+      "Setup complete!"
+    )
+  end
+
   def create(conn, params) do
     create(conn, params, "Welcome back!")
   end

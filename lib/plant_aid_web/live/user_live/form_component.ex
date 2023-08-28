@@ -20,10 +20,12 @@ defmodule PlantAidWeb.UserLive.FormComponent do
         phx-change="validate"
         phx-submit="save"
       >
-        <.input field={@form[:name]} type="text" label="Name" />
-        <.input field={@form[:preferred_name]} type="text" label="Preferred Name" />
         <.input field={@form[:email]} type="email" label="Email" />
+        <.input field={@form[:name]} type="text" label="Name" />
         <.input field={@form[:roles]} type="select" multiple label="Roles" options={@role_options} />
+        <%= if @id == :new do %>
+          <.input field={@form[:invite]} type="checkbox" label="Send Invitation Email" />
+        <% end %>
 
         <:actions>
           <.button phx-disable-with="Saving...">Save User</.button>
@@ -87,6 +89,15 @@ defmodule PlantAidWeb.UserLive.FormComponent do
     with :ok <- Bodyguard.permit(Accounts, :create_user, socket.assigns.current_user) do
       case Accounts.create_user(user_params) do
         {:ok, user} ->
+          if %{"invite" => "true"} == user_params do
+            {:ok, _} =
+              Accounts.deliver_user_invite(
+                user,
+                socket.assigns.current_user,
+                &url(~p"/users/invite/#{&1}")
+              )
+          end
+
           notify_parent({:saved, user})
 
           {:noreply,

@@ -28,4 +28,24 @@ defmodule PlantAidWeb.UserLive.Show do
 
   defp page_title(:show), do: "Show User"
   defp page_title(:edit), do: "Edit User"
+
+  @impl true
+  def handle_event("send_invitation", _, socket) do
+    user = socket.assigns.user
+
+    case Accounts.deliver_user_invite(
+           user,
+           socket.assigns.current_user,
+           &url(~p"/users/invite/#{&1}")
+         ) do
+      {:ok, _} ->
+        {:noreply,
+         socket
+         |> assign(:user, Accounts.get_user!(user.id))
+         |> put_flash(:info, "Invitation sent.")}
+
+      {:error, _} ->
+        {:noreply, socket |> put_flash(:error, "Something went wrong.")}
+    end
+  end
 end
