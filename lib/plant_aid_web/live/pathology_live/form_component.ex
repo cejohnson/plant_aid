@@ -13,15 +13,14 @@ defmodule PlantAidWeb.PathologyLive.FormComponent do
       </.header>
 
       <.simple_form
-        :let={f}
-        for={@changeset}
+        for={@form}
         id="pathology-form"
         phx-target={@myself}
         phx-change="validate"
         phx-submit="save"
       >
-        <.input field={{f, :common_name}} type="text" label="common_name" />
-        <.input field={{f, :scientific_name}} type="text" label="scientific_name" />
+        <.input field={@form[:common_name]} type="text" label="Common Name" />
+        <.input field={@form[:scientific_name]} type="text" label="Scientific Name" />
         <:actions>
           <.button phx-disable-with="Saving...">Save Pathology</.button>
         </:actions>
@@ -37,7 +36,7 @@ defmodule PlantAidWeb.PathologyLive.FormComponent do
     {:ok,
      socket
      |> assign(assigns)
-     |> assign(:changeset, changeset)}
+     |> assign_form(changeset)}
   end
 
   @impl true
@@ -47,7 +46,7 @@ defmodule PlantAidWeb.PathologyLive.FormComponent do
       |> Pathologies.change_pathology(pathology_params)
       |> Map.put(:action, :validate)
 
-    {:noreply, assign(socket, :changeset, changeset)}
+    {:noreply, socket |> assign_form(changeset)}
   end
 
   def handle_event("save", %{"pathology" => pathology_params}, socket) do
@@ -55,28 +54,46 @@ defmodule PlantAidWeb.PathologyLive.FormComponent do
   end
 
   defp save_pathology(socket, :edit, pathology_params) do
-    case Pathologies.update_pathology(socket.assigns.pathology, pathology_params) do
-      {:ok, _pathology} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Pathology updated successfully")
-         |> push_navigate(to: socket.assigns.navigate)}
+    current_user = socket.assigns.current_user
 
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, :changeset, changeset)}
+    with :ok <- Bodyguard.permit(Pathologies, :update_pathology, current_user) do
+      case Pathologies.update_pathology(socket.assigns.pathology, pathology_params) do
+        {:ok, pathology} ->
+          notify_parent({:saved, pathology})
+
+          {:noreply,
+           socket
+           |> put_flash(:info, "Pathology updated successfully")
+           |> push_patch(to: socket.assigns.patch)}
+
+        {:error, %Ecto.Changeset{} = changeset} ->
+          {:noreply, assign_form(socket, changeset)}
+      end
     end
   end
 
   defp save_pathology(socket, :new, pathology_params) do
-    case Pathologies.create_pathology(pathology_params) do
-      {:ok, _pathology} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Pathology created successfully")
-         |> push_navigate(to: socket.assigns.navigate)}
+    current_user = socket.assigns.current_user
 
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, changeset: changeset)}
+    with :ok <- Bodyguard.permit(Pathologies, :create_pathology, current_user) do
+      case Pathologies.create_pathology(pathology_params) do
+        {:ok, pathology} ->
+          notify_parent({:saved, pathology})
+
+          {:noreply,
+           socket
+           |> put_flash(:info, "Pathology created successfully")
+           |> push_patch(to: socket.assigns.patch)}
+
+        {:error, %Ecto.Changeset{} = changeset} ->
+          {:noreply, assign(socket, changeset: changeset)}
+      end
     end
   end
+
+  defp assign_form(socket, %Ecto.Changeset{} = changeset) do
+    assign(socket, :form, to_form(changeset))
+  end
+
+  defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 end

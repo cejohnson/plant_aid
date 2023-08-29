@@ -13,30 +13,14 @@ defmodule PlantAidWeb.HostLive.FormComponent do
       </.header>
 
       <.simple_form
-        :let={f}
-        for={@changeset}
+        for={@form}
         id="host-form"
         phx-target={@myself}
         phx-change="validate"
         phx-submit="save"
       >
-        <.input field={{f, :common_name}} type="text" label="common_name" />
-        <.input field={{f, :scientific_name}} type="text" label="scientific_name" />
-
-        <%= for {fp, i} <- Phoenix.HTML.Form.inputs_for(f, :varieties) |> Enum.with_index() do %>
-          <%= Phoenix.HTML.Form.hidden_inputs_for(fp) %>
-          <.input field={{fp, :name}} type="text" />
-          <%= cond do %>
-            <% fp.data.id -> %>
-              <.input field={{fp, :delete}} type="checkbox" label="delete" />
-            <% true -> %>
-              <.button form phx-target={@myself} phx-click="remove-variety" value={i}>
-                Delete
-              </.button>
-          <% end %>
-        <% end %>
-        <.button phx-click="add-variety" form phx-target={@myself}>Add Variety</.button>
-
+        <.input field={@form[:common_name]} type="text" label="Common Name" />
+        <.input field={@form[:scientific_name]} type="text" label="Scientific Name" />
         <:actions>
           <.button phx-disable-with="Saving...">Save Host</.button>
         </:actions>
@@ -52,7 +36,7 @@ defmodule PlantAidWeb.HostLive.FormComponent do
     {:ok,
      socket
      |> assign(assigns)
-     |> assign(:changeset, changeset)}
+     |> assign_form(changeset)}
   end
 
   @impl true
@@ -62,66 +46,54 @@ defmodule PlantAidWeb.HostLive.FormComponent do
       |> Hosts.change_host(host_params)
       |> Map.put(:action, :validate)
 
-    {:noreply, assign(socket, :changeset, changeset)}
+    {:noreply, socket |> assign_form(changeset)}
   end
 
   def handle_event("save", %{"host" => host_params}, socket) do
     save_host(socket, socket.assigns.action, host_params)
   end
 
-  def handle_event("add-variety", _, socket) do
-    varieties =
-      Map.get(socket.assigns.changeset.changes, :varieties, socket.assigns.host.varieties)
-
-    varieties = varieties ++ [Hosts.change_host_variety(%PlantAid.Hosts.HostVariety{})]
-
-    changeset =
-      socket.assigns.changeset
-      |> Ecto.Changeset.put_assoc(:varieties, varieties)
-
-    {:noreply, assign(socket, changeset: changeset)}
-  end
-
-  def handle_event("remove-variety", %{"value" => i}, socket) do
-    IO.inspect(i, label: "params")
-    index = String.to_integer(i)
-
-    {removed, varieties} =
-      Map.get(socket.assigns.changeset.changes, :varieties, socket.assigns.host.varieties)
-      |> List.pop_at(index)
-
-    # variety = Enum.at(varieties, index)
-
-    IO.inspect(removed, label: "removed")
-
-    changeset = socket.assigns.changeset |> Ecto.Changeset.put_assoc(:varieties, varieties)
-
-    {:noreply, assign(socket, changeset: changeset)}
-  end
-
   defp save_host(socket, :edit, host_params) do
-    case Hosts.update_host(socket.assigns.host, host_params) do
-      {:ok, _host} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Host updated successfully")
-         |> push_navigate(to: socket.assigns.navigate)}
+    current_user = socket.assigns.current_user
 
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, :changeset, changeset)}
+    with :ok <- Bodyguard.permit(Hosts, :update_host, current_user) do
+      case Hosts.update_host(socket.assigns.host, host_params) do
+        {:ok, host} ->
+          notify_parent({:saved, host})
+
+          {:noreply,
+           socket
+           |> put_flash(:info, "Host updated successfully")
+           |> push_patch(to: socket.assigns.patch)}
+
+        {:error, %Ecto.Changeset{} = changeset} ->
+          {:noreply, assign_form(socket, changeset)}
+      end
     end
   end
 
   defp save_host(socket, :new, host_params) do
-    case Hosts.create_host(host_params) do
-      {:ok, _host} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Host created successfully")
-         |> push_navigate(to: socket.assigns.navigate)}
+    current_user = socket.assigns.current_user
 
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, changeset: changeset)}
+    with :ok <- Bodyguard.permit(Hosts, :create_host, current_user) do
+      case Hosts.create_host(host_params) do
+        {:ok, host} ->
+          notify_parent({:saved, host})
+
+          {:noreply,
+           socket
+           |> put_flash(:info, "Host created successfully")
+           |> push_patch(to: socket.assigns.patch)}
+
+        {:error, %Ecto.Changeset{} = changeset} ->
+          {:noreply, assign(socket, changeset: changeset)}
+      end
     end
   end
+
+  defp assign_form(socket, %Ecto.Changeset{} = changeset) do
+    assign(socket, :form, to_form(changeset))
+  end
+
+  defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 end

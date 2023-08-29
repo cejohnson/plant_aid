@@ -53,9 +53,7 @@ defmodule PlantAidWeb.UserLive.FormComponent do
       |> Accounts.change_user(user_params)
       |> Map.put(:action, :validate)
 
-    {:noreply,
-     socket
-     |> assign_form(changeset)}
+    {:noreply, assign_form(socket, changeset)}
   end
 
   def handle_event("save", %{"user" => user_params}, socket) do

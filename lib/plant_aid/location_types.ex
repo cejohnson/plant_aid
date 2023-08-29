@@ -2,11 +2,33 @@ defmodule PlantAid.LocationTypes do
   @moduledoc """
   The LocationTypes context.
   """
+  @behaviour Bodyguard.Policy
 
   import Ecto.Query, warn: false
   alias PlantAid.Repo
 
+  alias PlantAid.Accounts.User
   alias PlantAid.LocationTypes.LocationType
+
+  def authorize(:list_location_types, %User{} = user, _) do
+    User.has_role?(user, [:superuser, :admin])
+  end
+
+  def authorize(:create_location_type, %User{} = user, _) do
+    User.has_role?(user, [:superuser, :admin])
+  end
+
+  def authorize(:get_location_type, %User{} = user, _) do
+    User.has_role?(user, [:superuser, :admin])
+  end
+
+  def authorize(:update_location_type, %User{} = user, _) do
+    User.has_role?(user, [:superuser, :admin])
+  end
+
+  def authorize(:delete_location_type, %User{} = user, _) do
+    User.has_role?(user, [:superuser, :admin])
+  end
 
   @doc """
   Returns the list of location_types.

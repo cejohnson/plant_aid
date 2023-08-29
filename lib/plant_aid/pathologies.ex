@@ -2,11 +2,33 @@ defmodule PlantAid.Pathologies do
   @moduledoc """
   The Pathologies context.
   """
+  @behaviour Bodyguard.Policy
 
   import Ecto.Query, warn: false
   alias PlantAid.Repo
 
+  alias PlantAid.Accounts.User
   alias PlantAid.Pathologies.Pathology
+
+  def authorize(:list_pathologies, %User{} = user, _) do
+    User.has_role?(user, [:superuser, :admin])
+  end
+
+  def authorize(:create_pathology, %User{} = user, _) do
+    User.has_role?(user, [:superuser, :admin])
+  end
+
+  def authorize(:get_pathology, %User{} = user, _) do
+    User.has_role?(user, [:superuser, :admin])
+  end
+
+  def authorize(:update_pathology, %User{} = user, _) do
+    User.has_role?(user, [:superuser, :admin])
+  end
+
+  def authorize(:delete_pathology, %User{} = user, _) do
+    User.has_role?(user, [:superuser, :admin])
+  end
 
   @doc """
   Returns the list of pathologies.

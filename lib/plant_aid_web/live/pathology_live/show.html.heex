@@ -2,7 +2,7 @@
   Pathology <%= @pathology.id %>
   <:subtitle>This is a pathology record from your database.</:subtitle>
   <:actions>
-    <.link patch={~p"/pathologies/#{@pathology}/show/edit"} phx-click={JS.push_focus()}>
+    <.link patch={~p"/admin/pathologies/#{@pathology}/show/edit"} phx-click={JS.push_focus()}>
       <.button>Edit pathology</.button>
     </.link>
   </:actions>
@@ -13,15 +13,21 @@
   <:item title="Scientific name"><%= @pathology.scientific_name %></:item>
 </.list>
 
-<.back navigate={~p"/pathologies"}>Back to pathologies</.back>
+<.back navigate={~p"/admin/pathologies"}>Back to Pathologies</.back>
 
-<.modal :if={@live_action == :edit} id="pathology-modal" show on_cancel={JS.patch(~p"/pathologies/#{@pathology}")}>
+<.modal
+  :if={@live_action == :edit}
+  id="pathology-modal"
+  show
+  on_cancel={JS.patch(~p"/admin/pathologies/#{@pathology}")}
+>
   <.live_component
     module={PlantAidWeb.PathologyLive.FormComponent}
     id={@pathology.id}
     title={@page_title}
     action={@live_action}
+    current_user={@current_user}
     pathology={@pathology}
-    navigate={~p"/pathologies/#{@pathology}"}
+    patch={~p"/admin/pathologies/#{@pathology}"}
   />
 </.modal>

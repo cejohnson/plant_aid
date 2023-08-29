@@ -6,7 +6,11 @@ defmodule PlantAidWeb.PathologyLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, :pathologies, list_pathologies())}
+    current_user = socket.assigns.current_user
+
+    with :ok <- Bodyguard.permit(Pathologies, :list_pathologies, current_user) do
+      {:ok, stream(socket, :pathologies, Pathologies.list_pathologies())}
+    end
   end
 
   @impl true
@@ -33,14 +37,19 @@ defmodule PlantAidWeb.PathologyLive.Index do
   end
 
   @impl true
-  def handle_event("delete", %{"id" => id}, socket) do
-    pathology = Pathologies.get_pathology!(id)
-    {:ok, _} = Pathologies.delete_pathology(pathology)
-
-    {:noreply, assign(socket, :pathologies, list_pathologies())}
+  def handle_info({PlantAidWeb.PathologyLive.FormComponent, {:saved, pathology}}, socket) do
+    {:noreply, stream_insert(socket, :pathologies, pathology)}
   end
 
-  defp list_pathologies do
-    Pathologies.list_pathologies()
+  @impl true
+  def handle_event("delete", %{"id" => id}, socket) do
+    current_user = socket.assigns.current_user
+    pathology = Pathologies.get_pathology!(id)
+
+    with :ok <- Bodyguard.permit(Pathologies, :delete_pathology, current_user) do
+      {:ok, _} = Pathologies.delete_pathology(pathology)
+
+      {:noreply, stream_delete(socket, :pathologies, pathology)}
+    end
   end
 end

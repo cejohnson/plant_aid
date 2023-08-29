@@ -1,23 +1,30 @@
 <.header>
   Listing Pathologies
   <:actions>
-    <.link patch={~p"/pathologies/new"}>
-      <.button>New Pathology</.button>
+    <.link patch={~p"/admin/pathologies/new"}>
+      <.button class="bg-lime-600">New Pathology</.button>
     </.link>
   </:actions>
 </.header>
 
-<.table id="pathologies" rows={@pathologies} row_click={&JS.navigate(~p"/pathologies/#{&1}")}>
-  <:col :let={pathology} label="Common name"><%= pathology.common_name %></:col>
-  <:col :let={pathology} label="Scientific name"><%= pathology.scientific_name %></:col>
-  <:action :let={pathology}>
+<.table
+  id="pathologies"
+  rows={@streams.pathologies}
+  row_click={fn {_id, pathology} -> JS.navigate(~p"/admin/pathologies/#{pathology}") end}
+>
+  <:col :let={{_id, pathology}} label="Common name"><%= pathology.common_name %></:col>
+  <:col :let={{_id, pathology}} label="Scientific name"><%= pathology.scientific_name %></:col>
+  <:action :let={{_id, pathology}}>
     <div class="sr-only">
-      <.link navigate={~p"/pathologies/#{pathology}"}>Show</.link>
+      <.link navigate={~p"/admin/pathologies/#{pathology}"}>Show</.link>
     </div>
-    <.link patch={~p"/pathologies/#{pathology}/edit"}>Edit</.link>
+    <.link patch={~p"/admin/pathologies/#{pathology}/edit"}>Edit</.link>
   </:action>
-  <:action :let={pathology}>
-    <.link phx-click={JS.push("delete", value: %{id: pathology.id})} data-confirm="Are you sure?">
+  <:action :let={{id, pathology}}>
+    <.link
+      phx-click={JS.push("delete", value: %{id: pathology.id}) |> hide("##{id}")}
+      data-confirm="Are you sure?"
+    >
       Delete
     </.link>
   </:action>
@@ -27,14 +34,15 @@
   :if={@live_action in [:new, :edit]}
   id="pathology-modal"
   show
-  on_cancel={JS.navigate(~p"/pathologies")}
+  on_cancel={JS.patch(~p"/admin/pathologies")}
 >
   <.live_component
     module={PlantAidWeb.PathologyLive.FormComponent}
     id={@pathology.id || :new}
     title={@page_title}
     action={@live_action}
+    current_user={@current_user}
     pathology={@pathology}
-    navigate={~p"/pathologies"}
+    patch={~p"/admin/pathologies"}
   />
 </.modal>

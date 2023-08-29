@@ -6,7 +6,11 @@ defmodule PlantAidWeb.HostLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, :hosts, list_hosts())}
+    current_user = socket.assigns.current_user
+
+    with :ok <- Bodyguard.permit(Hosts, :list_hosts, current_user) do
+      {:ok, stream(socket, :hosts, Hosts.list_hosts())}
+    end
   end
 
   @impl true
@@ -23,7 +27,7 @@ defmodule PlantAidWeb.HostLive.Index do
   defp apply_action(socket, :new, _params) do
     socket
     |> assign(:page_title, "New Host")
-    |> assign(:host, %Host{varieties: []})
+    |> assign(:host, %Host{})
   end
 
   defp apply_action(socket, :index, _params) do
@@ -33,14 +37,19 @@ defmodule PlantAidWeb.HostLive.Index do
   end
 
   @impl true
-  def handle_event("delete", %{"id" => id}, socket) do
-    host = Hosts.get_host!(id)
-    {:ok, _} = Hosts.delete_host(host)
-
-    {:noreply, assign(socket, :hosts, list_hosts())}
+  def handle_info({PlantAidWeb.HostLive.FormComponent, {:saved, host}}, socket) do
+    {:noreply, stream_insert(socket, :hosts, host)}
   end
 
-  defp list_hosts do
-    Hosts.list_hosts()
+  @impl true
+  def handle_event("delete", %{"id" => id}, socket) do
+    current_user = socket.assigns.current_user
+    host = Hosts.get_host!(id)
+
+    with :ok <- Bodyguard.permit(Hosts, :delete_host, current_user) do
+      {:ok, _} = Hosts.delete_host(host)
+
+      {:noreply, stream_delete(socket, :hosts, host)}
+    end
   end
 end

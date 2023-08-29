@@ -1,23 +1,30 @@
 <.header>
   Listing Hosts
   <:actions>
-    <.link patch={~p"/hosts/new"}>
-      <.button>New Host</.button>
+    <.link patch={~p"/admin/hosts/new"}>
+      <.button class="bg-lime-600">New Host</.button>
     </.link>
   </:actions>
 </.header>
 
-<.table id="hosts" rows={@hosts} row_click={&JS.navigate(~p"/hosts/#{&1}")}>
-  <:col :let={host} label="Common name"><%= host.common_name %></:col>
-  <:col :let={host} label="Scientific name"><%= host.scientific_name %></:col>
-  <:action :let={host}>
+<.table
+  id="hosts"
+  rows={@streams.hosts}
+  row_click={fn {_id, host} -> JS.navigate(~p"/admin/hosts/#{host}") end}
+>
+  <:col :let={{_id, host}} label="Common name"><%= host.common_name %></:col>
+  <:col :let={{_id, host}} label="Scientific name"><%= host.scientific_name %></:col>
+  <:action :let={{_id, host}}>
     <div class="sr-only">
-      <.link navigate={~p"/hosts/#{host}"}>Show</.link>
+      <.link navigate={~p"/admin/hosts/#{host}"}>Show</.link>
     </div>
-    <.link patch={~p"/hosts/#{host}/edit"}>Edit</.link>
+    <.link patch={~p"/admin/hosts/#{host}/edit"}>Edit</.link>
   </:action>
-  <:action :let={host}>
-    <.link phx-click={JS.push("delete", value: %{id: host.id})} data-confirm="Are you sure?">
+  <:action :let={{id, host}}>
+    <.link
+      phx-click={JS.push("delete", value: %{id: host.id}) |> hide("##{id}")}
+      data-confirm="Are you sure?"
+    >
       Delete
     </.link>
   </:action>
@@ -27,14 +34,15 @@
   :if={@live_action in [:new, :edit]}
   id="host-modal"
   show
-  on_cancel={JS.navigate(~p"/hosts")}
+  on_cancel={JS.patch(~p"/admin/hosts")}
 >
   <.live_component
     module={PlantAidWeb.HostLive.FormComponent}
     id={@host.id || :new}
     title={@page_title}
     action={@live_action}
+    current_user={@current_user}
     host={@host}
-    navigate={~p"/hosts"}
+    patch={~p"/admin/hosts"}
   />
 </.modal>

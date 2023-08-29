@@ -2,7 +2,10 @@
   Location type <%= @location_type.id %>
   <:subtitle>This is a location_type record from your database.</:subtitle>
   <:actions>
-    <.link patch={~p"/location_types/#{@location_type}/show/edit"} phx-click={JS.push_focus()}>
+    <.link
+      patch={~p"/admin/location_types/#{@location_type}/show/edit"}
+      phx-click={JS.push_focus()}
+    >
       <.button>Edit location_type</.button>
     </.link>
   </:actions>
@@ -12,15 +15,21 @@
   <:item title="Name"><%= @location_type.name %></:item>
 </.list>
 
-<.back navigate={~p"/location_types"}>Back to location_types</.back>
+<.back navigate={~p"/admin/location_types"}>Back to Location types</.back>
 
-<.modal :if={@live_action == :edit} id="location_type-modal" show on_cancel={JS.patch(~p"/location_types/#{@location_type}")}>
+<.modal
+  :if={@live_action == :edit}
+  id="location_type-modal"
+  show
+  on_cancel={JS.patch(~p"/admin/location_types/#{@location_type}")}
+>
   <.live_component
     module={PlantAidWeb.LocationTypeLive.FormComponent}
     id={@location_type.id}
     title={@page_title}
     action={@live_action}
+    current_user={@current_user}
     location_type={@location_type}
-    navigate={~p"/location_types/#{@location_type}"}
+    patch={~p"/admin/location_types/#{@location_type}"}
   />
 </.modal>

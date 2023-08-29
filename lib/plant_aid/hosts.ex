@@ -2,11 +2,33 @@ defmodule PlantAid.Hosts do
   @moduledoc """
   The Hosts context.
   """
+  @behaviour Bodyguard.Policy
 
   import Ecto.Query, warn: false
   alias PlantAid.Repo
 
+  alias PlantAid.Accounts.User
   alias PlantAid.Hosts.Host
+
+  def authorize(:list_hosts, %User{} = user, _) do
+    User.has_role?(user, [:superuser, :admin])
+  end
+
+  def authorize(:create_host, %User{} = user, _) do
+    User.has_role?(user, [:superuser, :admin])
+  end
+
+  def authorize(:get_host, %User{} = user, _) do
+    User.has_role?(user, [:superuser, :admin])
+  end
+
+  def authorize(:update_host, %User{} = user, _) do
+    User.has_role?(user, [:superuser, :admin])
+  end
+
+  def authorize(:delete_host, %User{} = user, _) do
+    User.has_role?(user, [:superuser, :admin])
+  end
 
   @doc """
   Returns the list of hosts.

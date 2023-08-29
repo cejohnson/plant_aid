@@ -6,7 +6,11 @@ defmodule PlantAidWeb.LocationTypeLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, :location_types, list_location_types())}
+    current_user = socket.assigns.current_user
+
+    with :ok <- Bodyguard.permit(LocationTypes, :list_location_types, current_user) do
+      {:ok, stream(socket, :location_types, LocationTypes.list_location_types())}
+    end
   end
 
   @impl true
@@ -33,14 +37,19 @@ defmodule PlantAidWeb.LocationTypeLive.Index do
   end
 
   @impl true
-  def handle_event("delete", %{"id" => id}, socket) do
-    location_type = LocationTypes.get_location_type!(id)
-    {:ok, _} = LocationTypes.delete_location_type(location_type)
-
-    {:noreply, assign(socket, :location_types, list_location_types())}
+  def handle_info({PlantAidWeb.LocationTypeLive.FormComponent, {:saved, location_type}}, socket) do
+    {:noreply, stream_insert(socket, :location_types, location_type)}
   end
 
-  defp list_location_types do
-    LocationTypes.list_location_types()
+  @impl true
+  def handle_event("delete", %{"id" => id}, socket) do
+    current_user = socket.assigns.current_user
+    location_type = LocationTypes.get_location_type!(id)
+
+    with :ok <- Bodyguard.permit(LocationTypes, :delete_location_type, current_user) do
+      {:ok, _} = LocationTypes.delete_location_type(location_type)
+
+      {:noreply, stream_delete(socket, :location_types, location_type)}
+    end
   end
 end
