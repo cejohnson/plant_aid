@@ -58,6 +58,7 @@ defmodule PlantAidWeb.Router do
       live "/users/log_in", UserLoginLive, :new
       live "/users/reset_password", UserForgotPasswordLive, :new
       live "/users/reset_password/:token", UserResetPasswordLive, :edit
+      live "/users/invite/:token", UserAcceptInviteLive, :edit
     end
 
     post "/users/log_in", UserSessionController, :create
@@ -65,6 +66,8 @@ defmodule PlantAidWeb.Router do
 
   scope "/", PlantAidWeb do
     pipe_through [:browser, :require_authenticated_user]
+
+    get "/observations/:id/print", SampleController, :print
 
     live_session :require_authenticated_user,
       on_mount: [
@@ -78,7 +81,7 @@ defmodule PlantAidWeb.Router do
       live "/observations/new", ObservationLive.Form, :new
       live "/observations/:id/edit", ObservationLive.Form, :edit
       live "/observations/:id", ObservationLive.Show, :show
-      # live "/observations/:id/show/edit", ObservationLive.Show, :edit
+      live "/observations/:id/submit-sample", ObservationLive.Show, :print
     end
   end
 
@@ -96,8 +99,6 @@ defmodule PlantAidWeb.Router do
 
       live "/users/confirm/:token", UserConfirmationLive, :edit
       live "/users/confirm", UserConfirmationInstructionsLive, :new
-
-      live "/users/invite/:token", UserAcceptInviteLive, :edit
     end
   end
 

@@ -87,7 +87,7 @@ defmodule PlantAidWeb.UserLive.FormComponent do
     with :ok <- Bodyguard.permit(Accounts, :create_user, socket.assigns.current_user) do
       case Accounts.create_user(user_params) do
         {:ok, user} ->
-          if %{"invite" => "true"} == user_params do
+          if Map.get(user_params, "invite") == "true" do
             {:ok, _} =
               Accounts.deliver_user_invite(
                 user,

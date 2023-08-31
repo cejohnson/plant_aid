@@ -28,5 +28,5 @@ defmodule PlantAidWeb.ObservationLive.Show do
   end
 
   defp page_title(:show), do: "Show Observation"
-  defp page_title(:edit), do: "Edit Observation"
+  defp page_title(:print), do: "Submit Sample"
 end

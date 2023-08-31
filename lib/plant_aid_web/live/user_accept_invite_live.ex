@@ -6,7 +6,7 @@ defmodule PlantAidWeb.UserAcceptInviteLive do
   def render(assigns) do
     ~H"""
     <div class="mx-auto max-w-sm">
-      <.header class="text-center">Accept Invitation</.header>
+      <.header class="text-center">Complete Account</.header>
 
       <.simple_form
         for={@form}

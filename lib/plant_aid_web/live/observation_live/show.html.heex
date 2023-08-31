@@ -2,6 +2,9 @@
   Observation <%= @observation.id %>
 
   <:actions>
+    <.link patch={~p"/observations/#{@observation}/submit-sample"}>
+      <.button>Submit Sample</.button>
+    </.link>
     <.link navigate={~p"/observations/#{@observation}/edit"} phx-click={JS.push_focus()}>
       <.button>Edit observation</.button>
     </.link>
@@ -56,17 +59,75 @@
 <.back navigate={~p"/observations"}>Back to observations</.back>
 
 <.modal
-  :if={@live_action == :edit}
-  id="observation-modal"
+  :if={@live_action == :print}
+  id="sample-modal"
   show
   on_cancel={JS.patch(~p"/observations/#{@observation}")}
 >
-  <.live_component
-    module={PlantAidWeb.ObservationLive.FormComponent}
-    id={@observation.id}
-    title={@page_title}
-    action={@live_action}
-    observation={@observation}
-    navigate={~p"/observations/#{@observation}"}
-  />
+  <.header>Sample Submission</.header>
+
+  <div class="pb-4">
+    To determine the genotype (strain) of the pathogen you observed, submit a sample following the procedures below.
+  </div>
+  <div class="">Directions:</div>
+  <div id="sample_instructions" class="pb-4">
+    <ol class="list-decimal">
+      <li>
+        <.link navigate={~p"/observations/#{@observation}/print"} target="_blank">
+          Print the information sheet
+        </.link>
+        (button below).
+      </li>
+      <li>
+        Collect sample(s)*.
+        <ol class="list-none">
+          <li>
+            a. A minimum of 5 turgid leaflets** with actively sporulating lesions. Small lesions are best. These leaflets should be collected from several locations within a field when possible. If you can, please send ten leaflets (or multiple whole leaves) so that some leaves can be dried and archived.
+          </li>
+          <li>
+            b. Place the foliage in an air-tight dry plastic (Ziploc) bag with a cushion of air &ndash; so the foliage doesn&rsquo;t get crushed in transit. &nbsp;WRITE the sample number on the bag.
+          </li>
+          <li>
+            c. Send the sample immediately. If you must &ldquo;hold&rdquo; the sample overnight, keep it at 39-50F (4-10C).
+          </li>
+        </ol>
+      </li>
+      <li>
+        Pack sample(s) and information sheet. (<em>It is best to use a small shipping box rather than an envelope.</em>) Include:
+        <ol class="list-decimal">
+          <li>
+            Sample(s)
+          </li>
+          <li>
+            Information sheet
+          </li>
+          <li>
+            IMPORTANT! If you are sending the sample from one state to another (across a state line), you must include a copy of the appropriate APHIS permit. If you do not have this permit, please contact Jean Ristaino (919-515-3257 or jbr@ncsu.edu ) or the lab you are sending the sample to.
+          </li>
+        </ol>
+      </li>
+      <li>
+        <div class="pb-2">Mail the sample via overnight mail to:</div>
+        <div class="">
+          PlantAid (c/o Jean Ristaino) <br /> 2323 Plant Sciences Building, Campus Box 7825 <br />
+          840 Oval Drive <br /> North Carolina State University <br /> Raleigh, NC 27606
+        </div>
+      </li>
+    </ol>
+  </div>
+  <div class="pb-4">
+    If you have questions about the sampling protocol, please see FAQs or contact us.
+  </div>
+
+  <div class="pb-2">
+    * If you suspect multiple sources of pathogen inoculum in a single field, please submit one sample from each area. We will culture some of the isolates we receive, but not all. If there is a special reason that this particular isolate should be cultured, please let us know.
+  </div>
+
+  <div class="pb-2">
+    ** It is best to send leaf tissue when possible; we have had greater success with our assays using leaf tissue rather than fruits or tubers. Also note, taking sporangia directly from leaf tissue will speed up the analysis by at least 5 days. If you do send fruit or tubers, please send them in a separate bag or shipment so that they do not crush the leaf tissue in transit. If you want a rapid identification, it&rsquo;s crucial that there be sporulation from the infected tissue.
+  </div>
+
+  <.link navigate={~p"/observations/#{@observation}/print"} target="_blank">
+    <.button>Print Information Sheet</.button>
+  </.link>
 </.modal>

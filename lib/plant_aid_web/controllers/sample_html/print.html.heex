@@ -1,0 +1,18 @@
+<div class="container mx-auto">
+  <.header>PlantAid Sample</.header>
+
+  <div class="pb-4">
+    Print this information sheet and include it in the box with your sample.
+  </div>
+  <div class="pb-4">
+    <strong>**Write the ID on the sample(s).**</strong>
+  </div>
+
+  <div class="pb-2">ID: <%= @observation.id %></div>
+  <div class="pb-4">Date: <%= @observation.observation_date %></div>
+  <div style="width: 100px;"><%= raw(@qr_code) %></div>
+
+  <script type="text/javascript">
+    print()
+  </script>
+</div>

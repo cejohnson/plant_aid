@@ -60,7 +60,8 @@ defmodule PlantAid.MixProject do
       {:geo_postgis, "~> 3.4"},
       {:nimble_csv, "~> 1.2"},
       {:flop, "~> 0.19"},
-      {:flop_phoenix, "~> 0.18"}
+      {:flop_phoenix, "~> 0.18"},
+      {:qr_code, "~> 3.0.0"}
     ]
   end
 
