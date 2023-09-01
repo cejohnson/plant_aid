@@ -7,20 +7,6 @@ defmodule PlantAid.ConnectionMonitor do
     GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
   end
 
-  def on_mount(:monitor_connection, _params, _session, socket) do
-    if socket.assigns.current_user do
-      user_id = socket.assigns.current_user.id
-
-      if socket.root_pid do
-        GenServer.call(__MODULE__, {:monitor, socket.root_pid, user_id})
-      else
-        insert(user_id, :http)
-      end
-    end
-
-    {:cont, socket}
-  end
-
   def monitor(pid, user_id) do
     GenServer.call(__MODULE__, {:monitor, pid, user_id})
   end

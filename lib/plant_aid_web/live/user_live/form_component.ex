@@ -28,7 +28,7 @@ defmodule PlantAidWeb.UserLive.FormComponent do
         <% end %>
 
         <:actions>
-          <.button phx-disable-with="Saving...">Save User</.button>
+          <.button variant="primary" phx-disable-with="Saving...">Save User</.button>
         </:actions>
       </.simple_form>
     </div>

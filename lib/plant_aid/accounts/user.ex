@@ -27,8 +27,8 @@ defmodule PlantAid.Accounts.User do
       join_fields: [
         last_seen: [
           binding: :last_seen,
-          field: :last_seen,
-          ecto_type: :date
+          field: :timestamp,
+          ecto_type: :utc_datetime
         ]
       ]
     ]
@@ -43,7 +43,10 @@ defmodule PlantAid.Accounts.User do
     field :roles, {:array, Ecto.Enum}, values: [:superuser, :admin, :researcher], default: []
     field :name, :string
     field :metadata, :map
-    field :last_seen, :date, virtual: true
+
+    # has_many :connection_events, PlantAid.Accounts.UserConnectionEvent
+
+    field :last_seen, :utc_datetime, virtual: true
 
     timestamps()
   end

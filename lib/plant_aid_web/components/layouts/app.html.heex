@@ -11,6 +11,17 @@
           <li class="text-[0.8125rem] leading-6 text-zinc-900">
             <%= @current_user.email %>
           </li>
+          <%= if PlantAid.Accounts.User.has_role?(@current_user, [:superuser]) do %>
+            <li>
+              <.link
+                navigate={~p"/superuser/dashboard"}
+                target="_blank"
+                class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+              >
+                Dashboard
+              </.link>
+            </li>
+          <% end %>
           <%= if PlantAid.Accounts.User.has_role?(@current_user, [:superuser, :admin]) do %>
             <li>
               <.link

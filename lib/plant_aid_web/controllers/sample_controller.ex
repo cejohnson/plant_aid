@@ -13,7 +13,12 @@ defmodule PlantAidWeb.SampleController do
       {:ok, qr_code} =
         url |> QRCode.create(:low) |> QRCode.render(:svg, %QRCode.Render.SvgSettings{scale: 5})
 
-      render(conn, :print, layout: false, observation: observation, url: url, qr_code: qr_code)
+      render(conn, :print,
+        layout: false,
+        page_title: "Sample Information",
+        observation: observation,
+        qr_code: qr_code
+      )
     end
   end
 end

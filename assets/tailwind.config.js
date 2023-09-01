@@ -14,9 +14,15 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        brand: "#FD4F00",
+        primary: "#65A30D",
       }
     },
+    listStyleType: {
+      none: 'none',
+      disc: 'disc',
+      decimal: 'decimal',
+      alpha: 'lower-alpha'
+    }
   },
   plugins: [
     require("@tailwindcss/forms"),

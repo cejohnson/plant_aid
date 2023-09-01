@@ -373,7 +373,7 @@ Uploaders.S3 = function (entries, onViewError) {
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {
-  params: { _csrf_token: csrfToken },
+  params: { _csrf_token: csrfToken, user_token: window.userToken },
   hooks: Hooks,
   uploaders: Uploaders
 })
@@ -422,6 +422,15 @@ window.addEventListener("phx:page-loading-stop", info => topbar.hide())
 
 // connect if there are any LiveViews on the page
 liveSocket.connect()
+
+if (window.userToken) {
+  let socket = new Socket("/socket", { params: { user_token: window.userToken } })
+  socket.connect()
+  let channel = socket.channel("presence", {})
+  channel.join().receive("ok", resp => { console.log("Socket connected", resp) })
+    .receive("error", resp => { console.log("Socket error", resp) })
+}
+
 
 // expose liveSocket on window for web console debug logs and latency simulation:
 // >> liveSocket.enableDebug()

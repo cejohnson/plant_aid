@@ -219,7 +219,7 @@ defmodule PlantAidWeb.CoreComponents do
     ~H"""
     <.form for={@form} id={@id} phx-target={@target} phx-change={@on_change} phx-submit={@on_reset}>
       <div class="bg-stone-300 p-4 ">
-        <.button class="bg-neutral-500">Reset Filters</.button>
+        <.button variant="secondary">Reset Filters</.button>
         <Flop.Phoenix.filter_fields :let={i} form={@form} fields={@fields}>
           <.input field={i.field} label={i.label} type={i.type} phx-debounce={0} {i.rest} />
         </Flop.Phoenix.filter_fields>
@@ -238,6 +238,7 @@ defmodule PlantAidWeb.CoreComponents do
   """
   attr :type, :string, default: nil
   attr :class, :string, default: nil
+  attr :variant, :string, default: "default"
   attr :rest, :global, include: ~w(disabled form name value)
 
   slot :inner_block, required: true
@@ -247,8 +248,9 @@ defmodule PlantAidWeb.CoreComponents do
     <button
       type={@type}
       class={[
-        "phx-submit-loading:opacity-75 rounded-lg bg-zinc-900 hover:bg-zinc-700 py-2 px-3",
+        "phx-submit-loading:opacity-75 rounded-lg py-2 px-3",
         "text-sm font-semibold leading-6 text-white active:text-white/80",
+        button_variant(@variant),
         @class
       ]}
       {@rest}
@@ -256,6 +258,14 @@ defmodule PlantAidWeb.CoreComponents do
       <%= render_slot(@inner_block) %>
     </button>
     """
+  end
+
+  defp button_variant(variant) do
+    case variant do
+      "default" -> "bg-zinc-900 hover:bg-zinc-700"
+      "primary" -> "bg-lime-600 hover:bg-lime-500"
+      "secondary" -> "bg-neutral-500 hover:bg-neutral-400"
+    end
   end
 
   @doc """

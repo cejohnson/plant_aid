@@ -54,8 +54,7 @@ defmodule PlantAidWeb.HomeLive.Index do
              data
            )}
 
-        {:error, meta} ->
-          IO.inspect(meta.errors, label: "errors")
+        {:error, _meta} ->
           socket
       end
     else

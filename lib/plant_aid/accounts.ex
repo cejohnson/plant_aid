@@ -50,22 +50,22 @@ defmodule PlantAid.Accounts do
   def list_users(%Flop{} = flop) do
     opts = [for: User]
 
-    last_seen_query =
-      from(
-        e in UserConnectionEvent,
-        where: parent_as(:user).id == e.user_id,
-        order_by: [desc: :timestamp],
-        limit: 1,
-        select: %{last_seen: type(e.timestamp, :date)}
-      )
-
     from(
       u in User,
       as: :user,
-      left_lateral_join: q in subquery(last_seen_query),
-      on: true,
+      left_lateral_join:
+        e in subquery(
+          from(
+            e in UserConnectionEvent,
+            where: parent_as(:user).id == e.user_id,
+            order_by: [desc: :timestamp],
+            limit: 1,
+            select: [:timestamp]
+          )
+        ),
       as: :last_seen,
-      select: %{u | last_seen: subquery(last_seen_query)}
+      on: true,
+      select: %{u | last_seen: e.timestamp}
     )
     |> Flop.run(flop, opts)
   end
@@ -125,22 +125,32 @@ defmodule PlantAid.Accounts do
 
   """
   def get_user!(id) do
-    last_seen_query =
-      from(
-        e in UserConnectionEvent,
-        where: parent_as(:user).id == e.user_id,
-        order_by: [desc: :timestamp],
-        limit: 1,
-        select: %{last_seen: type(e.timestamp, :date)}
-      )
+    # last_seen_query =
+    #   from(
+    #     e in UserConnectionEvent,
+    #     where: parent_as(:user).id == e.user_id,
+    #     order_by: [desc: :timestamp],
+    #     limit: 1,
+    #     select: %{last_seen: e.timestamp}
+    #   )
+
+    # from(
+    #   u in User,
+    #   as: :user,
+    #   left_lateral_join: q in subquery(last_seen_query),
+    #   on: true,
+    #   as: :last_seen,
+    #   select: u
+    # )
+    # |> Repo.get!(id)
 
     from(
       u in User,
-      as: :user,
-      left_lateral_join: q in subquery(last_seen_query),
-      on: true,
-      as: :last_seen,
-      select: %{u | last_seen: subquery(last_seen_query)}
+      left_join: e in UserConnectionEvent,
+      on: u.id == e.user_id,
+      order_by: [desc: e.timestamp],
+      limit: 1,
+      select: %{u | last_seen: e.timestamp}
     )
     |> Repo.get!(id)
   end

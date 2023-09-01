@@ -95,6 +95,15 @@ defmodule PlantAidWeb.UserAuth do
     assign(conn, :current_user, user)
   end
 
+  def put_user_token(conn, _opts) do
+    if current_user = conn.assigns[:current_user] do
+      token = Phoenix.Token.sign(conn, "user socket", current_user.id)
+      assign(conn, :user_token, token)
+    else
+      conn
+    end
+  end
+
   defp ensure_user_token(conn) do
     if token = get_session(conn, :user_token) do
       {token, conn}
@@ -170,6 +179,18 @@ defmodule PlantAidWeb.UserAuth do
       {:halt, Phoenix.LiveView.redirect(socket, to: signed_in_path(socket))}
     else
       {:cont, socket}
+    end
+  end
+
+  def on_mount(:ensure_admin, _params, _session, socket) do
+    if socket.assigns.current_user &&
+         User.has_role?(socket.assigns.current_user, [:admin, :superuser]) do
+      {:cont, socket}
+    else
+      {:halt,
+       socket
+       |> Phoenix.LiveView.put_flash(:error, "Unauthorized")
+       |> Phoenix.LiveView.redirect(to: ~p"/")}
     end
   end
 

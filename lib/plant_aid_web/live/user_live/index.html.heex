@@ -4,7 +4,7 @@
       Users
       <:actions>
         <.link patch={~p"/admin/users/new"}>
-          <.button class="bg-lime-600">New User</.button>
+          <.button variant="primary">New User</.button>
         </.link>
       </:actions>
     </.header>
@@ -35,7 +35,7 @@
             </:col>
             <:col :let={{_id, user}} label="Confirmed">
               <%= if user.confirmed_at do %>
-                <i class="fa-solid fa-circle-check text-lime-600"></i>
+                <i class="fa-solid fa-circle-check text-primary"></i>
               <% end %>
             </:col>
 

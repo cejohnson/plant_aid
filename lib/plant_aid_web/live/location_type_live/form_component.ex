@@ -21,7 +21,7 @@ defmodule PlantAidWeb.LocationTypeLive.FormComponent do
       >
         <.input field={@form[:name]} type="text" label="Name" />
         <:actions>
-          <.button phx-disable-with="Saving...">Save Location type</.button>
+          <.button variant="primary" phx-disable-with="Saving...">Save Location type</.button>
         </:actions>
       </.simple_form>
     </div>

@@ -22,7 +22,7 @@ defmodule PlantAidWeb.HostLive.FormComponent do
         <.input field={@form[:common_name]} type="text" label="Common Name" />
         <.input field={@form[:scientific_name]} type="text" label="Scientific Name" />
         <:actions>
-          <.button phx-disable-with="Saving...">Save Host</.button>
+          <.button variant="primary" phx-disable-with="Saving...">Save Host</.button>
         </:actions>
       </.simple_form>
     </div>

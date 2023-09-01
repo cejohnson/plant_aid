@@ -99,18 +99,6 @@ defmodule PlantAidWeb.ObservationLive.Form do
     |> assign(:selected_host, observation.host_id)
   end
 
-  # defp assign_remaining(socket) do
-  #   changeset = Observations.change_observation(socket.assigns.observation)
-  #   selected_host = get_selected_host(changeset, socket.assigns.hosts)
-  #   research_plot? = research_plot?(changeset, socket.assigns.location_types)
-
-  #   socket
-  #   |> assign(:changeset, changeset)
-  #   |> assign(:selected_host, selected_host)
-  #   |> assign(:research_plot?, research_plot?)
-  #   |> assign(:page_title, page_title(socket.assigns.live_action))
-  # end
-
   @impl true
   def handle_event("validate", %{"observation" => observation_params}, socket) do
     changeset =
@@ -118,51 +106,25 @@ defmodule PlantAidWeb.ObservationLive.Form do
       |> Observations.change_observation(observation_params)
       |> Map.put(:action, :validate)
 
-    # selected_host = get_selected_host(changeset, socket.assigns.hosts)
-    # research_plot? = research_plot?(changeset, socket.assigns.location_types)
-
     {:noreply,
      socket
      |> maybe_assign_geographic_subdivision_options(changeset)
      |> assign_form(changeset)}
-
-    #  |> assign(:selected_host, selected_host)
-    #  |> assign(:research_plot?, research_plot?)}
   end
 
   def handle_event("save", %{"observation" => observation_params}, socket) do
     save_observation(socket, socket.assigns.live_action, observation_params)
   end
 
-  # def handle_event("lat-long-blur", params, socket) do
-  #   IO.inspect(params, label: "params")
-  #   IO.inspect(socket.assigns, label: "socket.assigns")
-  #   changeset =
-  #     socket.assigns.observation
-  #     |> Observations.change_observation(socket.assigns.form.params)
-  #     |> Observations.populate_geographies_from_location()
-  #     |> Map.put(:action, validate)
-
-  #   {:noreply, socket
-  # |> assign_form(changeset)}
-  # end
-
   def handle_event(
         "set_position",
         %{"latitude" => latitude, "longitude" => longitude},
         socket
       ) do
-    # IO.inspect(position, label: "current position")
-    IO.inspect(socket.assigns.form, label: "set_position form")
-
     changeset =
       socket.assigns.form.source
-      # socket.assigns.observation
-      # |> Observations.change_observation(socket.assigns.form.params)
       |> Observation.put_coordinates(latitude, longitude)
       |> Map.put(:action, :validate)
-
-    IO.inspect(changeset, label: "set_position changeset")
 
     {:noreply,
      socket
@@ -176,32 +138,15 @@ defmodule PlantAidWeb.ObservationLive.Form do
   end
 
   def handle_event("set_geography", _, socket) do
-    # IO.inspect(socket.assigns, label: "set_geography assigns")
-    IO.inspect(socket.assigns.form, label: "set_geography form")
-
     changeset =
       socket.assigns.form.source
-      # socket.assigns.observation
-      # |> Observations.change_observation(socket.assigns.form.params)
       |> Observation.maybe_put_geography_from_position()
       |> Map.put(:action, :validate)
-
-    IO.inspect(changeset, label: "set_geography changeset")
 
     {:noreply,
      socket
      |> maybe_assign_geographic_subdivision_options(changeset)
      |> assign_form(changeset)}
-  end
-
-  def handle_event("country_changed", params, socket) do
-    IO.inspect(params, label: "country_changed")
-    {:noreply, socket}
-  end
-
-  def handle_event("primary_subdivision_changed", params, socket) do
-    IO.inspect(params, label: "primary subdivision changed")
-    {:noreply, socket}
   end
 
   def handle_event("cancel-upload", %{"ref" => ref}, socket) do
@@ -223,7 +168,6 @@ defmodule PlantAidWeb.ObservationLive.Form do
          |> push_navigate(to: ~p"/observations/#{observation}")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        IO.inspect(changeset, label: "save error")
         {:noreply, assign(socket, :changeset, changeset)}
     end
   end
@@ -243,7 +187,6 @@ defmodule PlantAidWeb.ObservationLive.Form do
          |> push_navigate(to: ~p"/observations/#{observation}")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        IO.inspect(changeset, label: "save error")
         {:noreply, assign(socket, changeset: changeset)}
     end
   end
@@ -483,7 +426,7 @@ defmodule PlantAidWeb.ObservationLive.Form do
   end
 
   defp prepend_default_option(options \\ []) do
-    [{'Select', nil}] ++ options
+    [{~c"Select", nil}] ++ options
   end
 
   defp page_title(:new), do: "Create Observation"

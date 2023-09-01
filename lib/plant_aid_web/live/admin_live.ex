@@ -7,11 +7,27 @@ defmodule PlantAidWeb.AdminLive do
     <div>
       <.header>Admin</.header>
 
-      <ul>
-        <li><.link navigate={~p"/admin/users"}>Users</.link></li>
-        <li><.link navigate={~p"/admin/location_types"}>Location Types</.link></li>
-        <li><.link navigate={~p"/admin/hosts"}>Hosts</.link></li>
-        <li><.link navigate={~p"/admin/pathologies"}>Pathologies</.link></li>
+      <ul class="list-disc">
+        <li>
+          <.link navigate={~p"/admin/users"} class="text-zinc-900 hover:text-zinc-700">
+            Users
+          </.link>
+        </li>
+        <li>
+          <.link navigate={~p"/admin/location_types"} class="text-zinc-900 hover:text-zinc-700">
+            Location Types
+          </.link>
+        </li>
+        <li>
+          <.link navigate={~p"/admin/hosts"} class="text-zinc-900 hover:text-zinc-700">
+            Hosts
+          </.link>
+        </li>
+        <li>
+          <.link navigate={~p"/admin/pathologies"} class="text-zinc-900 hover:text-zinc-700">
+            Pathologies
+          </.link>
+        </li>
       </ul>
     </div>
     """

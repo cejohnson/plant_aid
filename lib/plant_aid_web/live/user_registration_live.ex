@@ -38,7 +38,9 @@ defmodule PlantAidWeb.UserRegistrationLive do
         <.input field={@form[:name]} type="text" label="Name" />
 
         <:actions>
-          <.button phx-disable-with="Creating account..." class="w-full">Create an account</.button>
+          <.button variant="primary" phx-disable-with="Creating account..." class="w-full">
+            Create an account
+          </.button>
         </:actions>
       </.simple_form>
     </div>
