@@ -35,13 +35,10 @@ alert_users =
     %{
       email: String.downcase(email),
       name: first_name <> " " <> last_name,
-      # preferred_name: first_name,
       inserted_at: timestamp,
       updated_at: timestamp,
       metadata: %{"source" => "usa_blight", "alert" => true},
-      roles: [],
-      # # No password can hash to this value
-      # hashed_password: "INVALID"
+      roles: []
     }
   end)
 
@@ -56,13 +53,10 @@ non_alert_users =
     %{
       email: String.downcase(email),
       name: first_name <> " " <> last_name,
-      # preferred_name: first_name,
       inserted_at: timestamp,
       updated_at: timestamp,
       metadata: %{"source" => "usa_blight", "alert" => false},
-      roles: [],
-      # # No password can ever match this value
-      # hashed_password: "INVALID"
+      roles: []
     }
   end)
 

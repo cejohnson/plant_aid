@@ -48,14 +48,18 @@ defmodule PlantAidWeb.UserRegistrationLive do
   end
 
   def mount(_params, _session, socket) do
-    changeset = Accounts.change_user_registration(%User{})
+    if Application.get_env(:plant_aid, :registration_enabled) do
+      changeset = Accounts.change_user_registration(%User{})
 
-    socket =
-      socket
-      |> assign(trigger_submit: false, check_errors: false)
-      |> assign_form(changeset)
+      socket =
+        socket
+        |> assign(trigger_submit: false, check_errors: false)
+        |> assign_form(changeset)
 
-    {:ok, socket, temporary_assigns: [form: nil]}
+      {:ok, socket, temporary_assigns: [form: nil]}
+    else
+      {:ok, socket |> redirect(to: ~p"/")}
+    end
   end
 
   def handle_event("save", %{"user" => user_params}, socket) do

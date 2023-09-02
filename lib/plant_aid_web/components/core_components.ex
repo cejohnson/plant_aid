@@ -206,28 +206,6 @@ defmodule PlantAidWeb.CoreComponents do
     """
   end
 
-  attr :meta, Flop.Meta, required: true
-  attr :fields, :list, required: true
-  attr :id, :string, default: nil
-  attr :on_change, :string, default: "update-filter"
-  attr :on_reset, :string, default: "reset-filter"
-  attr :target, :string, default: nil
-
-  def filter_form(%{meta: meta} = assigns) do
-    assigns = assign(assigns, :form, Phoenix.Component.to_form(meta))
-
-    ~H"""
-    <.form for={@form} id={@id} phx-target={@target} phx-change={@on_change} phx-submit={@on_reset}>
-      <div class="bg-stone-300 p-4 ">
-        <.button variant="secondary">Reset Filters</.button>
-        <Flop.Phoenix.filter_fields :let={i} form={@form} fields={@fields}>
-          <.input field={i.field} label={i.label} type={i.type} phx-debounce={0} {i.rest} />
-        </Flop.Phoenix.filter_fields>
-      </div>
-    </.form>
-    """
-  end
-
   @doc """
   Renders a button.
 
@@ -693,5 +671,39 @@ defmodule PlantAidWeb.CoreComponents do
   """
   def translate_errors(errors, field) when is_list(errors) do
     for {^field, {msg, opts}} <- errors, do: translate_error({msg, opts})
+  end
+
+  attr :meta, Flop.Meta, required: true
+  attr :fields, :list, required: true
+  attr :id, :string, default: nil
+  attr :on_change, :string, default: "update-filter"
+  attr :on_reset, :string, default: "reset-filter"
+  attr :target, :string, default: nil
+
+  def filter_form(%{meta: meta} = assigns) do
+    assigns = assign(assigns, :form, Phoenix.Component.to_form(meta))
+
+    ~H"""
+    <.form for={@form} id={@id} phx-target={@target} phx-change={@on_change} phx-submit={@on_reset}>
+      <div class="bg-stone-300 p-4 ">
+        <.button variant="secondary">Reset Filters</.button>
+        <Flop.Phoenix.filter_fields :let={i} form={@form} fields={@fields}>
+          <.input field={i.field} label={i.label} type={i.type} phx-debounce={0} {i.rest} />
+        </Flop.Phoenix.filter_fields>
+      </div>
+    </.form>
+    """
+  end
+
+  def register_or_login(assigns) do
+    if Application.get_env(:plant_aid, :registration_enabled) do
+      ~H"""
+      <.link href="/users/register">Register</.link> | <.link href="/users/log_in">Log in</.link>
+      """
+    else
+      ~H"""
+      <.link href="/users/log_in">Log in</.link>
+      """
+    end
   end
 end

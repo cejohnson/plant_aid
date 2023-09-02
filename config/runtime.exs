@@ -20,6 +20,9 @@ if System.get_env("PHX_SERVER") do
   config :plant_aid, PlantAidWeb.Endpoint, server: true
 end
 
+config :plant_aid,
+  registration_enabled: String.to_existing_atom(System.get_env("REGISTRATION_ENABLED") || "true")
+
 if config_env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||
