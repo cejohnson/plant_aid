@@ -24,27 +24,11 @@ import topbar from "../vendor/topbar"
 
 mapboxgl.accessToken = "pk.eyJ1Ijoic2hhbmtqNjg3IiwiYSI6ImNsNHlneGluejFqaDkzam5rNmc1Nmg1c2oifQ.OKCoEsxl4NF19EnW95zc7A"
 
-// Prefetch and cache GeoJSON
-// let countyGeojson
-// fetch("/api/v1/geojson/counties").then((response) => {
-//   if (!response.ok) {
-//     throw new Error(`Error retrieving county GeoJSON: ${response.statusText}`)
-//   }
-//   return response.json()
-// }).then((geojson) => {
-//   countyGeojson = geojson
-// }).catch((error) => {
-//   console.error(error)
-// })
-
 let Hooks = {}
 
 Hooks.GetCurrentPosition = {
   mounted() {
-    console.log("getCurrentPosition hook mounted");
     this.el.addEventListener("click", e => {
-      console.log("onclick this", this)
-      console.log("onclick e", e)
       e.target.textContent = "Retrieving Position...";
       e.target.disabled = true;
 
@@ -59,8 +43,6 @@ Hooks.GetCurrentPosition = {
       }
 
       let success = (position) => {
-        console.log('setting values in dom');
-        console.log("sending position to server?")
         this.pushEvent("set_position", { latitude: position.coords.latitude, longitude: position.coords.longitude });
         onComplete()
       }
@@ -77,7 +59,6 @@ Hooks.GetCurrentPosition = {
 
 Hooks.MapBoxAggregateData = {
   mounted() {
-    console.log("mapbox container mounted")
     const map = new mapboxgl.Map({
       container: this.el,
       trackResize: false,
@@ -91,9 +72,7 @@ Hooks.MapBoxAggregateData = {
     });
 
     this.handleEvent("map-data", ({ data, bounds }) => {
-      console.log("setting map data", data);
       if (bounds) {
-        console.log("setting bounds", bounds);
         map.fitBounds(bounds, { padding: 10 });
       }
 
@@ -109,7 +88,6 @@ Hooks.MapBoxAggregateData = {
     })
 
     map.on('load', () => {
-      console.log('map loaded, settings data from temp variable');
       map.addSource('regions', {
         type: "geojson",
         data: tempData
@@ -193,7 +171,6 @@ Hooks.MapBoxAggregateData = {
           .addTo(map);
       });
     })
-    // })
   }
 }
 
@@ -427,8 +404,9 @@ if (window.userToken) {
   let socket = new Socket("/socket", { params: { user_token: window.userToken } })
   socket.connect()
   let channel = socket.channel("presence", {})
-  channel.join().receive("ok", resp => { console.log("Socket connected", resp) })
-    .receive("error", resp => { console.log("Socket error", resp) })
+  channel.join()
+  // .receive("ok", resp => { console.log("Socket connected", resp) })
+  //   .receive("error", resp => { console.log("Socket error", resp) })
 }
 
 

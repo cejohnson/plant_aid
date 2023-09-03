@@ -139,21 +139,15 @@ defmodule PlantAid.Observations.Observation do
   end
 
   def maybe_put_geography_from_position(%Ecto.Changeset{} = changeset) do
-    IO.inspect(changeset, label: "changeset")
-
     with %Geo.Point{} = position <- get_field(changeset, :position),
          %PlantAid.Geography.SecondarySubdivision{} = s <-
            PlantAid.Geography.find_secondary_subdivision_containing_point(position) do
-      IO.inspect(position, label: "position")
-      IO.inspect(s, label: "ssd")
-
       changeset
       |> put_change(:country_id, s.primary_subdivision.country.id)
       |> put_change(:primary_subdivision_id, s.primary_subdivision.id)
       |> put_change(:secondary_subdivision_id, s.id)
     else
-      e ->
-        IO.inspect(e, label: "error?")
+      _ ->
         changeset
     end
   end
