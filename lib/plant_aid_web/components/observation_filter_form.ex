@@ -15,10 +15,20 @@ defmodule PlantAidWeb.ObservationFilterForm do
 
   @impl true
   def mount(socket) do
-    host_options = FormHelpers.list_host_options() |> prepend_default_option()
-    location_type_options = FormHelpers.list_location_type_options() |> prepend_default_option()
-    pathology_options = FormHelpers.list_pathology_options() |> prepend_default_option()
-    country_options = FormHelpers.list_country_options() |> prepend_default_option()
+    {:ok, socket}
+  end
+
+  @impl true
+  def update(assigns, socket) do
+    flop = assigns.meta.flop
+    organic_options = FormHelpers.list_organic_options(flop) |> prepend_default_option()
+    country_options = FormHelpers.list_country_options(flop) |> prepend_default_option()
+    host_options = FormHelpers.list_host_options(flop) |> prepend_default_option()
+
+    location_type_options =
+      FormHelpers.list_location_type_options(flop) |> prepend_default_option()
+
+    pathology_options = FormHelpers.list_pathology_options(flop) |> prepend_default_option()
 
     fields = [
       source: [
@@ -61,11 +71,7 @@ defmodule PlantAidWeb.ObservationFilterForm do
       organic: [
         label: "Organic",
         type: "select",
-        options: [
-          {"Any", nil},
-          {"Organic", true},
-          {"Not Organic", false}
-        ]
+        options: organic_options
       ],
       country_id: [
         label: "Country",
@@ -76,17 +82,11 @@ defmodule PlantAidWeb.ObservationFilterForm do
 
     {:ok,
      socket
-     |> assign(:fields, fields)}
-  end
-
-  @impl true
-  def update(assigns, socket) do
-    {:ok,
-     socket
+     |> assign(assigns)
+     |> assign(:fields, fields)
      |> maybe_add_user_field(assigns)
      |> maybe_add_primary_subdivision_id_field(assigns.meta.flop)
-     |> maybe_add_secondary_subdivision_id_field(assigns.meta.flop)
-     |> assign(assigns)}
+     |> maybe_add_secondary_subdivision_id_field(assigns.meta.flop)}
   end
 
   @impl true
@@ -125,8 +125,7 @@ defmodule PlantAidWeb.ObservationFilterForm do
 
       country_id ->
         primary_subdivision_options =
-          country_id
-          |> FormHelpers.list_primary_subdivision_options()
+          FormHelpers.list_primary_subdivision_options(flop)
           |> prepend_default_option()
 
         primary_subdivision_label =
@@ -158,13 +157,12 @@ defmodule PlantAidWeb.ObservationFilterForm do
 
       primary_subdivision_id ->
         secondary_subdivision_options =
-          primary_subdivision_id
-          |> FormHelpers.list_secondary_subdivision_options()
+          FormHelpers.list_secondary_subdivision_options(flop)
           |> prepend_default_option()
 
         fields =
-          case length(secondary_subdivision_options) do
-            1 ->
+          case secondary_subdivision_options do
+            [{"Any", nil}] ->
               Keyword.drop(fields, [:secondary_subdivision_id])
 
             _ ->
@@ -231,7 +229,7 @@ defmodule PlantAidWeb.ObservationFilterForm do
   end
 
   defp prepend_default_option(options) do
-    [{'Any', nil}] ++ options
+    [{"Any", nil}] ++ options
   end
 
   defp join_with_or([]) do
