@@ -59,7 +59,7 @@ defmodule PlantAidWeb.ObservationFilterForm do
         options: host_options
       ],
       suspected_pathology_id: [
-        label: "Suspected Pathology",
+        label: "Confirmed Disease",
         type: "select",
         options: pathology_options
       ],

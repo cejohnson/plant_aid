@@ -7,7 +7,7 @@ defmodule PlantAidWeb.HomeLive.Index do
   def render(assigns) do
     ~H"""
     <div class="text-xl p-2">
-      Suspected Pathogen Observations
+      Confirmed Disease Observations
     </div>
 
     <div class="md:flex md:flex-row">
