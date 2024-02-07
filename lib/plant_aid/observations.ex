@@ -68,11 +68,12 @@ defmodule PlantAid.Observations do
         :suspected_pathology,
         :country,
         :primary_subdivision,
-        secondary_subdivision: ^from(s in SecondarySubdivision, select: %{s | geog: nil})
+        secondary_subdivision: ^from(s in SecondarySubdivision, select: %{s | geog: nil}),
+        sample: [:pathology, :genotype]
       ]
     )
     |> scope(user)
-    |> Flop.with_named_bindings(flop, &join_user_assoc/2, opts)
+    |> Flop.with_named_bindings(flop, &join_observation_assocs/2, opts)
     |> Flop.run(flop, opts)
     |> then(fn {observations, meta} ->
       {observations
@@ -98,11 +99,19 @@ defmodule PlantAid.Observations do
     end
   end
 
-  defp join_user_assoc(query, :user) do
+  defp join_observation_assocs(query, :user) do
     from(
       o in query,
       left_join: u in assoc(o, :user),
       as: :user
+    )
+  end
+
+  defp join_observation_assocs(query, :sample) do
+    from(
+      o in query,
+      left_join: s in assoc(o, :sample),
+      as: :sample
     )
   end
 
@@ -130,7 +139,8 @@ defmodule PlantAid.Observations do
       :suspected_pathology,
       :country,
       :primary_subdivision,
-      :secondary_subdivision
+      :secondary_subdivision,
+      sample: [:pathology, :genotype]
     ])
     |> maybe_populate_lat_long()
     |> maybe_populate_location()
@@ -273,5 +283,107 @@ defmodule PlantAid.Observations do
 
   defp add_data_source(%Observation{source: :cucurbit_sentinel_network} = observation) do
     %{observation | data_source: "Cucurbit Sentinel Network"}
+  end
+
+  alias PlantAid.Observations.Sample
+
+  @doc """
+  Returns the list of samples.
+
+  ## Examples
+
+      iex> list_samples()
+      [%Sample{}, ...]
+
+  """
+  def list_samples do
+    Repo.all(Sample)
+  end
+
+  @doc """
+  Gets a single sample.
+
+  Raises `Ecto.NoResultsError` if the Sample does not exist.
+
+  ## Examples
+
+      iex> get_sample!(123)
+      %Sample{}
+
+      iex> get_sample!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_sample!(id), do: Repo.get!(Sample, id)
+
+  def get_sample_by_observation_id!(observation_id) do
+    Repo.get_by!(Sample, observation_id: observation_id)
+  end
+
+  @doc """
+  Creates a sample.
+
+  ## Examples
+
+      iex> create_sample(%{field: value})
+      {:ok, %Sample{}}
+
+      iex> create_sample(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_sample(observation_id, attrs \\ %{}) do
+    %Sample{observation_id: observation_id}
+    |> Sample.changeset(attrs)
+    |> IO.inspect(label: "create changeset")
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a sample.
+
+  ## Examples
+
+      iex> update_sample(sample, %{field: new_value})
+      {:ok, %Sample{}}
+
+      iex> update_sample(sample, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_sample(%Sample{} = sample, attrs) do
+    sample
+    |> Sample.changeset(attrs)
+    |> IO.inspect(label: "update changeset")
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a sample.
+
+  ## Examples
+
+      iex> delete_sample(sample)
+      {:ok, %Sample{}}
+
+      iex> delete_sample(sample)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_sample(%Sample{} = sample) do
+    Repo.delete(sample)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking sample changes.
+
+  ## Examples
+
+      iex> change_sample(sample)
+      %Ecto.Changeset{data: %Sample{}}
+
+  """
+  def change_sample(%Sample{} = sample, attrs \\ %{}) do
+    Sample.changeset(sample, attrs)
   end
 end

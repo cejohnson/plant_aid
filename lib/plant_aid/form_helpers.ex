@@ -7,7 +7,7 @@ defmodule PlantAid.FormHelpers do
   alias PlantAid.Geography.{Country, PrimarySubdivision, SecondarySubdivision}
   alias PlantAid.Hosts.Host
   alias PlantAid.LocationTypes.LocationType
-  alias PlantAid.Pathologies.Pathology
+  alias PlantAid.Pathologies.{Pathology, Genotype}
   alias PlantAid.Observations.Observation
 
   def list_organic_options(%Flop{} = flop) do
@@ -21,6 +21,7 @@ defmodule PlantAid.FormHelpers do
       select: o.organic,
       order_by: [desc: o.organic]
     )
+    |> Flop.with_named_bindings(flop, &join_observation_assocs/2, opts)
     |> Flop.filter(flop, opts)
     |> Repo.all()
     |> Enum.map(fn o ->
@@ -55,6 +56,7 @@ defmodule PlantAid.FormHelpers do
       select: {c.name, c.id},
       order_by: c.name
     )
+    |> Flop.with_named_bindings(flop, &join_observation_assocs/2, opts)
     |> Flop.filter(flop, opts)
     |> Repo.all()
   end
@@ -84,6 +86,7 @@ defmodule PlantAid.FormHelpers do
       select: {p.name, p.id},
       order_by: p.name
     )
+    |> Flop.with_named_bindings(flop, &join_observation_assocs/2, opts)
     |> Flop.filter(flop, opts)
     |> Repo.all()
   end
@@ -130,6 +133,7 @@ defmodule PlantAid.FormHelpers do
       select: {s.name, s.id},
       order_by: s.name
     )
+    |> Flop.with_named_bindings(flop, &join_observation_assocs/2, opts)
     |> Flop.filter(flop, opts)
     |> Repo.all()
   end
@@ -180,6 +184,7 @@ defmodule PlantAid.FormHelpers do
       select: {h.common_name, h.id},
       order_by: h.common_name
     )
+    |> Flop.with_named_bindings(flop, &join_observation_assocs/2, opts)
     |> Flop.filter(flop, opts)
     |> Repo.all()
   end
@@ -219,6 +224,7 @@ defmodule PlantAid.FormHelpers do
       select: {l.name, l.id},
       order_by: l.name
     )
+    |> Flop.with_named_bindings(flop, &join_observation_assocs/2, opts)
     |> Flop.filter(flop, opts)
     |> Repo.all()
   end
@@ -244,7 +250,34 @@ defmodule PlantAid.FormHelpers do
       select: {p.common_name, p.id},
       order_by: p.common_name
     )
+    |> Flop.with_named_bindings(flop, &join_observation_assocs/2, opts)
     |> Flop.filter(flop, opts)
     |> Repo.all()
+  end
+
+  def list_genotype_options(pathology_id) do
+    from(
+      g in Genotype,
+      where: g.pathology_id == ^pathology_id,
+      select: {g.name, g.id},
+      order_by: g.name
+    )
+    |> Repo.all()
+  end
+
+  defp join_observation_assocs(query, :user) do
+    from(
+      o in query,
+      left_join: u in assoc(o, :user),
+      as: :user
+    )
+  end
+
+  defp join_observation_assocs(query, :sample) do
+    from(
+      o in query,
+      left_join: s in assoc(o, :sample),
+      as: :sample
+    )
   end
 end

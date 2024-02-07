@@ -62,8 +62,16 @@
               <:col :let={observation} label="User">
                 <%= observation.user && observation.user.email %>
               </:col>
-              <:col :let={observation} label="Pathology">
+              <:col :let={observation} label="Suspected Disease">
                 <%= observation.suspected_pathology && observation.suspected_pathology.common_name %>
+              </:col>
+              <:col :let={observation} label="Confirmed Disease">
+                <%= observation.sample && observation.sample.pathology &&
+                  observation.sample.pathology.common_name %>
+              </:col>
+              <:col :let={observation} label="Genotype">
+                <%= observation.sample && observation.sample.genotype &&
+                  observation.sample.genotype.name %>
               </:col>
               <:col :let={observation} label="Host">
                 <%= (observation.host && observation.host.common_name) || observation.host_other %>

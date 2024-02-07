@@ -15,6 +15,48 @@ defmodule PlantAid.Mapping do
   end
 
   def group_observations_by_secondary_subdivision(%Flop{} = flop) do
+    opts = [for: Observation]
+
+    counts =
+      from(
+        o in Observation,
+        inner_join: ssd in assoc(o, :secondary_subdivision),
+        left_join: s in assoc(o, :sample),
+        as: :sample,
+        left_join: p in assoc(s, :pathology),
+        left_join: g in assoc(s, :genotype),
+        group_by: [ssd.id, p.common_name, g.name],
+        select: %{
+          secondary_subdivision_id: ssd.id,
+          pathology: p.common_name,
+          genotype: g.name,
+          count: count(o.id)
+        }
+      )
+      |> Flop.with_named_bindings(flop, &join_observation_assocs/2, opts)
+      |> Flop.filter(flop, opts)
+      |> Repo.all()
+      |> Enum.group_by(fn %{secondary_subdivision_id: id} -> id end)
+      |> Enum.map(fn {secondary_subdivision_id, counts} ->
+        {secondary_subdivision_id,
+         Enum.group_by(counts, fn %{pathology: pathology} -> pathology end)
+         |> Enum.map(fn {pathology, counts} ->
+           %{
+             name: pathology || "Unknown",
+             count: Enum.reduce(counts, 0, fn %{count: count}, total ->
+                total + count
+               end),
+             genotypes:
+               Enum.map(counts, fn %{count: count, genotype: genotype} ->
+                 %{name: genotype || "Unknown", count: count}
+               end)
+               |> Enum.sort_by(fn %{count: count} -> count end, :desc)
+           }
+         end)
+        |> Enum.sort_by(fn %{count: count} -> count end, :desc)}
+      end)
+      |> Map.new()
+
     secondary_subdivisions =
       from(
         o in Observation,
@@ -25,9 +67,31 @@ defmodule PlantAid.Mapping do
           | observation_count: count(o.id)
         }
       )
-      |> Flop.filter(flop)
+      |> Flop.with_named_bindings(flop, &join_observation_assocs/2, opts)
+      |> Flop.filter(flop, opts)
       |> Repo.all()
+      # from(
+      #   s in SecondarySubdivision,
+      #   inner_join: o in assoc(s, :observations)
+      # )
+      # |> Flop.filter(flop)
+      # |> Repo.all()
       |> Repo.preload(primary_subdivision: :country)
+
+    # secondary_subdivisions =
+    #   from(
+    #     o in Observation,
+    #     left_join: s in assoc(o, :sample),
+    #     inner_join: ssd in assoc(o, :secondary_subdivision),
+    #     group_by: [ssd.id, s.pathology_id, s.genotype_id],
+    #     select: %{
+    #       ssd
+    #       | observation_count: count(o.id)
+    #     }
+    #   )
+    #   |> Flop.filter(flop)
+    #   |> Repo.all()
+    #   |> Repo.preload(primary_subdivision: :country)
 
     bounds =
       from(
@@ -35,7 +99,8 @@ defmodule PlantAid.Mapping do
         inner_join: s in assoc(o, :secondary_subdivision),
         select: fragment("ST_Envelope(ST_Collect(?::geometry))", s.geog)
       )
-      |> Flop.filter(flop)
+      |> Flop.with_named_bindings(flop, &join_observation_assocs/2, opts)
+      |> Flop.filter(flop, opts)
       |> Repo.one()
       |> (fn geom ->
             case geom do
@@ -56,7 +121,8 @@ defmodule PlantAid.Mapping do
         o in Observation,
         inner_join: ssd in assoc(o, :secondary_subdivision)
       )
-      |> Flop.count(flop)
+      |> Flop.with_named_bindings(flop, &join_observation_assocs/2, opts)
+      |> Flop.count(flop, opts)
 
     meta = %Flop.Meta{
       flop: flop,
@@ -69,6 +135,15 @@ defmodule PlantAid.Mapping do
       features:
         secondary_subdivisions
         |> Enum.map(fn s ->
+          # count_breakdown = Map.get(counts, s.id)
+          # partial_counts =
+          #   Map.get(counts, s.id, [])
+          #   |> Enum.group_by(fn %{pathology: p} -> p end)
+          #   |> Enum.map(fn {pathology, data} ->
+          #     {pathology, %{data[:genotype] => data[:count]}}
+          #   end)
+          #   |> Map.new()
+
           %{
             type: "Feature",
             properties: %{
@@ -76,7 +151,10 @@ defmodule PlantAid.Mapping do
               category: s.category,
               primary_subdivision:
                 String.split(s.primary_subdivision.iso3166_2, "-") |> List.last(),
-              observation_count: s.observation_count
+              country: s.primary_subdivision.country.iso3166_1_alpha2,
+              observation_count: s.observation_count,
+              counts: Map.get(counts, s.id)
+              # pathologies: partial_counts
             },
             geometry: s.geog
           }
@@ -246,5 +324,13 @@ defmodule PlantAid.Mapping do
       | location:
           "#{secondary_subdivision.name} #{secondary_subdivision.category}, #{psd_abbreviation}, #{country.iso3166_1_alpha2}"
     }
+  end
+
+  defp join_observation_assocs(query, :sample) do
+    from(
+      o in query,
+      left_join: s in assoc(o, :sample),
+      as: :sample
+    )
   end
 end

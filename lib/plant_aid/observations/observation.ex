@@ -22,17 +22,29 @@ defmodule PlantAid.Observations.Observation do
       :country_id,
       :primary_subdivision_id,
       :secondary_subdivision_id,
-      :user_email
+      :user_email,
+      :confirmed_pathology_id,
+      :genotype_id
     ],
     sortable: [
       :status,
       :observation_date
     ],
-    join_fields: [
-      user_email: [
-        binding: :user,
-        field: :email,
-        ecto_type: :string
+    adapter_opts: [
+      join_fields: [
+        user_email: [
+          binding: :user,
+          field: :email,
+          ecto_type: :string
+        ],
+        confirmed_pathology_id: [
+          binding: :sample,
+          field: :pathology_id
+        ],
+        genotype_id: [
+          binding: :sample,
+          field: :genotype_id
+        ]
       ]
     ],
     default_order: %{
@@ -69,6 +81,8 @@ defmodule PlantAid.Observations.Observation do
     belongs_to :country, PlantAid.Geography.Country
     belongs_to :primary_subdivision, PlantAid.Geography.PrimarySubdivision
     belongs_to :secondary_subdivision, PlantAid.Geography.SecondarySubdivision
+
+    has_one :sample, PlantAid.Observations.Sample
 
     timestamps()
   end

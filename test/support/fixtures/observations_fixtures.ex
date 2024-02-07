@@ -23,4 +23,18 @@ defmodule PlantAid.ObservationsFixtures do
 
     observation
   end
+
+  @doc """
+  Generate a sample.
+  """
+  def sample_fixture(attrs \\ %{}) do
+    {:ok, sample} =
+      attrs
+      |> Enum.into(%{
+        data: %{}
+      })
+      |> PlantAid.Observations.create_sample()
+
+    sample
+  end
 end

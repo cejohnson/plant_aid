@@ -59,6 +59,12 @@ defmodule PlantAidWeb.ObservationFilterForm do
         options: host_options
       ],
       suspected_pathology_id: [
+        label: "Suspected Disease",
+        type: "select",
+        options: pathology_options,
+        value: Flop.Filter.get_value(flop.filters, :suspected_pathology_id)
+      ],
+      confirmed_pathology_id: [
         label: "Confirmed Disease",
         type: "select",
         options: pathology_options
@@ -85,6 +91,7 @@ defmodule PlantAidWeb.ObservationFilterForm do
      |> assign(assigns)
      |> assign(:fields, fields)
      |> maybe_add_user_field(assigns)
+     |> maybe_add_genotype_id_field(assigns.meta.flop)
      |> maybe_add_primary_subdivision_id_field(assigns.meta.flop)
      |> maybe_add_secondary_subdivision_id_field(assigns.meta.flop)}
   end
@@ -112,6 +119,30 @@ defmodule PlantAidWeb.ObservationFilterForm do
 
   defp maybe_add_user_field(socket, _assigns) do
     socket
+  end
+
+  defp maybe_add_genotype_id_field(%{assigns: %{fields: fields}} = socket, %Flop{} = flop) do
+    case Flop.Filter.get_value(flop.filters, :confirmed_pathology_id) do
+      nil ->
+        fields = Keyword.drop(fields, [:genotype_id])
+        assign(socket, :fields, fields)
+
+      pathology_id ->
+        genotype_options =
+          FormHelpers.list_genotype_options(pathology_id)
+          |> prepend_default_option()
+
+        index = Enum.find_index(fields, fn {key, _value} -> key == :confirmed_pathology_id end)
+
+        fields =
+          List.insert_at(
+            fields,
+            index + 1,
+            {:genotype_id, [label: "Genotype", type: "select", options: genotype_options]}
+          )
+
+        assign(socket, :fields, fields)
+    end
   end
 
   defp maybe_add_primary_subdivision_id_field(

@@ -11,6 +11,11 @@
 <.list>
   <:item title="Common name"><%= @pathology.common_name %></:item>
   <:item title="Scientific name"><%= @pathology.scientific_name %></:item>
+  <:item title="Genotypes">
+    <div :for={genotype <- @pathology.genotypes}>
+      <%= genotype.name %>
+    </div>
+  </:item>
 </.list>
 
 <.back navigate={~p"/admin/pathologies"}>Back to Pathologies</.back>

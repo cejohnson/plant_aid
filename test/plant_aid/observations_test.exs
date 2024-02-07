@@ -68,4 +68,58 @@ defmodule PlantAid.ObservationsTest do
       assert %Ecto.Changeset{} = Observations.change_observation(observation)
     end
   end
+
+  describe "samples" do
+    alias PlantAid.Observations.Sample
+
+    import PlantAid.ObservationsFixtures
+
+    @invalid_attrs %{data: nil}
+
+    test "list_samples/0 returns all samples" do
+      sample = sample_fixture()
+      assert Observations.list_samples() == [sample]
+    end
+
+    test "get_sample!/1 returns the sample with given id" do
+      sample = sample_fixture()
+      assert Observations.get_sample!(sample.id) == sample
+    end
+
+    test "create_sample/1 with valid data creates a sample" do
+      valid_attrs = %{data: %{}}
+
+      assert {:ok, %Sample{} = sample} = Observations.create_sample(valid_attrs)
+      assert sample.data == %{}
+    end
+
+    test "create_sample/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Observations.create_sample(@invalid_attrs)
+    end
+
+    test "update_sample/2 with valid data updates the sample" do
+      sample = sample_fixture()
+      update_attrs = %{data: %{}}
+
+      assert {:ok, %Sample{} = sample} = Observations.update_sample(sample, update_attrs)
+      assert sample.data == %{}
+    end
+
+    test "update_sample/2 with invalid data returns error changeset" do
+      sample = sample_fixture()
+      assert {:error, %Ecto.Changeset{}} = Observations.update_sample(sample, @invalid_attrs)
+      assert sample == Observations.get_sample!(sample.id)
+    end
+
+    test "delete_sample/1 deletes the sample" do
+      sample = sample_fixture()
+      assert {:ok, %Sample{}} = Observations.delete_sample(sample)
+      assert_raise Ecto.NoResultsError, fn -> Observations.get_sample!(sample.id) end
+    end
+
+    test "change_sample/1 returns a sample changeset" do
+      sample = sample_fixture()
+      assert %Ecto.Changeset{} = Observations.change_sample(sample)
+    end
+  end
 end

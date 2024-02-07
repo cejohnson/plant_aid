@@ -82,6 +82,14 @@ defmodule PlantAidWeb.Router do
       live "/observations/:id/edit", ObservationLive.Form, :edit
       live "/observations/:id", ObservationLive.Show, :show
       live "/observations/:id/submit-sample", ObservationLive.Show, :print
+
+      live "/observations/:id/sample/new", ObservationLive.Show, :add_sample
+      live "/observations/:id/sample/edit", ObservationLive.Show, :edit_sample
+      # live "/samples/new", SampleLive.Index, :new
+      # live "/samples/:id/edit", SampleLive.Index, :edit
+
+      # live "/samples/:id", SampleLive.Show, :show
+      # live "/samples/:id/show/edit", SampleLive.Show, :edit
     end
   end
 

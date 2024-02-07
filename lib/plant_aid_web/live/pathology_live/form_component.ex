@@ -21,6 +21,31 @@ defmodule PlantAidWeb.PathologyLive.FormComponent do
       >
         <.input field={@form[:common_name]} type="text" label="Common Name" />
         <.input field={@form[:scientific_name]} type="text" label="Scientific Name" />
+
+        <div class="space-y-2">
+          <.label>Genotypes</.label>
+          <.inputs_for :let={f_genotype} field={@form[:genotypes]}>
+            <div class="flex space-x-2 items-center">
+              <input type="hidden" name="pathology[genotypes_order][]" value={f_genotype.index} />
+              <.input field={f_genotype[:name]} type="text" placeholder="Name" />
+              <label class="cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="pathology[genotypes_delete][]"
+                  class="hidden"
+                  value={f_genotype.index}
+                />
+                <.icon name="hero-x-mark" />
+              </label>
+            </div>
+          </.inputs_for>
+        </div>
+
+        <label class="cursor-pointer">
+          <input type="checkbox" name="pathology[genotypes_order][]" class="hidden" />
+          <.icon name="hero-plus-circle" /><span class="align-middle">Add Genotype</span>
+        </label>
+
         <:actions>
           <.button variant="primary" phx-disable-with="Saving...">Save Pathology</.button>
         </:actions>

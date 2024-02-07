@@ -137,19 +137,52 @@ Hooks.MapBoxAggregateData = {
       const detail_popup = new mapboxgl.Popup({
       });
 
+      const as_percent = (numerator, denominator) => {
+        return Number(numerator / denominator).toLocaleString(undefined, { style: 'percent', minimumFractionDigits: 1 })
+      }
+
       map.on('mousemove', 'regionFill', (e) => {
         map.getCanvas().style.cursor = 'pointer';
         const props = e.features[0].properties
         if (!detail_popup.isOpen()) {
+          const counts = JSON.parse(props.counts)
+          console.log(props)
 
           hover_popup.setLngLat(e.lngLat)
             .setHTML(`
-            <div>
-            <strong>${props.name}</strong>
-            <div>${props.observation_count} observations</div>
+              <div>
+              <strong>${props.name} ${props.category}, ${props.primary_subdivision}, ${props.country}</strong>
+              <div>Total Observations: ${props.observation_count}</div>
+              <div>Confirmed Disease</div>
+              <ul class="list-disc list-inside pl-2">${counts.map(pathology => {
+              if (pathology.name === "Unknown") {
+                return `
+                  <li>
+                  ${pathology.name}: ${as_percent(pathology.count, props.observation_count)} (${pathology.count})
+                  </li>
+                  `
+              } else {
+                return `
+                  <li>
+                  ${pathology.name}: ${as_percent(pathology.count, props.observation_count)} (${pathology.count})
+                  <div class="pl-3">
+                  <ul class="list-disc list-inside pl-2">
+                    ${pathology.genotypes.map(genotype => {
+                  return `
+                        <li>
+                          ${genotype.name}: ${as_percent(genotype.count, pathology.count)} (${genotype.count})
+                        </li>
+                      `
+                }).join("\n")}
+                  </ul>
+                  </div>
+                  </li>
+                `}
+            }).join("\n")}</ul>
             </div>
-          ` )
+            ` )
             .addTo(map);
+
         }
       });
 
@@ -161,11 +194,39 @@ Hooks.MapBoxAggregateData = {
       map.on('click', 'regionFill', (e) => {
         map.getCanvas().style.cursor = 'pointer';
         const props = e.features[0].properties
+        const counts = JSON.parse(props.counts)
         detail_popup.setLngLat(e.lngLat)
           .setHTML(`
-            <div>
-            <strong>${props.name}</strong>
-            <div>${props.observation_count} observations</div>
+          <div>
+              <strong>${props.name} ${props.category}, ${props.primary_subdivision}, ${props.country}</strong>
+              <div>Total Observations: ${props.observation_count}</div>
+              <div>Confirmed Disease</div>
+              <ul class="list-disc list-inside pl-2">${counts.map(pathology => {
+            if (pathology.name === "Unknown") {
+              return `
+                  <li>
+                  ${pathology.name}: ${Number(pathology.genotypes[0].count / props.observation_count).toLocaleString(undefined, { style: 'percent', minimumFractionDigits: 1 })}
+                  </li>
+                  `
+            } else {
+              return `
+                  <li>
+                  <div>${pathology.name}</div>
+                  <div class="pl-3">
+                  <div>Genotypes</div>
+                  <ul class="list-disc list-inside pl-2">
+                    ${pathology.genotypes.map(genotype => {
+                return `
+                        <li>
+                          ${genotype.name}: ${Number(genotype.count / props.observation_count).toLocaleString(undefined, { style: 'percent', minimumFractionDigits: 1 })}
+                        </li>
+                      `
+              }).join("\n")}
+                  </ul>
+                  </div>
+                  </li>
+                `}
+          }).join("\n")}</ul>
             </div>
           ` )
           .addTo(map);
@@ -359,43 +420,6 @@ let liveSocket = new LiveSocket("/live", Socket, {
 topbar.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" })
 window.addEventListener("phx:page-loading-start", info => topbar.delayedShow(200))
 window.addEventListener("phx:page-loading-stop", info => topbar.hide())
-
-// Populate coordinates
-// window.addEventListener("plantaid:populate-coordinates", (event) => {
-//   console.log("plantaid:populate-coordinates", event)
-//   let button = event.target.querySelector("#get-position");
-//   button.disabled = true;
-//   button.textContent = "Getting Current Position...";
-//   event.target.querySelector("#latitude").focus();
-
-//   let options = {
-//     enableHighAccuracy: true,
-//     timeout: 15000
-//   }
-
-//   let onComplete = () => {
-//     button.textContent = "Use Current Position"
-//     button.disabled = false;
-//   }
-
-//   let success = (position) => {
-//     console.log('sending position to server');
-//     console.log(window);
-//     console.log(document);
-//     // event.target.querySelector("#latitude").value = position.coords.latitude;
-//     // event.target.querySelector("#longitude").value = position.coords.longitude;
-//     window.push("current_position", { latitude: position.coords.latitude, longitude: position.coords.longitude })
-//     // event.target.querySelector("#latitude").blur();
-//     onComplete()
-//   }
-
-//   let error = (error) => {
-//     this.pushEvent("current_position_error", { message: error.message });
-//     onComplete()
-//   }
-
-//   navigator.geolocation.getCurrentPosition(success, error, options);
-// })
 
 // connect if there are any LiveViews on the page
 liveSocket.connect()

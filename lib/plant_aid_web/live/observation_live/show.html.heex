@@ -51,16 +51,77 @@
       <img src={url} height="200" width="200" />
     <% end %>
   </:item>
-  <:item title="Metadata">
+  <:item title="Metadata" if={User.has_role?(@current_user, [:researcher, :admin, :superuser])}>
     <%= @observation.metadata && Jason.encode!(@observation.metadata) %>
   </:item>
 </.list>
 
+<%= cond do %>
+  <% @observation.sample -> %>
+    <div class="mt-16">
+      <.header>
+        Sample Results
+        <:actions>
+          <%= if User.has_role?(@current_user, [:researcher, :admin, :superuser]) do %>
+            <.link
+              navigate={~p"/observations/#{@observation}/sample/edit"}
+              phx-click={JS.push_focus()}
+            >
+              <.button>Edit sample results</.button>
+            </.link>
+          <% end %>
+        </:actions>
+      </.header>
+      <.list>
+        <:item title="Result">
+          <%= @observation.sample.result |> Atom.to_string() |> String.capitalize() %>
+        </:item>
+        <:item title="Confidence">
+          <%= @observation.sample.confidence %>
+        </:item>
+        <:item title="Pathology">
+          <%= @observation.sample.pathology && @observation.sample.pathology.common_name %>
+        </:item>
+        <:item title="Genotype">
+          <%= @observation.sample.genotype && @observation.sample.genotype.name %>
+        </:item>
+        <:item title="Comments">
+          <%= @observation.sample.comments %>
+        </:item>
+        <:item title="Data">
+          <%= for %{key: k, value: v} <- @observation.sample.data do %>
+            <div><%= "#{k}: #{v}" %></div>
+          <% end %>
+        </:item>
+      </.list>
+    </div>
+  <% User.has_role?(@current_user, [:researcher, :admin, :superuser]) -> %>
+    <.link navigate={~p"/observations/#{@observation}/sample/new"} phx-click={JS.push_focus()}>
+      <.button variant="primary">Add Sample Results</.button>
+    </.link>
+<% end %>
+
 <.back navigate={~p"/observations"}>Back to observations</.back>
 
 <.modal
+  :if={@live_action in [:add_sample, :edit_sample]}
+  id="sample-results-modal"
+  show
+  on_cancel={JS.patch(~p"/observations/#{@observation}")}
+>
+  <.live_component
+    module={PlantAidWeb.ObservationLive.SampleFormComponent}
+    id={@observation.id}
+    title={@page_title}
+    action={@live_action}
+    sample={@observation.sample || %Sample{observation: @observation}}
+    patch={~p"/observations/#{@observation}"}
+  />
+</.modal>
+
+<.modal
   :if={@live_action == :print}
-  id="sample-modal"
+  id="sample-instructions-modal"
   show
   on_cancel={JS.patch(~p"/observations/#{@observation}")}
 >

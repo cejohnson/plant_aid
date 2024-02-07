@@ -9,6 +9,7 @@ defmodule PlantAid.Pathologies do
 
   alias PlantAid.Accounts.User
   alias PlantAid.Pathologies.Pathology
+  alias PlantAid.Pathologies.Genotype
 
   def authorize(:list_pathologies, %User{} = user, _) do
     User.has_role?(user, [:superuser, :admin])
@@ -57,7 +58,10 @@ defmodule PlantAid.Pathologies do
       ** (Ecto.NoResultsError)
 
   """
-  def get_pathology!(id), do: Repo.get!(Pathology, id)
+  def get_pathology!(id) do
+    Repo.get!(Pathology, id)
+    |> Repo.preload([:genotypes])
+  end
 
   @doc """
   Creates a pathology.
@@ -122,5 +126,91 @@ defmodule PlantAid.Pathologies do
   """
   def change_pathology(%Pathology{} = pathology, attrs \\ %{}) do
     Pathology.changeset(pathology, attrs)
+  end
+
+  def list_genotypes(pathology_id) do
+    from(g in Genotype, where: g.pathology_id == ^pathology_id)
+    |> Repo.all()
+  end
+
+  @doc """
+  Gets a single genotype.
+
+  Raises `Ecto.NoResultsError` if the Genotype does not exist.
+
+  ## Examples
+
+      iex> get_genotype!(123)
+      %Genotype{}
+
+      iex> get_genotype!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_genotype!(id), do: Repo.get!(Genotype, id)
+
+  @doc """
+  Creates a genotype.
+
+  ## Examples
+
+      iex> create_genotype(%{field: value})
+      {:ok, %Genotype{}}
+
+      iex> create_genotype(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_genotype(pathology_id, attrs \\ %{}) do
+    %Genotype{pathology_id: pathology_id}
+    |> Genotype.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a genotype.
+
+  ## Examples
+
+      iex> update_genotype(genotype, %{field: new_value})
+      {:ok, %Genotype{}}
+
+      iex> update_genotype(genotype, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_genotype(%Genotype{} = genotype, attrs) do
+    genotype
+    |> Genotype.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a genotype.
+
+  ## Examples
+
+      iex> delete_genotype(genotype)
+      {:ok, %Genotype{}}
+
+      iex> delete_genotype(genotype)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_genotype(%Genotype{} = genotype) do
+    Repo.delete(genotype)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking genotype changes.
+
+  ## Examples
+
+      iex> change_genotype(genotype)
+      %Ecto.Changeset{data: %Genotype{}}
+
+  """
+  def change_genotype(%Genotype{} = genotype, attrs \\ %{}) do
+    Genotype.changeset(genotype, attrs)
   end
 end

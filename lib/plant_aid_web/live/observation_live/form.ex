@@ -426,7 +426,7 @@ defmodule PlantAidWeb.ObservationLive.Form do
   end
 
   defp prepend_default_option(options \\ []) do
-    [{~c"Select", nil}] ++ options
+    [{"Select", nil}] ++ options
   end
 
   defp page_title(:new), do: "Create Observation"
