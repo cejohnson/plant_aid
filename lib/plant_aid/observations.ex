@@ -6,6 +6,7 @@ defmodule PlantAid.Observations do
   @behaviour Bodyguard.Policy
 
   import Ecto.Query, warn: false
+  alias NimbleCSV.RFC4180, as: CSV
   alias PlantAid.Repo
 
   alias PlantAid.Accounts.User
@@ -17,6 +18,8 @@ defmodule PlantAid.Observations do
   def authorize(:list_all_observations, %User{} = user, _) do
     User.has_role?(user, [:superuser, :admin, :researcher])
   end
+
+  def authorize(:export_observations, %User{}, _), do: :ok
 
   def authorize(:get_observation, %User{id: user_id}, %Observation{user_id: user_id}), do: :ok
 
@@ -86,6 +89,96 @@ defmodule PlantAid.Observations do
   def list_observations(%User{} = user, %{} = params) do
     with {:ok, flop} <- Flop.validate(params, for: Observation) do
       {:ok, list_observations(user, flop)}
+    end
+  end
+
+  def export_observations(%User{} = user) do
+    export_observations(user, %Flop{})
+  end
+
+  def export_observations(%User{} = user, %Flop{} = flop) do
+    opts = [for: Observation]
+
+    observations =
+      from(
+        o in Observation,
+        preload: [
+          :user,
+          :host,
+          :host_variety,
+          :location_type,
+          :suspected_pathology,
+          :country,
+          :primary_subdivision,
+          secondary_subdivision: ^from(s in SecondarySubdivision, select: %{s | geog: nil}),
+          sample: [:pathology, :genotype]
+        ]
+      )
+      |> scope(user)
+      |> Flop.with_named_bindings(flop, &join_observation_assocs/2, opts)
+      |> Flop.filter(flop, opts)
+      |> Repo.all()
+      |> Enum.map(&maybe_populate_lat_long/1)
+      |> Enum.map(&maybe_populate_location/1)
+      |> Enum.map(&add_data_source/1)
+      |> Enum.map(fn o ->
+        [
+          o.id,
+          o.status,
+          o.user && o.user.email,
+          o.observation_date,
+          o.suspected_pathology && o.suspected_pathology.common_name,
+          o.host && o.host.common_name,
+          o.host_variety && o.host_variety.name,
+          o.location_type && o.location_type.name,
+          o.organic,
+          o.latitude,
+          o.longitude,
+          o.country && o.country.name,
+          o.primary_subdivision && o.primary_subdivision.name,
+          o.secondary_subdivision && o.secondary_subdivision.name,
+          o.control_method,
+          o.notes,
+          o.data_source,
+          o.sample && o.sample.result,
+          o.sample && o.sample.comments,
+          o.sample && o.sample.pathology && o.sample.pathology.common_name,
+          o.sample && o.sample.genotype && o.sample.genotype.name
+        ]
+      end)
+
+    [
+      [
+        "id",
+        "status",
+        "user",
+        "observation_date",
+        "suspected_pathology",
+        "host",
+        "host_variety",
+        "location_type",
+        "organic",
+        "latitude",
+        "longitude",
+        "country",
+        "primary_subdivision",
+        "secondary_subdivision",
+        "control_method",
+        "notes",
+        "data_source",
+        "sample_result",
+        "sample_comments",
+        "sample_pathology",
+        "sample_genotype"
+      ]
+      | observations
+    ]
+    |> CSV.dump_to_iodata()
+  end
+
+  def export_observations(%User{} = user, %{} = params) do
+    with {:ok, flop} <- Flop.validate(params, for: Observation) do
+      {:ok, export_observations(user, flop)}
     end
   end
 

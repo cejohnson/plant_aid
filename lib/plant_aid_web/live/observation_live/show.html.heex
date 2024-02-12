@@ -135,7 +135,7 @@
     <ol class="list-decimal p-2">
       <li>
         <.link
-          navigate={~p"/observations/#{@observation}/print"}
+          href={~p"/observations/#{@observation}/print"}
           target="_blank"
           class="text-primary hover:underline"
         >
@@ -192,7 +192,7 @@
     ** It is best to send leaf tissue when possible; we have had greater success with our assays using leaf tissue rather than fruits or tubers. Also note, taking sporangia directly from leaf tissue will speed up the analysis by at least 5 days. If you do send fruit or tubers, please send them in a separate bag or shipment so that they do not crush the leaf tissue in transit. If you want a rapid identification, it&rsquo;s crucial that there be sporulation from the infected tissue.
   </div>
 
-  <.link navigate={~p"/observations/#{@observation}/print"} target="_blank">
-    <.button variant="primary">Print Information Sheet</.button>
+  <.link href={~p"/observations/#{@observation}/print"} target="_blank">
+    <.button type="button" variant="primary">Print Information Sheet</.button>
   </.link>
 </.modal>

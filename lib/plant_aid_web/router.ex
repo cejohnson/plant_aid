@@ -69,6 +69,7 @@ defmodule PlantAidWeb.Router do
     pipe_through [:browser, :require_authenticated_user]
 
     get "/observations/:id/print", SampleController, :print
+    get "/observations/export", ObservationController, :export_csv
 
     live_session :require_authenticated_user,
       on_mount: [

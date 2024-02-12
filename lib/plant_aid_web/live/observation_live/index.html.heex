@@ -6,6 +6,9 @@
         <.link navigate={~p"/observations/new"}>
           <.button variant="primary">New Observation</.button>
         </.link>
+        <.link href={~p"/observations/export?#{@params}"} download target="_blank">
+          <.button type="button" variant="primary">Export CSV</.button>
+        </.link>
       </:actions>
     </.header>
     <ul class="flex flex-wrap text-sm font-medium text-center text-gray-500 border-b-2 border-stone-300 dark:border-stone-700 dark:text-gray-400">
