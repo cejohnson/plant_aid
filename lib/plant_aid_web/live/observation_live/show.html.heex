@@ -99,6 +99,7 @@
     <.link navigate={~p"/observations/#{@observation}/sample/new"} phx-click={JS.push_focus()}>
       <.button variant="primary">Add Sample Results</.button>
     </.link>
+  <% true -> %>
 <% end %>
 
 <.back navigate={~p"/observations"}>Back to observations</.back>

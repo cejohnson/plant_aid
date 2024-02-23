@@ -14,7 +14,6 @@ defmodule PlantAidWeb.ObservationLive.Show do
   def handle_params(%{"id" => id}, _, socket) do
     user = socket.assigns.current_user
     observation = Observations.get_observation!(id)
-    IO.inspect(observation, label: "observation")
 
     with :ok <- Bodyguard.permit(Observations, :get_observation, user, observation) do
       {:noreply,
