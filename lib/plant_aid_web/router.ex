@@ -78,6 +78,13 @@ defmodule PlantAidWeb.Router do
       live "/users/settings", UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
 
+      live "/locations", LocationLive.Index, :index
+      live "/locations/new", LocationLive.Index, :new
+      live "/locations/:id/edit", LocationLive.Index, :edit
+
+      live "/locations/:id", LocationLive.Show, :show
+      live "/locations/:id/show/edit", LocationLive.Show, :edit
+
       live "/observations", ObservationLive.Index, :index
       live "/observations/new", ObservationLive.Form, :new
       live "/observations/:id/edit", ObservationLive.Form, :edit
