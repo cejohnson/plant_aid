@@ -43,13 +43,22 @@ Hooks.GetCurrentPosition = {
       }
 
       let success = (position) => {
-        this.pushEvent("set_position", { latitude: position.coords.latitude, longitude: position.coords.longitude });
+        pushEvent("current_position", { latitude: position.coords.latitude, longitude: position.coords.longitude });
         onComplete()
       }
 
       let error = (error) => {
-        this.pushEvent("on_get_current_position_error", { message: error.message });
+        pushEvent("on_get_current_position_error", { message: error.message });
         onComplete()
+      }
+
+      let pushEvent = (event, payload) => {
+        let target = this.el.getAttribute("phx-target");
+        if (target) {
+          this.pushEventTo(target, event, payload)
+        } else {
+          this.pushEvent(event, payload)
+        }
       }
 
       navigator.geolocation.getCurrentPosition(success, error, options);

@@ -22,8 +22,8 @@ defmodule PlantAid.Locations.Location do
   @doc false
   def changeset(location, attrs) do
     location
-    |> cast(attrs, [:name, :position, :latitude, :longitude])
-    |> validate_required([:name, :position])
+    |> cast(attrs, [:name, :latitude, :longitude])
+    |> validate_required([:name, :latitude, :longitude])
     |> maybe_put_position()
   end
 
@@ -31,14 +31,12 @@ defmodule PlantAid.Locations.Location do
     from(row in query, where: row.user_id == ^user_id)
   end
 
-  def put_coordinates(%Ecto.Changeset{} = changeset, latitude, longitude) do
+  def put_coordinates(%Ecto.Changeset{} = changeset, position) do
     changeset
-    |> put_change(:latitude, latitude)
-    |> put_change(:longitude, longitude)
-    |> maybe_put_position()
+    |> cast(position, [:latitude, :longitude])
   end
 
-  def maybe_put_position(%Ecto.Changeset{} = changeset) do
+  defp maybe_put_position(%Ecto.Changeset{} = changeset) do
     latitude = get_field(changeset, :latitude)
     longitude = get_field(changeset, :longitude)
 

@@ -84,8 +84,10 @@ defmodule PlantAid.Locations do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_location(attrs \\ %{}) do
-    %Location{}
+  def create_location(user, attrs \\ %{}) do
+    IO.puts("create location?")
+
+    %Location{user: user}
     |> Location.changeset(attrs)
     |> Repo.insert()
   end

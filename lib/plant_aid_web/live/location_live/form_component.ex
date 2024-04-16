@@ -21,20 +21,26 @@ defmodule PlantAidWeb.LocationLive.FormComponent do
         phx-submit="save"
       >
         <.input field={@form[:name]} type="text" label="Name" />
-        <.button id="get-position" class="bg-stone-500" type="button" phx-hook="GetCurrentPosition">
-          Use Current Location
+        <.button
+          id="get-position"
+          class="bg-stone-500"
+          type="button"
+          phx-hook="GetCurrentPosition"
+          phx-target={@myself}
+        >
+          Populate Current Position
         </.button>
 
         <.input field={@form[:latitude]} type="text" inputmode="decimal" label="Latitude" />
         <.input field={@form[:longitude]} type="text" inputmode="decimal" label="Longitude" />
 
-        <div
+        <%!-- <div
           id="location-form-map"
           phx-hook="MapBoxPointData"
           phx-update="ignore"
           style="height: 200px;"
         >
-        </div>
+        </div> --%>
 
         <:actions>
           <.button phx-disable-with="Saving...">Save Location</.button>
@@ -69,13 +75,13 @@ defmodule PlantAidWeb.LocationLive.FormComponent do
   end
 
   def handle_event(
-        "set_position",
-        %{"latitude" => latitude, "longitude" => longitude},
+        "current_position",
+        position,
         socket
       ) do
     changeset =
       socket.assigns.form.source
-      |> Location.put_coordinates(latitude, longitude)
+      |> Location.put_coordinates(position)
       |> Map.put(:action, :validate)
 
     {:noreply,
@@ -99,8 +105,9 @@ defmodule PlantAidWeb.LocationLive.FormComponent do
   end
 
   defp save_location(socket, :new, location_params) do
-    case Locations.create_location(location_params) do
+    case Locations.create_location(socket.assigns.current_user, location_params) do
       {:ok, location} ->
+        IO.puts("created")
         notify_parent({:saved, location})
 
         {:noreply,
@@ -109,6 +116,7 @@ defmodule PlantAidWeb.LocationLive.FormComponent do
          |> push_patch(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
+        IO.puts("error")
         {:noreply, assign_form(socket, changeset)}
     end
   end

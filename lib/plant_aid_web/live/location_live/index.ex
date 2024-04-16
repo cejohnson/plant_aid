@@ -57,4 +57,19 @@ defmodule PlantAidWeb.LocationLive.Index do
 
     {:noreply, stream_delete(socket, :locations, location)}
   end
+
+  # def handle_event(
+  #       "set_position",
+  #       %{"latitude" => latitude, "longitude" => longitude},
+  #       socket
+  #     ) do
+  #   changeset =
+  #     socket.assigns.form.source
+  #     |> Location.put_coordinates(latitude, longitude)
+  #     |> Map.put(:action, :validate)
+
+  #   {:noreply,
+  #    socket
+  #    |> assign_form(changeset)}
+  # end
 end

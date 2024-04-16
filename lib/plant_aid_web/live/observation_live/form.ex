@@ -117,7 +117,7 @@ defmodule PlantAidWeb.ObservationLive.Form do
   end
 
   def handle_event(
-        "set_position",
+        "current_position",
         %{"latitude" => latitude, "longitude" => longitude},
         socket
       ) do
