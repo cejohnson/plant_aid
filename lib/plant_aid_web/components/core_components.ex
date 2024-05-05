@@ -333,6 +333,11 @@ defmodule PlantAidWeb.CoreComponents do
     ~H"""
     <div phx-feedback-for={@name}>
       <.label for={@id}><%= @label %></.label>
+      <%= if @multiple do %>
+        <div class="text-sm leading-6 text-zinc-600">
+          Hold Ctrl/Cmd to select multiple options, or Shift to select a range.
+        </div>
+      <% end %>
       <select
         id={@id}
         name={@name}
@@ -386,6 +391,61 @@ defmodule PlantAidWeb.CoreComponents do
         ]}
         {@rest}
       />
+      <.error :for={msg <- @errors}><%= msg %></.error>
+    </div>
+    """
+  end
+
+  @doc """
+  Provides a radio group input for a given form field.
+
+  ## Examples
+
+      <.radio_group field={@form[:tip]}>
+        <:radio value="0">No Tip</:radio>
+        <:radio value="10">10%</:radio>
+        <:radio value="20">20%</:radio>
+      </.radio_group>
+  """
+  attr :id, :any, default: nil
+  attr :name, :any
+  attr :label, :string, default: nil
+  attr :value, :any
+
+  attr :field, Phoenix.HTML.FormField
+  attr :errors, :list, default: []
+
+  slot :radio, required: true do
+    attr :value, :string, required: true
+  end
+
+  slot :inner_block
+
+  def radio_group(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
+    assigns
+    |> assign(field: nil, id: assigns.id || field.id)
+    |> assign(:errors, Enum.map(field.errors, &translate_error(&1)))
+    |> assign_new(:name, fn -> field.name end)
+    |> assign_new(:value, fn -> field.value end)
+    |> radio_group()
+  end
+
+  def radio_group(assigns) do
+    ~H"""
+    <div phx-feedback-for={@name}>
+      <.label for={@id}><%= @label %></.label>
+      <%= render_slot(@inner_block) %>
+      <div :for={{%{value: value} = rad, idx} <- Enum.with_index(@radio)}>
+        <input
+          type="radio"
+          name={@name}
+          id={"#{@id}-#{idx}"}
+          value={value}
+          checked={to_string(@value) == to_string(value)}
+          class="rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6"
+        />
+        <label for={"#{@id}-#{idx}"}><%= render_slot(rad) %></label>
+      </div>
       <.error :for={msg <- @errors}><%= msg %></.error>
     </div>
     """

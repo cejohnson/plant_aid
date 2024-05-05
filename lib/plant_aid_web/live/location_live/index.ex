@@ -32,7 +32,7 @@ defmodule PlantAidWeb.LocationLive.Index do
   defp apply_action(socket, :new, _params) do
     user = socket.assigns.current_user
 
-    with :ok <- Bodyguard.permit(Locations, :update_location, user) do
+    with :ok <- Bodyguard.permit(Locations, :create_location, user) do
       socket
       |> assign(:page_title, "New Location")
       |> assign(:location, %Location{})

@@ -78,12 +78,7 @@ defmodule PlantAid.Observations do
     |> scope(user)
     |> Flop.with_named_bindings(flop, &join_observation_assocs/2, opts)
     |> Flop.run(flop, opts)
-    |> then(fn {observations, meta} ->
-      {observations
-       |> Enum.map(&maybe_populate_lat_long/1)
-       |> Enum.map(&maybe_populate_location/1)
-       |> Enum.map(&add_data_source/1), meta}
-    end)
+    |> populate_virtual_fields()
   end
 
   def list_observations(%User{} = user, %{} = params) do
@@ -118,9 +113,7 @@ defmodule PlantAid.Observations do
       |> Flop.with_named_bindings(flop, &join_observation_assocs/2, opts)
       |> Flop.filter(flop, opts)
       |> Repo.all()
-      |> Enum.map(&maybe_populate_lat_long/1)
-      |> Enum.map(&maybe_populate_location/1)
-      |> Enum.map(&add_data_source/1)
+      |> populate_virtual_fields()
       |> Enum.map(fn o ->
         [
           o.id,
@@ -235,9 +228,7 @@ defmodule PlantAid.Observations do
       :secondary_subdivision,
       sample: [:pathology, :genotype]
     ])
-    |> maybe_populate_lat_long()
-    |> maybe_populate_location()
-    |> add_data_source()
+    |> populate_virtual_fields()
   end
 
   @doc """
@@ -257,6 +248,7 @@ defmodule PlantAid.Observations do
     |> Observation.changeset(attrs)
     |> Observation.put_user(user)
     |> Repo.insert()
+    |> populate_virtual_fields()
     |> after_save(after_save)
   end
 
@@ -276,6 +268,7 @@ defmodule PlantAid.Observations do
     observation
     |> Observation.changeset(attrs)
     |> Repo.update()
+    |> populate_virtual_fields()
     |> after_save(after_save)
   end
 
@@ -312,6 +305,33 @@ defmodule PlantAid.Observations do
   """
   def change_observation(%Observation{} = observation, attrs \\ %{}) do
     Observation.changeset(observation, attrs)
+  end
+
+  def populate_virtual_fields({:ok, observation}) do
+    {:ok, populate_virtual_fields(observation)}
+  end
+
+  def populate_virtual_fields({:error, _} = resp) do
+    resp
+  end
+
+  def populate_virtual_fields({observations, meta}) do
+    {
+      Enum.map(observations, &populate_virtual_fields/1),
+      meta
+    }
+  end
+
+  def populate_virtual_fields(%Observation{} = observation) do
+    observation
+    |> Repo.preload([:country, :primary_subdivision, :secondary_subdivision])
+    |> maybe_populate_lat_long()
+    |> maybe_populate_location()
+    |> add_data_source()
+  end
+
+  def populate_virtual_fields(observations) do
+    Enum.map(observations, &populate_virtual_fields/1)
   end
 
   defp maybe_populate_lat_long(%Observation{position: %{coordinates: {long, lat}}} = observation) do
@@ -428,7 +448,6 @@ defmodule PlantAid.Observations do
   def create_sample(observation_id, attrs \\ %{}) do
     %Sample{observation_id: observation_id}
     |> Sample.changeset(attrs)
-    |> IO.inspect(label: "create changeset")
     |> Repo.insert()
   end
 
@@ -447,7 +466,6 @@ defmodule PlantAid.Observations do
   def update_sample(%Sample{} = sample, attrs) do
     sample
     |> Sample.changeset(attrs)
-    |> IO.inspect(label: "update changeset")
     |> Repo.update()
   end
 

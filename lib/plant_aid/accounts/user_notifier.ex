@@ -103,4 +103,25 @@ defmodule PlantAid.Accounts.UserNotifier do
     ==============================
     """)
   end
+
+  def deliver_alert(user, pathology, observation, alert_url, alert_settings_url) do
+    deliver(user.email, "PlantAid Alert: #{pathology.common_name}", """
+
+    ==============================
+
+    Hi #{user.email},
+
+    An observation of #{pathology.common_name} reported on #{observation.observation_date} in #{observation.location} has been confirmed.
+
+    You can view this alert by visiting the URL below:
+
+    #{alert_url}
+
+    You can change your alert settings by visiting the URL below:
+
+    #{alert_settings_url}
+
+    ==============================
+    """)
+  end
 end

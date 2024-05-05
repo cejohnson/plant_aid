@@ -1,0 +1,38 @@
+<.header>
+  Listing Alerts
+  <:subtitle>To receive disease alerts, update your alert settings -></:subtitle>
+  <:actions>
+    <.link navigate={~p"/alerts/settings"}>
+      <.button variant="primary">Settings</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table
+  id="alerts"
+  rows={@streams.alerts}
+  row_click={fn {_id, alert} -> JS.navigate(~p"/alerts/#{alert}") end}
+>
+  <:col :let={{_id, alert}} label="Created At">
+    <%= alert.inserted_at %>
+  </:col>
+  <:col :let={{_id, alert}} label="Pathology"><%= alert.sample.pathology.common_name %></:col>
+  <:col :let={{_id, alert}} label="Location"><%= alert.sample.observation.location %></:col>
+  <:col :let={{_id, alert}} label="Reported On">
+    <%= alert.sample.observation.observation_date %>
+  </:col>
+  <:col :let={{_id, alert}} label="Confirmed At"><%= alert.sample.inserted_at %></:col>
+  <:action :let={{_id, alert}}>
+    <div class="sr-only">
+      <.link navigate={~p"/alerts/#{alert}"}>Show</.link>
+    </div>
+  </:action>
+  <:action :let={{id, alert}}>
+    <.link
+      phx-click={JS.push("delete", value: %{id: alert.id}) |> hide("##{id}")}
+      data-confirm="Are you sure?"
+    >
+      Delete
+    </.link>
+  </:action>
+</.table>

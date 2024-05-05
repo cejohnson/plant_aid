@@ -2,7 +2,6 @@ defmodule PlantAidWeb.LocationLive.FormComponent do
   use PlantAidWeb, :live_component
 
   alias PlantAid.Locations
-  alias PlantAid.Locations.Location
 
   @impl true
   def render(assigns) do
@@ -28,7 +27,7 @@ defmodule PlantAidWeb.LocationLive.FormComponent do
           phx-hook="GetCurrentPosition"
           phx-target={@myself}
         >
-          Populate Current Position
+          Load Current Position
         </.button>
 
         <.input field={@form[:latitude]} type="text" inputmode="decimal" label="Latitude" />
@@ -43,7 +42,7 @@ defmodule PlantAidWeb.LocationLive.FormComponent do
         </div> --%>
 
         <:actions>
-          <.button phx-disable-with="Saving...">Save Location</.button>
+          <.button variant="primary" phx-disable-with="Saving...">Save Location</.button>
         </:actions>
       </.simple_form>
     </div>
@@ -79,45 +78,62 @@ defmodule PlantAidWeb.LocationLive.FormComponent do
         position,
         socket
       ) do
+    location_params = Map.merge(socket.assigns.form.params, position)
+
     changeset =
-      socket.assigns.form.source
-      |> Location.put_coordinates(position)
+      socket.assigns.location
+      |> Locations.change_location(location_params)
       |> Map.put(:action, :validate)
 
-    {:noreply,
-     socket
-     |> assign_form(changeset)}
+    {:noreply, assign_form(socket, changeset)}
   end
 
   defp save_location(socket, :edit, location_params) do
-    case Locations.update_location(socket.assigns.location, location_params) do
-      {:ok, location} ->
-        notify_parent({:saved, location})
+    location = socket.assigns.location
+    user = socket.assigns.current_user
 
+    with :ok <- Bodyguard.permit(Locations, :update_location, user, location) do
+      case Locations.update_location(socket.assigns.location, location_params) do
+        {:ok, location} ->
+          notify_parent({:saved, location})
+
+          {:noreply,
+           socket
+           |> put_flash(:info, "Location updated successfully")
+           |> push_patch(to: socket.assigns.patch)}
+
+        {:error, %Ecto.Changeset{} = changeset} ->
+          {:noreply, assign_form(socket, changeset)}
+      end
+    else
+      _ ->
         {:noreply,
          socket
-         |> put_flash(:info, "Location updated successfully")
-         |> push_patch(to: socket.assigns.patch)}
-
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign_form(socket, changeset)}
+         |> put_flash(:error, "Unauthorized")}
     end
   end
 
   defp save_location(socket, :new, location_params) do
-    case Locations.create_location(socket.assigns.current_user, location_params) do
-      {:ok, location} ->
-        IO.puts("created")
-        notify_parent({:saved, location})
+    user = socket.assigns.current_user
 
+    with :ok <- Bodyguard.permit(Locations, :create_location, user) do
+      case Locations.create_location(user, location_params) do
+        {:ok, location} ->
+          notify_parent({:saved, location})
+
+          {:noreply,
+           socket
+           |> put_flash(:info, "Location created successfully")
+           |> push_patch(to: socket.assigns.patch)}
+
+        {:error, %Ecto.Changeset{} = changeset} ->
+          {:noreply, assign_form(socket, changeset)}
+      end
+    else
+      _ ->
         {:noreply,
          socket
-         |> put_flash(:info, "Location created successfully")
-         |> push_patch(to: socket.assigns.patch)}
-
-      {:error, %Ecto.Changeset{} = changeset} ->
-        IO.puts("error")
-        {:noreply, assign_form(socket, changeset)}
+         |> put_flash(:error, "Unauthorized")}
     end
   end
 

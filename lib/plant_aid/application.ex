@@ -17,6 +17,7 @@ defmodule PlantAid.Application do
       PlantAid.ConnectionMonitor,
       # Start Finch
       {Finch, name: PlantAid.Finch},
+      {Task.Supervisor, name: PlantAid.TaskSupervisor},
       # Start the Endpoint (http/https)
       PlantAidWeb.Endpoint
       # Start a worker by calling: PlantAid.Worker.start_link(arg)

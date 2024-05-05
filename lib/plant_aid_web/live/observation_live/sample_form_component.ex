@@ -57,6 +57,10 @@ defmodule PlantAidWeb.ObservationLive.SampleFormComponent do
           <.icon name="hero-plus-circle" /><span class="align-middle">Add Key-Value Pair</span>
         </label>
 
+        <%= if @form[:result].value in [:positive, "positive"] do %>
+          <.input field={@form[:alert]} type="checkbox" label="Send Alerts" />
+        <% end %>
+
         <:actions>
           <.button phx-disable-with="Saving...">Save sample</.button>
         </:actions>
@@ -67,8 +71,6 @@ defmodule PlantAidWeb.ObservationLive.SampleFormComponent do
 
   @impl true
   def update(%{sample: sample} = assigns, socket) do
-    IO.inspect(sample, label: "sample")
-
     result_options =
       Ecto.Enum.mappings(Sample, :result)
       |> Enum.map(fn {k, v} -> {String.capitalize(v), k} end)
@@ -131,11 +133,20 @@ defmodule PlantAidWeb.ObservationLive.SampleFormComponent do
   defp save_sample(socket, :edit_sample, sample_params) do
     case Observations.update_sample(socket.assigns.sample, sample_params) do
       {:ok, sample} ->
+        if Map.get(sample_params, "alert") == "true" do
+          Task.Supervisor.start_child(
+            PlantAid.TaskSupervisor,
+            PlantAid.Alerts,
+            :handle_positive_sample,
+            [sample]
+          )
+        end
+
         notify_parent({:saved, sample})
 
         {:noreply,
          socket
-         |> put_flash(:info, "sample updated successfully")
+         |> put_flash(:info, "Sample updated successfully")
          |> push_patch(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -146,11 +157,20 @@ defmodule PlantAidWeb.ObservationLive.SampleFormComponent do
   defp save_sample(socket, :add_sample, sample_params) do
     case Observations.create_sample(socket.assigns.id, sample_params) do
       {:ok, sample} ->
+        if Map.get(sample_params, "alert") == "true" do
+          Task.Supervisor.start_child(
+            PlantAid.TaskSupervisor,
+            PlantAid.Alerts,
+            :handle_positive_sample,
+            [sample]
+          )
+        end
+
         notify_parent({:saved, sample})
 
         {:noreply,
          socket
-         |> put_flash(:info, "sample created successfully")
+         |> put_flash(:info, "Sample created successfully")
          |> push_patch(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->

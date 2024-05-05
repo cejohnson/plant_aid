@@ -1,0 +1,25 @@
+<.header>
+  Alert <%= @alert.id %>
+  <:subtitle>This is an alert record from your database.</:subtitle>
+</.header>
+
+<.list>
+  <:item title="Created At"><%= @alert.inserted_at %></:item>
+  <:item title="Pathology"><%= @alert.sample.pathology.common_name %></:item>
+  <:item title="Location"><%= @alert.sample.observation.location %></:item>
+  <:item title="Reported On"><%= @alert.sample.observation.observation_date %></:item>
+  <:item title="Confirmed At"><%= @alert.sample.inserted_at %></:item>
+  <:item title="Triggered By">
+    <ul>
+      <%= for alert_setting <- @alert.alert_settings do %>
+        <li>
+          <.link navigate={~p"/alerts/settings/#{alert_setting}"}>
+            <%= alert_setting.description %>
+          </.link>
+        </li>
+      <% end %>
+    </ul>
+  </:item>
+</.list>
+
+<.back navigate={~p"/alerts"}>Back to alerts</.back>

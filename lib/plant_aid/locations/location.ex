@@ -24,16 +24,13 @@ defmodule PlantAid.Locations.Location do
     location
     |> cast(attrs, [:name, :latitude, :longitude])
     |> validate_required([:name, :latitude, :longitude])
+    |> validate_number(:latitude, greater_than_or_equal_to: -90, less_than_or_equal_to: 90)
+    |> validate_number(:longitude, greater_than_or_equal_to: -180, less_than_or_equal_to: 180)
     |> maybe_put_position()
   end
 
   def scope(query, %User{id: user_id}, _) do
     from(row in query, where: row.user_id == ^user_id)
-  end
-
-  def put_coordinates(%Ecto.Changeset{} = changeset, position) do
-    changeset
-    |> cast(position, [:latitude, :longitude])
   end
 
   defp maybe_put_position(%Ecto.Changeset{} = changeset) do

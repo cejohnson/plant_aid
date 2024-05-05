@@ -118,12 +118,14 @@ defmodule PlantAidWeb.ObservationLive.Form do
 
   def handle_event(
         "current_position",
-        %{"latitude" => latitude, "longitude" => longitude},
+        position,
         socket
       ) do
+    observation_params = Map.merge(socket.assigns.form.params, position)
+
     changeset =
-      socket.assigns.form.source
-      |> Observation.put_coordinates(latitude, longitude)
+      socket.assigns.observation
+      |> Observations.change_observation(observation_params)
       |> Map.put(:action, :validate)
 
     {:noreply,

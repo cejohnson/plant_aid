@@ -34,6 +34,14 @@
           <% end %>
           <li>
             <.link
+              navigate={~p"/locations"}
+              class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+            >
+              Locations
+            </.link>
+          </li>
+          <li>
+            <.link
               navigate={~p"/observations"}
               class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
             >
@@ -42,10 +50,10 @@
           </li>
           <li>
             <.link
-              navigate={~p"/locations"}
+              navigate={~p"/alerts"}
               class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
             >
-              Locations
+              Alerts
             </.link>
           </li>
           <li>
