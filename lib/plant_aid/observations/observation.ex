@@ -49,7 +49,7 @@ defmodule PlantAid.Observations.Observation do
     ],
     default_order: %{
       order_by: [:observation_date],
-      order_directions: [:desc]
+      order_directions: [:desc_nulls_last]
     }
   }
 

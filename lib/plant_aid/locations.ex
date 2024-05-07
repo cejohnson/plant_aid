@@ -53,6 +53,7 @@ defmodule PlantAid.Locations do
     Location
     |> Bodyguard.scope(user)
     |> Repo.all()
+    |> Repo.preload([:location_type])
     |> Enum.map(&maybe_populate_lat_long/1)
   end
 
@@ -70,7 +71,9 @@ defmodule PlantAid.Locations do
       ** (Ecto.NoResultsError)
 
   """
-  def get_location!(id), do: Repo.get!(Location, id) |> maybe_populate_lat_long()
+  def get_location!(id) do
+    Repo.get!(Location, id) |> Repo.preload([:location_type]) |> maybe_populate_lat_long()
+  end
 
   @doc """
   Creates a location.
@@ -88,6 +91,10 @@ defmodule PlantAid.Locations do
     %Location{user: user}
     |> Location.changeset(attrs)
     |> Repo.insert()
+    |> case do
+      {:ok, location} -> {:ok, Repo.preload(location, [:location_type])}
+      error -> error
+    end
   end
 
   @doc """
@@ -106,6 +113,10 @@ defmodule PlantAid.Locations do
     location
     |> Location.changeset(attrs)
     |> Repo.update()
+    |> case do
+      {:ok, location} -> {:ok, Repo.preload(location, [:location_type])}
+      error -> error
+    end
   end
 
   @doc """

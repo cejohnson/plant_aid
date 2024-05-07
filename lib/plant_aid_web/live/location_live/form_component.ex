@@ -2,6 +2,7 @@ defmodule PlantAidWeb.LocationLive.FormComponent do
   use PlantAidWeb, :live_component
 
   alias PlantAid.Locations
+  alias PlantAid.LocationTypes
 
   @impl true
   def render(assigns) do
@@ -20,6 +21,12 @@ defmodule PlantAidWeb.LocationLive.FormComponent do
         phx-submit="save"
       >
         <.input field={@form[:name]} type="text" label="Name" />
+        <.input
+          field={@form[:location_type_id]}
+          type="select"
+          options={@location_type_options}
+          label="Location Type"
+        />
         <.button
           id="get-position"
           class="bg-stone-500"
@@ -53,9 +60,16 @@ defmodule PlantAidWeb.LocationLive.FormComponent do
   def update(%{location: location} = assigns, socket) do
     changeset = Locations.change_location(location)
 
+    location_type_options =
+      LocationTypes.list_location_types()
+      |> Enum.map(fn location_type ->
+        {location_type.name, location_type.id}
+      end)
+
     {:ok,
      socket
      |> assign(assigns)
+     |> assign(:location_type_options, location_type_options)
      |> assign_form(changeset)}
   end
 

@@ -15,6 +15,7 @@ defmodule PlantAid.Locations.Location do
     field :longitude, :float, virtual: true
 
     belongs_to :user, User
+    belongs_to :location_type, PlantAid.LocationTypes.LocationType
 
     timestamps()
   end
@@ -22,7 +23,7 @@ defmodule PlantAid.Locations.Location do
   @doc false
   def changeset(location, attrs) do
     location
-    |> cast(attrs, [:name, :latitude, :longitude])
+    |> cast(attrs, [:name, :location_type_id, :latitude, :longitude])
     |> validate_required([:name, :latitude, :longitude])
     |> validate_number(:latitude, greater_than_or_equal_to: -90, less_than_or_equal_to: 90)
     |> validate_number(:longitude, greater_than_or_equal_to: -180, less_than_or_equal_to: 180)

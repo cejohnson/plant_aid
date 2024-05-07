@@ -20,18 +20,10 @@
           label="Suspected Pathology"
         />
       </div>
-      <div class="md:basis-1/3 px-2">
-        <.input field={@form[:host_id]} type="select" options={@host_options} label="Host" />
-      </div>
     </div>
     <div class="md:flex md:flex-row">
       <div class="md:basis-1/3 px-2">
-        <.input
-          field={@form[:location_type_id]}
-          type="select"
-          options={@location_type_options}
-          label="Location Type"
-        />
+        <.input field={@form[:host_id]} type="select" options={@host_options} label="Host" />
       </div>
       <div class="md:basis-1/3 px-2">
         <.input
@@ -52,20 +44,43 @@
       <div class="text-lg font-semibold">
         Location
       </div>
-      <div class="px-2 pt-4">
-        <.button
-          id="get-position"
-          class="bg-stone-500"
-          type="button"
-          phx-hook="GetCurrentPosition"
-        >
-          Load Current Location
-        </.button>
+      <div class="text-sm text-stone-500">
+        Load an existing location, use your current position (this may take several seconds), or fill in manually.
       </div>
-      <div class="text-sm text-stone-500 px-2">
-        This may take several seconds and accuracy will vary based on your device.
+      <div class="md:flex md:flex-row pt-4">
+        <div class="md:basis-1/3 px-2">
+          <.input
+            field={@form[:location_id]}
+            type="select"
+            options={@location_options}
+            label="Load from location"
+            prompt="Select"
+            phx-change="load_location"
+          />
+        </div>
+        <div class="md:basis-1/3 px-2">
+          <div class="pt-8">
+            <.button
+              id="get-position"
+              class="bg-stone-500"
+              type="button"
+              phx-hook="GetCurrentPosition"
+            >
+              Load Current Position
+            </.button>
+          </div>
+        </div>
       </div>
+
       <div class="md:flex md:flex-row py-2">
+        <div class="md:basis-1/3 px-2">
+          <.input
+            field={@form[:location_type_id]}
+            type="select"
+            options={@location_type_options}
+            label="Location Type"
+          />
+        </div>
         <div class="md:basis-1/3 px-2">
           <.input field={@form[:latitude]} type="text" inputmode="decimal" label="Latitude" />
         </div>
@@ -114,18 +129,21 @@
       <div class="text-lg font-semibold">
         Observation Images
       </div>
-      <label>General Images</label>
+      <div class="text-sm text-stone-500 pb-4">
+        Add one or more images of the observation to aid in diagnosis.
+      </div>
+      <label class="pb-2">General Images</label>
       <%= if length(@observation.image_urls) > 0 do %>
         <div>Uploaded Images</div>
         <div>
           <%= for url <- @observation.image_urls do %>
-            <img src={url} height="200" />
+            <img src={url} height="200" width="200" />
           <% end %>
         </div>
       <% end %>
 
       <.live_file_input upload={@uploads.image} />
-      <section phx-drop-target={@uploads.image.ref}>
+      <section class="pt-2" phx-drop-target={@uploads.image.ref}>
         <%= for entry <- @uploads.image.entries do %>
           <article>
             <figure>

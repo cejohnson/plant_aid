@@ -1,6 +1,7 @@
 defmodule PlantAidWeb.ObservationLive.Form do
   use PlantAidWeb, :live_view
 
+  alias PlantAid.Locations
   alias PlantAid.ObjectStorage
   alias PlantAid.Observations
   alias PlantAid.Observations.Observation
@@ -16,12 +17,19 @@ defmodule PlantAidWeb.ObservationLive.Form do
     pathology_options = FormHelpers.list_pathology_options() |> prepend_default_option()
     country_options = FormHelpers.list_country_options() |> prepend_default_option()
 
+    location_options =
+      Locations.list_locations(socket.assigns.current_user)
+      |> Enum.map(fn location ->
+        {location.name, location.id}
+      end)
+
     # primary_subdivision_options = [{"First select country", nil}]
     # secondary_subdivision_options = [{"First select primary subdivision", nil}]
 
     {:ok,
      socket
      |> assign(:host_options, host_options)
+     |> assign(:location_options, location_options)
      |> assign(:location_type_options, location_type_options)
      |> assign(:pathology_options, pathology_options)
      |> assign(:country_options, country_options)
@@ -126,17 +134,66 @@ defmodule PlantAidWeb.ObservationLive.Form do
     changeset =
       socket.assigns.observation
       |> Observations.change_observation(observation_params)
+      |> Observation.maybe_put_geography_from_position()
       |> Map.put(:action, :validate)
 
     {:noreply,
      socket
+     |> maybe_assign_geographic_subdivision_options(changeset)
      |> assign_form(changeset)}
   end
 
-  def handle_event("on_current_position_error", %{"message" => message}, socket) do
+  def handle_event("on_get_current_position_error", %{"message" => message}, socket) do
     {:noreply,
      socket
      |> put_flash(:error, message)}
+  end
+
+  def handle_event("load_location", %{"observation" => %{"location_id" => location_id}}, socket) do
+    location =
+      case location_id do
+        "" ->
+          nil
+
+        id ->
+          Locations.get_location!(id)
+      end
+
+    location_type_id =
+      case location do
+        %{location_type: location_type} ->
+          location_type.id
+
+        nil ->
+          nil
+      end
+
+    {lat, long} =
+      case location do
+        %{position: %{coordinates: {long, lat}}} ->
+          {lat, long}
+
+        nil ->
+          {nil, nil}
+      end
+
+    observation_params =
+      Map.merge(socket.assigns.form.params, %{
+        "latitude" => lat,
+        "longitude" => long,
+        "location_type_id" => location_type_id
+      })
+
+    changeset =
+      socket.assigns.observation
+      |> Observations.change_observation(observation_params)
+      |> Observation.maybe_put_geography_from_position()
+      |> Map.put(:action, :validate)
+
+    {:noreply,
+     socket
+     |> maybe_assign_geographic_subdivision_options(changeset)
+     |> assign_form(changeset)}
   end
 
   def handle_event("set_geography", _, socket) do

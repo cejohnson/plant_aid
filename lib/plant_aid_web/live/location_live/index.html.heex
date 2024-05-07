@@ -13,6 +13,7 @@
   row_click={fn {_id, location} -> JS.navigate(~p"/locations/#{location}") end}
 >
   <:col :let={{_id, location}} label="Name"><%= location.name %></:col>
+  <:col :let={{_id, location}} label="Location Type"><%= location.location_type.name %></:col>
   <:col :let={{_id, location}} label="Latitude"><%= location.latitude %></:col>
   <:col :let={{_id, location}} label="Longitude"><%= location.longitude %></:col>
   <:action :let={{_id, location}}>
