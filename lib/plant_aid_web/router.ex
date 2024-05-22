@@ -161,6 +161,13 @@ defmodule PlantAidWeb.Router do
       live "/pathologies/:id/edit", PathologyLive.Index, :edit
       live "/pathologies/:id", PathologyLive.Show, :show
       live "/pathologies/:id/show/edit", PathologyLive.Show, :edit
+
+      live "/diagnostic_methods", DiagnosticMethodLive.Index, :index
+      live "/diagnostic_methods/new", DiagnosticMethodLive.Index, :new
+      live "/diagnostic_methods/:id/edit", DiagnosticMethodLive.Index, :edit
+
+      live "/diagnostic_methods/:id", DiagnosticMethodLive.Show, :show
+      live "/diagnostic_methods/:id/show/edit", DiagnosticMethodLive.Show, :edit
     end
   end
 

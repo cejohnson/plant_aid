@@ -3,7 +3,6 @@ defmodule PlantAid.Observations.Sample do
   import Ecto.Changeset
 
   schema "samples" do
-    # field :data, :map
     field :result, Ecto.Enum, values: [:positive, :negative, :indeterminate]
     field :confidence, :float
     field :comments, :string

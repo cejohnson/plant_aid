@@ -14,6 +14,11 @@ defmodule PlantAidWeb.AdminLive do
           </.link>
         </li>
         <li>
+          <.link navigate={~p"/admin/diagnostic_methods"} class="text-zinc-900 hover:text-zinc-700">
+            Diagnostic Methods
+          </.link>
+        </li>
+        <li>
           <.link navigate={~p"/admin/location_types"} class="text-zinc-900 hover:text-zinc-700">
             Location Types
           </.link>

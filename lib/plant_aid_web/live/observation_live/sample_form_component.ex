@@ -1,6 +1,7 @@
 defmodule PlantAidWeb.ObservationLive.SampleFormComponent do
   use PlantAidWeb, :live_component
 
+  alias PlantAid.Diagnostics
   alias PlantAid.Observations
   alias PlantAid.Observations.Sample
   alias PlantAid.FormHelpers
@@ -38,6 +39,15 @@ defmodule PlantAidWeb.ObservationLive.SampleFormComponent do
           />
         <% end %>
         <.input field={@form[:comments]} type="textarea" label="Comments" />
+
+        <.input
+          field={@form[:diagnostic_method_id]}
+          type="select"
+          options={@diagnostic_method_options}
+          label="Diagnostic Method"
+          prompt="Select"
+          phx-change="diagnostic-method-changed"
+        />
 
         <.label>Data</.label>
         <.inputs_for :let={f_data} field={@form[:data]}>
@@ -87,6 +97,12 @@ defmodule PlantAidWeb.ObservationLive.SampleFormComponent do
           FormHelpers.list_genotype_options(id) |> prepend_default_option()
       end
 
+    diagnostic_method_options =
+      Diagnostics.list_diagnostic_methods()
+      |> Enum.map(fn dm ->
+        {dm.name, dm.id}
+      end)
+
     changeset = Observations.change_sample(sample)
 
     {:ok,
@@ -95,6 +111,7 @@ defmodule PlantAidWeb.ObservationLive.SampleFormComponent do
      |> assign(:result_options, result_options)
      |> assign(:pathology_options, pathology_options)
      |> assign(:genotype_options, genotype_options)
+     |> assign(:diagnostic_method_options, diagnostic_method_options)
      |> assign_form(changeset)}
   end
 
@@ -128,6 +145,32 @@ defmodule PlantAidWeb.ObservationLive.SampleFormComponent do
       end
 
     {:noreply, socket |> assign(:genotype_options, genotype_options)}
+  end
+
+  def handle_event(
+        "diagnostic-method-changed",
+        %{"sample" => %{"diagnostic_method_id" => diagnostic_method_id}},
+        socket
+      ) do
+    diagnostic_method = Diagnostics.get_diagnostic_method!(diagnostic_method_id)
+
+    data =
+      diagnostic_method.field_names
+      |> Enum.with_index(fn field_name, index ->
+        {index, %{"key" => field_name.value}}
+      end)
+      |> Map.new()
+
+    sample_params =
+      Map.merge(socket.assigns.form.params, %{
+        "data" => data
+      })
+
+    changeset =
+      socket.assigns.sample
+      |> Observations.change_sample(sample_params)
+
+    {:noreply, socket |> assign_form(changeset)}
   end
 
   defp save_sample(socket, :edit_sample, sample_params) do

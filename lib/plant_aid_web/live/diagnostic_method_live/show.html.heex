@@ -1,0 +1,42 @@
+<.header>
+  Diagnostic method <%= @diagnostic_method.id %>
+  <:subtitle>This is a diagnostic_method record from your database.</:subtitle>
+  <:actions>
+    <.link
+      patch={~p"/admin/diagnostic_methods/#{@diagnostic_method}/show/edit"}
+      phx-click={JS.push_focus()}
+    >
+      <.button>Edit diagnostic_method</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Name"><%= @diagnostic_method.name %></:item>
+  <:item title="Description"><%= @diagnostic_method.description %></:item>
+  <:item title="Fields">
+    <.table id="fields" rows={@diagnostic_method.fields}>
+      <:col :let={field} label="Name"><%= field.name %></:col>
+      <:col :let={field} label="Type"><%= field.type %></:col>
+      <:col :let={field} label="Data"><%= field.data %></:col>
+    </.table>
+  </:item>
+</.list>
+
+<.back navigate={~p"/admin/diagnostic_methods"}>Back to diagnostic_methods</.back>
+
+<.modal
+  :if={@live_action == :edit}
+  id="diagnostic_method-modal"
+  show
+  on_cancel={JS.patch(~p"/admin/diagnostic_methods/#{@diagnostic_method}")}
+>
+  <.live_component
+    module={PlantAidWeb.DiagnosticMethodLive.FormComponent}
+    id={@diagnostic_method.id}
+    title={@page_title}
+    action={@live_action}
+    diagnostic_method={@diagnostic_method}
+    patch={~p"/admin/diagnostic_methods/#{@diagnostic_method}"}
+  />
+</.modal>

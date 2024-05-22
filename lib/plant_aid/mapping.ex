@@ -43,17 +43,18 @@ defmodule PlantAid.Mapping do
          |> Enum.map(fn {pathology, counts} ->
            %{
              name: pathology || "Unknown",
-             count: Enum.reduce(counts, 0, fn %{count: count}, total ->
-                total + count
+             count:
+               Enum.reduce(counts, 0, fn %{count: count}, total ->
+                 total + count
                end),
              genotypes:
                Enum.map(counts, fn %{count: count, genotype: genotype} ->
-                 %{name: genotype || "Unknown", count: count}
+                 %{name: genotype || "Not Genotyped", count: count}
                end)
                |> Enum.sort_by(fn %{count: count} -> count end, :desc)
            }
          end)
-        |> Enum.sort_by(fn %{count: count} -> count end, :desc)}
+         |> Enum.sort_by(fn %{count: count} -> count end, :desc)}
       end)
       |> Map.new()
 
