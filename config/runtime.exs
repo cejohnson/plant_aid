@@ -21,7 +21,7 @@ if System.get_env("PHX_SERVER") do
 end
 
 config :plant_aid,
-  registration_enabled: String.to_existing_atom(System.get_env("REGISTRATION_ENABLED") || "true")
+  registration_enabled: String.to_existing_atom(System.get_env("REGISTRATION_ENABLED") || "false")
 
 if config_env() == :prod do
   database_url =
