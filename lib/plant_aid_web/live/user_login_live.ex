@@ -6,15 +6,6 @@ defmodule PlantAidWeb.UserLoginLive do
     <div class="mx-auto max-w-sm">
       <.header class="text-center">
         Sign in to account
-        <:subtitle>
-          <%= if Application.get_env(:plant_aid, :registration_enabled) do %>
-            Don't have an account?
-            <.link navigate={~p"/users/register"} class="font-semibold text-brand hover:underline">
-              Sign up
-            </.link>
-            for an account now.
-          <% end %>
-        </:subtitle>
       </.header>
 
       <.simple_form for={@form} id="login_form" action={~p"/users/log_in"} phx-update="ignore">
@@ -33,6 +24,17 @@ defmodule PlantAidWeb.UserLoginLive do
           </.button>
         </:actions>
       </.simple_form>
+      <div class="p-4 font-light">
+        <%= if Application.get_env(:plant_aid, :registration_enabled) do %>
+          Don't have an account?
+          <.link navigate={~p"/users/register"} class="font-semibold text-brand hover:underline">
+            Sign up
+          </.link>
+          for an account now.
+        <% else %>
+          PlantAid is currently being used by our collaborators. Registration will open to the public in the future.
+        <% end %>
+      </div>
     </div>
     """
   end

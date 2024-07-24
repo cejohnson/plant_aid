@@ -116,11 +116,20 @@ defmodule PlantAidWeb.Router do
 
     delete "/users/log_out", UserSessionController, :delete
 
+    get "/", PageController, :home
+    get "/about", PageController, :about
+    get "/funding", PageController, :funding
+    get "/contact", PageController, :contact
+    get "/publications", PageController, :publications
+    get "/team", PageController, :team
+    get "/pathogens", PageController, :pathogens
+    get "/tools", PageController, :tools
+
     live_session :current_user,
       on_mount: [
         {PlantAidWeb.UserAuth, :mount_current_user}
       ] do
-      live "/", HomeLive.Index, :index
+      live "/map", MapLive.Index, :index
 
       live "/users/confirm/:token", UserConfirmationLive, :edit
       live "/users/confirm", UserConfirmationInstructionsLive, :new
