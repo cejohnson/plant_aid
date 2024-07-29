@@ -3,10 +3,10 @@
   <:subtitle>This is a diagnostic_method record from your database.</:subtitle>
   <:actions>
     <.link
-      patch={~p"/admin/diagnostic_methods/#{@diagnostic_method}/show/edit"}
+      navigate={~p"/admin/diagnostic_methods/#{@diagnostic_method}/show/edit"}
       phx-click={JS.push_focus()}
     >
-      <.button>Edit diagnostic_method</.button>
+      <.button variant="primary">Edit Diagnostic Method</.button>
     </.link>
   </:actions>
 </.header>
@@ -72,20 +72,3 @@
 </.list>
 
 <.back navigate={~p"/admin/diagnostic_methods"}>Back to diagnostic_methods</.back>
-
-<.modal
-  :if={@live_action == :edit}
-  id="diagnostic_method-modal"
-  show
-  on_cancel={JS.patch(~p"/admin/diagnostic_methods/#{@diagnostic_method}")}
->
-  <.live_component
-    module={PlantAidWeb.DiagnosticMethodLive.FormComponent}
-    id={@diagnostic_method.id}
-    title={@page_title}
-    action={@live_action}
-    current_user={@current_user}
-    diagnostic_method={@diagnostic_method}
-    patch={~p"/admin/diagnostic_methods/#{@diagnostic_method}"}
-  />
-</.modal>

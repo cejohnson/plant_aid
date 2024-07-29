@@ -1,24 +1,19 @@
-defmodule PlantAidWeb.DiagnosticMethodLive.FormComponent do
-  use PlantAidWeb, :live_component
+defmodule PlantAidWeb.DiagnosticMethodLive.Form do
+  use PlantAidWeb, :live_view
 
   alias PlantAid.DiagnosticMethods
+  alias PlantAid.DiagnosticMethods.DiagnosticMethod
 
   @impl true
   def render(assigns) do
     ~H"""
     <div>
       <.header>
-        <%= @title %>
+        <%= @page_title %>
         <:subtitle>Use this form to manage diagnostic_method records in your database.</:subtitle>
       </.header>
 
-      <.simple_form
-        for={@form}
-        id="diagnostic_method-form"
-        phx-target={@myself}
-        phx-change="validate"
-        phx-submit="save"
-      >
+      <.simple_form for={@form} id="diagnostic_method-form" phx-change="validate" phx-submit="save">
         <.input field={@form[:name]} type="text" label="Name" />
         <.input field={@form[:description]} type="textarea" label="Description" />
         <.input
@@ -58,7 +53,6 @@ defmodule PlantAidWeb.DiagnosticMethodLive.FormComponent do
               label="Fill Out"
               options={[{"Once Per Test", false}, {"For Each Pathology", true}]}
             />
-            <%!-- <.inputs_for :let={f_data} field={f_field[:data]}> --%>
             <.input
               field={f_field[:type]}
               type="select"
@@ -66,34 +60,6 @@ defmodule PlantAidWeb.DiagnosticMethodLive.FormComponent do
               options={[:string, :image, :select, :list, :map]}
             />
             <%= case Ecto.Changeset.get_field(f_field.source, :type) do %>
-              <%!-- <% :select -> %>
-                <div>
-                  <.inputs_for :let={f_option} field={f_field[:select_options]}>
-                    <input
-                      type="hidden"
-                      name={"diagnostic_method[per_test_fields][#{f_field.index}][select_option_order][]"}
-                      value={f_option.index}
-                    />
-                    <.input field={f_option[:value]} type="text" label="Option" />
-                    <label class="cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name={"diagnostic_method[per_test_fields][#{f_field.index}][select_option_delete][]"}
-                        class="hidden"
-                        value={f_option.index}
-                      />
-                      <.icon name="hero-x-mark" />
-                    </label>
-                  </.inputs_for>
-                  <label class="cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name={"diagnostic_method[per_test_fields][#{f_field.index}][select_option_order][]"}
-                      class="hidden"
-                    />
-                    <.icon name="hero-plus-circle" /><span class="align-middle">Add Option</span>
-                  </label>
-                </div> --%>
               <% :list -> %>
                 <.input
                   field={f_field[:subtype]}
@@ -108,7 +74,6 @@ defmodule PlantAidWeb.DiagnosticMethodLive.FormComponent do
                   label="Map Type"
                   options={[:string, :select]}
                 />
-                <%!-- </.inputs_for> --%>
               <% _ -> %>
             <% end %>
 
@@ -141,17 +106,7 @@ defmodule PlantAidWeb.DiagnosticMethodLive.FormComponent do
                 </label>
               </div>
             <% end %>
-            <%!-- </.inputs_for> --%>
 
-            <%!-- <label class="cursor-pointer">
-              <input
-                type="checkbox"
-                name="diagnostic_method[per_test_field_delete][]"
-                class="hidden"
-                value={f_field.index}
-              />
-              <.icon name="hero-x-mark" />
-            </label> --%>
             <button
               type="button"
               name="diagnostic_method[fields_drop][]"
@@ -174,15 +129,10 @@ defmodule PlantAidWeb.DiagnosticMethodLive.FormComponent do
           <.icon name="hero-plus-circle" /><span class="align-middle">Add Field</span>
         </button>
 
-        <%!-- <input type="hidden" name="mailing_list[emails_drop][]" />
-
-        <label class="cursor-pointer">
-          <input type="checkbox" name="diagnostic_method[per_test_field_order][]" class="hidden" />
-          <.icon name="hero-plus-circle" /><span class="align-middle">Add Field</span>
-        </label> --%>
-
         <:actions>
           <.button variant="primary" phx-disable-with="Saving...">Save Diagnostic method</.button>
+          <.button variant="secondary" type="button" phx-click="reset">Reset</.button>
+          <.button type="button" phx-click="cancel">Cancel</.button>
         </:actions>
       </.simple_form>
     </div>
@@ -190,17 +140,35 @@ defmodule PlantAidWeb.DiagnosticMethodLive.FormComponent do
   end
 
   @impl true
-  def update(%{diagnostic_method: diagnostic_method} = assigns, socket) do
-    changeset = DiagnosticMethods.change_diagnostic_method(diagnostic_method)
-
+  def mount(_params, _session, socket) do
     pathology_options =
-      PlantAid.Pathologies.list_pathologies() |> Enum.map(fn p -> {p.common_name, p.id} end)
+      PlantAid.Pathologies.list_pathologies() |> Enum.map(&{&1.common_name, &1.id})
 
     {:ok,
      socket
-     |> assign(assigns)
      |> assign(:pathology_options, pathology_options)
+     |> assign(:page_title, page_title(socket.assigns.live_action))}
+  end
+
+  @impl true
+  def handle_params(params, url, socket) do
+    diagnostic_method = get_diagnostic_method(socket.assigns.live_action, params)
+
+    changeset = DiagnosticMethods.change_diagnostic_method(diagnostic_method)
+
+    {:noreply,
+     socket
+     |> assign(:url, url)
+     |> assign(:diagnostic_method, diagnostic_method)
      |> assign_form(changeset)}
+  end
+
+  defp get_diagnostic_method(:edit, %{"id" => id}) do
+    DiagnosticMethods.get_diagnostic_method!(id)
+  end
+
+  defp get_diagnostic_method(:new, _) do
+    %DiagnosticMethod{}
   end
 
   @impl true
@@ -213,8 +181,29 @@ defmodule PlantAidWeb.DiagnosticMethodLive.FormComponent do
     {:noreply, assign_form(socket, changeset)}
   end
 
+  def handle_event("reset", _, socket) do
+    changeset = DiagnosticMethods.change_diagnostic_method(socket.assigns.diagnostic_method)
+
+    {:noreply,
+     socket
+     |> assign_form(changeset)}
+  end
+
+  def handle_event("cancel", _, socket) do
+    to =
+      if String.contains?(socket.assigns.url, "show") do
+        ~p"/admin/diagnostic_methods/#{socket.assigns.diagnostic_method}"
+      else
+        ~p"/admin/diagnostic_methods"
+      end
+
+    {:noreply,
+     socket
+     |> push_navigate(to: to)}
+  end
+
   def handle_event("save", %{"diagnostic_method" => diagnostic_method_params}, socket) do
-    save_diagnostic_method(socket, socket.assigns.action, diagnostic_method_params)
+    save_diagnostic_method(socket, socket.assigns.live_action, diagnostic_method_params)
   end
 
   defp save_diagnostic_method(socket, :edit, diagnostic_method_params) do
@@ -233,12 +222,10 @@ defmodule PlantAidWeb.DiagnosticMethodLive.FormComponent do
              diagnostic_method_params
            ) do
         {:ok, diagnostic_method} ->
-          notify_parent({:saved, diagnostic_method})
-
           {:noreply,
            socket
            |> put_flash(:info, "Diagnostic method updated successfully")
-           |> push_patch(to: socket.assigns.patch)}
+           |> push_navigate(to: ~p"/admin/diagnostic_methods/#{diagnostic_method}")}
 
         {:error, %Ecto.Changeset{} = changeset} ->
           {:noreply, assign_form(socket, changeset)}
@@ -263,12 +250,10 @@ defmodule PlantAidWeb.DiagnosticMethodLive.FormComponent do
              diagnostic_method_params
            ) do
         {:ok, diagnostic_method} ->
-          notify_parent({:saved, diagnostic_method})
-
           {:noreply,
            socket
            |> put_flash(:info, "Diagnostic method created successfully")
-           |> push_patch(to: socket.assigns.patch)}
+           |> push_navigate(to: ~p"/admin/diagnostic_methods/#{diagnostic_method}")}
 
         {:error, %Ecto.Changeset{} = changeset} ->
           {:noreply, assign_form(socket, changeset)}
@@ -285,5 +270,6 @@ defmodule PlantAidWeb.DiagnosticMethodLive.FormComponent do
     assign(socket, :form, to_form(changeset))
   end
 
-  defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
+  defp page_title(:new), do: "New Diagnostic Method"
+  defp page_title(:edit), do: "Edit Diagnostic Method"
 end

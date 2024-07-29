@@ -133,10 +133,6 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
                           <.input field={f_entry[:delete]} type="checkbox" label="Delete" />
                           <img src={f_entry.data.value} height="200" width="200" />
                         </.inputs_for>
-                        <%!-- <%= for entry <- Changeset.get_embed do %>
-                          <.input type="checkbox" name={"test_result[fields][#{f_field.index}][list_entries_drop][]"} label="Delete" />
-                          <img src={entry.value} height="200" width="200" />
-                        <% end %> --%>
                       <% end %>
                       <.live_file_input upload={@uploads[Changeset.get_field(f_field.source, :id)]} />
                       <section
@@ -603,8 +599,6 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
              &consume_images(socket, &1)
            ) do
         {:ok, test_result} ->
-          notify_parent({:saved, test_result})
-
           {:noreply,
            socket
            |> put_flash(:info, "Test result updated successfully")
@@ -634,8 +628,6 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
              &consume_images(socket, &1)
            ) do
         {:ok, test_result} ->
-          notify_parent({:saved, test_result})
-
           {:noreply,
            socket
            |> put_flash(:info, "Test result created successfully")
@@ -655,8 +647,6 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
   defp assign_form(socket, %Ecto.Changeset{} = changeset) do
     assign(socket, :form, to_form(changeset))
   end
-
-  defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 
   defp presign_upload(entry, socket) do
     meta =
@@ -753,189 +743,6 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
         |> then(&Changeset.put_change(field_changeset, :list_entries, &1))
     end
   end
-
-  # def put_upload_urls(%TestResult{} = test_result, test_result_params, socket) do
-  #   IO.inspect(test_result_params, label: "put_upload_url params")
-
-  #   test_result_params =
-  #     test_result_params["fields"]
-  #     |> Enum.filter(fn {_persistent_id, field} ->
-  #       field["type"] == "image" or field["subtype"] == "image"
-  #     end)
-  #     |> Enum.reduce(test_result_params, fn {persistent_id, field}, test_result_params ->
-  #       new_urls =
-  #         get_upload_urls(socket, field["name"])
-
-  #       if length(new_urls) > 0 do
-  #         # persistent_id =
-  #         #   Enum.find_value(
-  #         #     test_result_params["fields"],
-  #         #     fn {persistent_id, field_params} ->
-  #         #       if field.id == field_params["id"], do: persistent_id
-  #         #     end
-  #         #   )
-
-  #         # TODO: we need to delete old images here
-  #         case field["type"] do
-  #           "image" ->
-  #             put_in(
-  #               test_result_params,
-  #               ["fields", persistent_id, "value"],
-  #               List.first(new_urls)
-  #             )
-
-  #           "list" ->
-  #             new_list_entries =
-  #               new_urls
-  #               |> Enum.map(fn url ->
-  #                 %{"value" => url}
-  #               end)
-
-  #             list_entries =
-  #               test_result.fields
-  #               |> Enum.find_value([], fn field ->
-  #                 if field.id == field["id"], do: persistent_id
-  #               end)
-  #               |> Enum.map(&Map.from_struct/1)
-  #               |> Enum.concat(new_list_entries)
-
-  #             put_in(
-  #               test_result_params,
-  #               ["fields", persistent_id, "list_entries"],
-  #               list_entries
-  #             )
-
-  #             # Map.put(test_result_params, "value", List.first(new_urls))
-  #             # :list ->
-  #             #   Map.put(test_result_params, "list_entries", )
-  #         end
-  #       else
-  #         test_result_params
-  #       end
-  #     end)
-
-  #   test_result_params["pathology_results"]
-  #   |> Enum.reduce(test_result_params, fn {index, pathology_result_params}, test_result_params ->
-  #     pathology_result_params["fields"]
-  #     |> Enum.filter(fn {_persistent_id, field} ->
-  #       field["type"] == "image" or field["subtype"] == "image"
-  #     end)
-  #     |> Enum.reduce(test_result_params, fn {persistent_id, field}, test_result_params ->
-  #       upload_name = "pathology_results_#{index}_#{field["name"]}"
-
-  #       new_urls =
-  #         get_upload_urls(socket, upload_name)
-
-  #       IO.inspect(new_urls, label: "new urls")
-
-  #       if length(new_urls) > 0 do
-  #         # persistent_id =
-  #         #   Enum.find_value(
-  #         #     test_result_params["fields"],
-  #         #     fn {persistent_id, field_params} ->
-  #         #       if field.id == field_params["id"], do: persistent_id
-  #         #     end
-  #         #   )
-
-  #         # TODO: we need to delete old images here
-  #         case field["type"] do
-  #           "image" ->
-  #             put_in(
-  #               test_result_params,
-  #               ["pathology_results", index, "fields", persistent_id, "value"],
-  #               List.first(new_urls)
-  #             )
-
-  #           "list" ->
-  #             new_list_entries =
-  #               new_urls
-  #               |> Enum.map(fn url ->
-  #                 %{"value" => url}
-  #               end)
-
-  #             list_entries =
-  #               test_result.fields
-  #               |> Enum.find_value([], fn field ->
-  #                 if field.id == field["id"], do: field.list_entries
-  #               end)
-  #               |> Enum.map(&Map.from_struct/1)
-  #               |> Enum.concat(new_list_entries)
-
-  #             put_in(
-  #               test_result_params,
-  #               ["pathology_results", index, "fields", persistent_id, "list_entries"],
-  #               list_entries
-  #             )
-
-  #             # Map.put(test_result_params, "value", List.first(new_urls))
-  #             # :list ->
-  #             #   Map.put(test_result_params, "list_entries", )
-  #         end
-  #       else
-  #         test_result_params
-  #       end
-  #     end)
-  #   end)
-
-  #   # test_result.pathology_results
-  #   # |> Enum.with_index()
-  #   # |> Enum.reduce(params, fn {pathology_result, index}, test_result_params ->
-  #   #   pathology_result.fields
-  #   #   |> Enum.filter(fn field ->
-  #   #     field.type == :image or field.subtype == :image
-  #   #   end)
-  #   #   |> Enum.reduce(test_result_params, fn field, test_result_params ->
-  #   #     upload_name = "pathology_results_#{index}_#{field.name}"
-
-  #   #     new_urls =
-  #   #       get_upload_urls(socket, upload_name)
-
-  #   #     if length(new_urls) > 0 do
-  #   #       persistent_id =
-  #   #         Enum.find_value(
-  #   #           test_result_params["fields"],
-  #   #           fn {persistent_id, field_params} ->
-  #   #             if field.id == field_params["id"], do: persistent_id
-  #   #           end
-  #   #         )
-
-  #   #       # TODO: we need to delete old images here
-  #   #       case field.type do
-  #   #         :image ->
-  #   #           put_in(
-  #   #             test_result_params,
-  #   #             ["fields", persistent_id, "value"],
-  #   #             List.first(new_urls)
-  #   #           )
-
-  #   #         :list ->
-  #   #           list_entries =
-  #   #             new_urls
-  #   #             |> Enum.map(fn url ->
-  #   #               %{"value" => url}
-  #   #             end)
-
-  #   #           list_entries =
-  #   #             field.list_entries
-  #   #             |> Enum.map(&Map.from_struct/1)
-  #   #             |> Enum.concat(list_entries)
-
-  #   #           put_in(
-  #   #             test_result_params,
-  #   #             ["fields", persistent_id, "list_entries"],
-  #   #             list_entries
-  #   #           )
-
-  #   #           # Map.put(test_result_params, "value", List.first(new_urls))
-  #   #           # :list ->
-  #   #           #   Map.put(test_result_params, "list_entries", )
-  #   #       end
-  #   #     else
-  #   #       test_result_params
-  #   #     end
-  #   #   end)
-  #   # end)
-  # end
 
   defp consume_images(socket, %TestResult{} = test_result) do
     test_result.fields

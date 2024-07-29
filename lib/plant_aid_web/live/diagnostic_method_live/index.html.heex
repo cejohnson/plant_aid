@@ -1,7 +1,7 @@
 <.header>
   Listing Diagnostic methods
   <:actions>
-    <.link patch={~p"/admin/diagnostic_methods/new"}>
+    <.link navigate={~p"/admin/diagnostic_methods/new"}>
       <.button variant="primary">New Diagnostic method</.button>
     </.link>
   </:actions>
@@ -44,20 +44,3 @@
     </.link>
   </:action>
 </.table>
-
-<.modal
-  :if={@live_action in [:new, :edit]}
-  id="diagnostic_method-modal"
-  show
-  on_cancel={JS.patch(~p"/admin/diagnostic_methods")}
->
-  <.live_component
-    module={PlantAidWeb.DiagnosticMethodLive.FormComponent}
-    id={@diagnostic_method.id || :new}
-    title={@page_title}
-    action={@live_action}
-    current_user={@current_user}
-    diagnostic_method={@diagnostic_method}
-    patch={~p"/admin/diagnostic_methods"}
-  />
-</.modal>
