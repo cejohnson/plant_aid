@@ -36,9 +36,9 @@ defmodule PlantAid.MixProject do
       {:argon2_elixir, "~> 3.0"},
       {:phoenix, "~> 1.7"},
       {:phoenix_ecto, "~> 4.4"},
-      {:ecto_sql, "~> 3.6"},
+      {:ecto_sql, "~> 3.11"},
       {:postgrex, ">= 0.0.0"},
-      {:phoenix_html, "~> 3.0"},
+      {:phoenix_html, "~> 4.0"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 0.18"},
       {:heroicons, "~> 0.5"},
@@ -59,9 +59,11 @@ defmodule PlantAid.MixProject do
       # Specific project dependencies
       {:geo_postgis, "~> 3.4"},
       {:nimble_csv, "~> 1.2"},
-      {:flop, "~> 0.19"},
-      {:flop_phoenix, "~> 0.18"},
-      {:qr_code, "~> 3.0.0"}
+      {:flop, "~> 0.25.0"},
+      {:flop_phoenix, "~> 0.22.9"},
+      {:qr_code, "~> 3.0.0"},
+      {:ex_aws, "~> 2.0"},
+      {:ex_aws_s3, "~> 2.0"}
     ]
   end
 

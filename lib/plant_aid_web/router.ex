@@ -108,6 +108,12 @@ defmodule PlantAidWeb.Router do
 
       # live "/samples/:id", SampleLive.Show, :show
       # live "/samples/:id/show/edit", SampleLive.Show, :edit
+
+      live "/test_results", DiagnosticTestResultLive.Index, :index
+      live "/test_results/new", DiagnosticTestResultLive.Form, :new
+      live "/test_results/:id/edit", DiagnosticTestResultLive.Form, :edit
+      live "/test_results/:id", DiagnosticTestResultLive.Show, :show
+      live "/test_results/:id/show/edit", DiagnosticTestResultLive.Form, :edit
     end
   end
 

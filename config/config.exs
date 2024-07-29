@@ -70,6 +70,10 @@ config :flop_phoenix,
   pagination: [opts: {PlantAidWeb.Helpers, :pagination_opts}],
   table: [opts: {PlantAidWeb.Helpers, :table_opts}]
 
+config :ex_aws,
+  json_codec: Jason,
+  http_client: PlantAid.ExAwsHttpClient
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"

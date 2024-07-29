@@ -1,0 +1,141 @@
+<.header>
+  Test result <%= @test_result.id %>
+  <:subtitle>This is a test_result record from your database.</:subtitle>
+  <:actions>
+    <.link patch={~p"/test_results/#{@test_result}/show/edit"} phx-click={JS.push_focus()}>
+      <.button>Edit test_result</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Observation ID"><%= @test_result.observation_id %></:item>
+  <:item title="Created By">
+    <%= @test_result.inserted_by.email %>
+  </:item>
+  <:item title="Created On">
+    <%= DateTime.to_date(@test_result.inserted_at) %>
+  </:item>
+  <:item title="Updated By">
+    <%= @test_result.updated_by.email %>
+  </:item>
+  <:item title="Updated On">
+    <%= DateTime.to_date(@test_result.updated_at) %>
+  </:item>
+  <:item title="Comments"><%= @test_result.comments %></:item>
+  <:item title="Fields">
+    <%= if length(@test_result.fields) > 0 do %>
+      <.table id="fields" rows={@test_result.fields}>
+        <:col :let={field} label="Name"><%= field.name %></:col>
+        <:col :let={field} label="Data">
+          <%= case field.type do %>
+            <% :image -> %>
+              <a :if={field.value} href={field.value} target="_blank">
+                <img src={field.value} height="200" width="200" />
+              </a>
+            <% :list -> %>
+              <ul>
+                <%= for entry <- field.list_entries do %>
+                  <li>
+                    <%= case field.subtype do %>
+                      <% :image -> %>
+                        <a href={entry.value} target="_blank">
+                          <img src={entry.value} height="200" width="200" />
+                        </a>
+                      <% _ -> %>
+                        <%= entry.value %>
+                    <% end %>
+                  </li>
+                <% end %>
+              </ul>
+            <% :map -> %>
+              <ul>
+                <%= for entry <- field.map_entries do %>
+                  <li>
+                    <span><%= entry.key %></span>
+                    <span><%= entry.value %></span>
+                  </li>
+                <% end %>
+              </ul>
+            <% _ -> %>
+              <%= field.value %>
+          <% end %>
+        </:col>
+      </.table>
+    <% end %>
+  </:item>
+  <:item :if={length(@test_result.pathology_results) > 0} title="Pathology Results">
+    <.table id="pathology_results" rows={@test_result.pathology_results}>
+      <:col :let={pathology_result} label="Pathology">
+        <%= pathology_result.pathology.common_name %>
+      </:col>
+      <:col :let={pathology_result} label="Result"><%= pathology_result.result %></:col>
+      <:col :let={pathology_result} label="Genotype">
+        <%= pathology_result.genotype && pathology_result.genotype.name %>
+      </:col>
+      <:col :let={pathology_result} label="Fields">
+        <%= if length(pathology_result.fields) > 0 do %>
+          <.table
+            id={"pathology_results_#{pathology_result.id}_fields"}
+            rows={pathology_result.fields}
+          >
+            <:col :let={field} label="Name"><%= field.name %></:col>
+            <:col :let={field} label="Data">
+              <%= case field.type do %>
+                <% :image -> %>
+                  <a :if={field.value} href={field.value} target="_blank">
+                    <img src={field.value} height="200" width="200" />
+                  </a>
+                <% :list -> %>
+                  <ul>
+                    <%= for entry <- field.list_entries do %>
+                      <li>
+                        <%= case field.subtype do %>
+                          <% :image -> %>
+                            <a href={entry.value} target="_blank">
+                              <img src={entry.value} height="200" width="200" />
+                            </a>
+                          <% _ -> %>
+                            <%= entry.value %>
+                        <% end %>
+                      </li>
+                    <% end %>
+                  </ul>
+                <% :map -> %>
+                  <ul>
+                    <%= for entry <- field.map_entries do %>
+                      <li>
+                        <span><%= entry.key %></span>
+                        <span><%= entry.value %></span>
+                      </li>
+                    <% end %>
+                  </ul>
+                <% _ -> %>
+                  <%= field.value %>
+              <% end %>
+            </:col>
+          </.table>
+        <% end %>
+      </:col>
+    </.table>
+  </:item>
+</.list>
+
+<.back navigate={~p"/test_results"}>Back to test_results</.back>
+
+<%!-- <.modal
+  :if={@live_action == :edit}
+  id="test_result-modal"
+  show
+  on_cancel={JS.patch(~p"/test_results/#{@test_result}")}
+>
+  <.live_component
+    module={PlantAidWeb.DiagnosticTestResultLive.FormComponent}
+    id={@test_result.id}
+    title={@page_title}
+    action={@live_action}
+    test_result={@test_result}
+    current_user={@current_user}
+    patch={~p"/test_results/#{@test_result}"}
+  />
+</.modal> --%>

@@ -17,4 +17,20 @@ defmodule PlantAid.DiagnosticsFixtures do
 
     diagnostic_method
   end
+
+  @doc """
+  Generate a diagnostic_test_result.
+  """
+  def diagnostic_test_result_fixture(attrs \\ %{}) do
+    {:ok, diagnostic_test_result} =
+      attrs
+      |> Enum.into(%{
+        comments: "some comments",
+        data: %{},
+        metadata: %{}
+      })
+      |> PlantAid.Diagnostics.create_diagnostic_test_result()
+
+    diagnostic_test_result
+  end
 end

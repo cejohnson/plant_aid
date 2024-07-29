@@ -1,6 +1,9 @@
 defmodule PlantAid.Diagnostics do
+  @behaviour Bodyguard.Policy
+
   import Ecto.Query, warn: false
   alias PlantAid.Repo
+  alias PlantAid.Accounts.User
   alias PlantAid.Diagnostics.Diagnostic
 
   def list_diagnostics(observation_id) do
@@ -31,99 +34,104 @@ defmodule PlantAid.Diagnostics do
     Diagnostic.changeset(diagnostic, attrs)
   end
 
-  alias PlantAid.Diagnostics.DiagnosticMethod
+  # alias PlantAid.Diagnostics.DiagnosticMethod
+
+  # alias PlantAid.Diagnostics.DiagnosticTestResult
 
   @doc """
-  Returns the list of diagnostic_methods.
+  Returns the list of diagnostic_test_results.
 
   ## Examples
 
-      iex> list_diagnostic_methods()
-      [%DiagnosticMethod{}, ...]
+      iex> list_diagnostic_test_results()
+      [%DiagnosticTestResult{}, ...]
 
   """
-  def list_diagnostic_methods do
-    Repo.all(DiagnosticMethod)
-  end
+  # def list_diagnostic_test_results do
+  #   Repo.all(DiagnosticTestResult)
+  # end
 
-  @doc """
-  Gets a single diagnostic_method.
+  # @doc """
+  # Gets a single diagnostic_test_result.
 
-  Raises `Ecto.NoResultsError` if the Diagnostic method does not exist.
+  # Raises `Ecto.NoResultsError` if the Diagnostic test result does not exist.
 
-  ## Examples
+  # ## Examples
 
-      iex> get_diagnostic_method!(123)
-      %DiagnosticMethod{}
+  #     iex> get_diagnostic_test_result!(123)
+  #     %DiagnosticTestResult{}
 
-      iex> get_diagnostic_method!(456)
-      ** (Ecto.NoResultsError)
+  #     iex> get_diagnostic_test_result!(456)
+  #     ** (Ecto.NoResultsError)
 
-  """
-  def get_diagnostic_method!(id), do: Repo.get!(DiagnosticMethod, id)
+  # """
+  # def get_diagnostic_test_result!(id), do: Repo.get!(DiagnosticTestResult, id)
 
-  @doc """
-  Creates a diagnostic_method.
+  # @doc """
+  # Creates a diagnostic_test_result.
 
-  ## Examples
+  # ## Examples
 
-      iex> create_diagnostic_method(%{field: value})
-      {:ok, %DiagnosticMethod{}}
+  #     iex> create_diagnostic_test_result(%{field: value})
+  #     {:ok, %DiagnosticTestResult{}}
 
-      iex> create_diagnostic_method(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
+  #     iex> create_diagnostic_test_result(%{field: bad_value})
+  #     {:error, %Ecto.Changeset{}}
 
-  """
-  def create_diagnostic_method(attrs \\ %{}) do
-    %DiagnosticMethod{}
-    |> DiagnosticMethod.changeset(attrs)
-    |> Repo.insert()
-  end
+  # """
+  # def create_diagnostic_test_result(attrs \\ %{}) do
+  #   %DiagnosticTestResult{}
+  #   |> DiagnosticTestResult.changeset(attrs)
+  #   |> Repo.insert()
+  # end
 
-  @doc """
-  Updates a diagnostic_method.
+  # @doc """
+  # Updates a diagnostic_test_result.
 
-  ## Examples
+  # ## Examples
 
-      iex> update_diagnostic_method(diagnostic_method, %{field: new_value})
-      {:ok, %DiagnosticMethod{}}
+  #     iex> update_diagnostic_test_result(diagnostic_test_result, %{field: new_value})
+  #     {:ok, %DiagnosticTestResult{}}
 
-      iex> update_diagnostic_method(diagnostic_method, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
+  #     iex> update_diagnostic_test_result(diagnostic_test_result, %{field: bad_value})
+  #     {:error, %Ecto.Changeset{}}
 
-  """
-  def update_diagnostic_method(%DiagnosticMethod{} = diagnostic_method, attrs) do
-    diagnostic_method
-    |> DiagnosticMethod.changeset(attrs)
-    |> Repo.update()
-  end
+  # """
+  # def update_diagnostic_test_result(%DiagnosticTestResult{} = diagnostic_test_result, attrs) do
+  #   diagnostic_test_result
+  #   |> DiagnosticTestResult.changeset(attrs)
+  #   |> Repo.update()
+  # end
 
-  @doc """
-  Deletes a diagnostic_method.
+  # @doc """
+  # Deletes a diagnostic_test_result.
 
-  ## Examples
+  # ## Examples
 
-      iex> delete_diagnostic_method(diagnostic_method)
-      {:ok, %DiagnosticMethod{}}
+  #     iex> delete_diagnostic_test_result(diagnostic_test_result)
+  #     {:ok, %DiagnosticTestResult{}}
 
-      iex> delete_diagnostic_method(diagnostic_method)
-      {:error, %Ecto.Changeset{}}
+  #     iex> delete_diagnostic_test_result(diagnostic_test_result)
+  #     {:error, %Ecto.Changeset{}}
 
-  """
-  def delete_diagnostic_method(%DiagnosticMethod{} = diagnostic_method) do
-    Repo.delete(diagnostic_method)
-  end
+  # """
+  # def delete_diagnostic_test_result(%DiagnosticTestResult{} = diagnostic_test_result) do
+  #   Repo.delete(diagnostic_test_result)
+  # end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking diagnostic_method changes.
+  # @doc """
+  # Returns an `%Ecto.Changeset{}` for tracking diagnostic_test_result changes.
 
-  ## Examples
+  # ## Examples
 
-      iex> change_diagnostic_method(diagnostic_method)
-      %Ecto.Changeset{data: %DiagnosticMethod{}}
+  #     iex> change_diagnostic_test_result(diagnostic_test_result)
+  #     %Ecto.Changeset{data: %DiagnosticTestResult{}}
 
-  """
-  def change_diagnostic_method(%DiagnosticMethod{} = diagnostic_method, attrs \\ %{}) do
-    DiagnosticMethod.changeset(diagnostic_method, attrs)
-  end
+  # """
+  # def change_diagnostic_test_result(
+  #       %DiagnosticTestResult{} = diagnostic_test_result,
+  #       attrs \\ %{}
+  #     ) do
+  #   DiagnosticTestResult.changeset(diagnostic_test_result, attrs)
+  # end
 end

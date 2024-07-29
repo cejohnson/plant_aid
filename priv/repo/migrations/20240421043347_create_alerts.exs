@@ -4,8 +4,8 @@ defmodule PlantAid.Repo.Migrations.CreateAlerts do
   def change do
     create table(:alerts) do
       add :viewed_at, :utc_datetime
-      add :user_id, references(:users, on_delete: :nothing)
-      add :sample_id, references(:samples, on_delete: :nothing)
+      add :user_id, references(:users, on_delete: :delete_all)
+      add :sample_id, references(:samples, on_delete: :delete_all)
 
       timestamps()
     end

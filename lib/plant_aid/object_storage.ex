@@ -41,6 +41,27 @@ defmodule PlantAid.ObjectStorage do
     "https://#{object_storage[:bucket]}.#{object_storage[:region]}.#{object_storage[:domain]}"
   end
 
+  def delete_objects([]) do
+  end
+
+  def delete_objects(urls) do
+    objects =
+      Enum.map(urls, fn url ->
+        URI.new!(url).path
+        |> String.slice(1..-1)
+      end)
+
+    object_storage = Application.get_env(:plant_aid, PlantAid.ObjectStorage)
+
+    ExAws.S3.delete_multiple_objects(object_storage[:bucket], objects)
+    |> ExAws.request!(
+      host: object_storage[:region] <> "." <> object_storage[:domain],
+      # region: object_storage[:region],
+      access_key_id: object_storage[:access_key_id],
+      secret_access_key: object_storage[:secret_access_key]
+    )
+  end
+
   @doc """
   Signs a form upload.
 

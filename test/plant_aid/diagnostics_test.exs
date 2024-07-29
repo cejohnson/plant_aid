@@ -56,4 +56,62 @@ defmodule PlantAid.DiagnosticsTest do
       assert %Ecto.Changeset{} = Diagnostics.change_diagnostic_method(diagnostic_method)
     end
   end
+
+  describe "diagnostic_test_results" do
+    alias PlantAid.Diagnostics.DiagnosticTestResult
+
+    import PlantAid.DiagnosticsFixtures
+
+    @invalid_attrs %{data: nil, metadata: nil, comments: nil}
+
+    test "list_diagnostic_test_results/0 returns all diagnostic_test_results" do
+      diagnostic_test_result = diagnostic_test_result_fixture()
+      assert Diagnostics.list_diagnostic_test_results() == [diagnostic_test_result]
+    end
+
+    test "get_diagnostic_test_result!/1 returns the diagnostic_test_result with given id" do
+      diagnostic_test_result = diagnostic_test_result_fixture()
+      assert Diagnostics.get_diagnostic_test_result!(diagnostic_test_result.id) == diagnostic_test_result
+    end
+
+    test "create_diagnostic_test_result/1 with valid data creates a diagnostic_test_result" do
+      valid_attrs = %{data: %{}, metadata: %{}, comments: "some comments"}
+
+      assert {:ok, %DiagnosticTestResult{} = diagnostic_test_result} = Diagnostics.create_diagnostic_test_result(valid_attrs)
+      assert diagnostic_test_result.data == %{}
+      assert diagnostic_test_result.metadata == %{}
+      assert diagnostic_test_result.comments == "some comments"
+    end
+
+    test "create_diagnostic_test_result/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Diagnostics.create_diagnostic_test_result(@invalid_attrs)
+    end
+
+    test "update_diagnostic_test_result/2 with valid data updates the diagnostic_test_result" do
+      diagnostic_test_result = diagnostic_test_result_fixture()
+      update_attrs = %{data: %{}, metadata: %{}, comments: "some updated comments"}
+
+      assert {:ok, %DiagnosticTestResult{} = diagnostic_test_result} = Diagnostics.update_diagnostic_test_result(diagnostic_test_result, update_attrs)
+      assert diagnostic_test_result.data == %{}
+      assert diagnostic_test_result.metadata == %{}
+      assert diagnostic_test_result.comments == "some updated comments"
+    end
+
+    test "update_diagnostic_test_result/2 with invalid data returns error changeset" do
+      diagnostic_test_result = diagnostic_test_result_fixture()
+      assert {:error, %Ecto.Changeset{}} = Diagnostics.update_diagnostic_test_result(diagnostic_test_result, @invalid_attrs)
+      assert diagnostic_test_result == Diagnostics.get_diagnostic_test_result!(diagnostic_test_result.id)
+    end
+
+    test "delete_diagnostic_test_result/1 deletes the diagnostic_test_result" do
+      diagnostic_test_result = diagnostic_test_result_fixture()
+      assert {:ok, %DiagnosticTestResult{}} = Diagnostics.delete_diagnostic_test_result(diagnostic_test_result)
+      assert_raise Ecto.NoResultsError, fn -> Diagnostics.get_diagnostic_test_result!(diagnostic_test_result.id) end
+    end
+
+    test "change_diagnostic_test_result/1 returns a diagnostic_test_result changeset" do
+      diagnostic_test_result = diagnostic_test_result_fixture()
+      assert %Ecto.Changeset{} = Diagnostics.change_diagnostic_test_result(diagnostic_test_result)
+    end
+  end
 end
