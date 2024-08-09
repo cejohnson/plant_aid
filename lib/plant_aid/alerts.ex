@@ -461,7 +461,7 @@ defmodule PlantAid.Alerts do
             |> Enum.map(fn l -> l.name end)
             |> join_with_or()
 
-          "within #{alert_setting.distance} #{alert_setting.distance_unit} of any location except #{locations}"
+          "within #{alert_setting.distance} #{alert_setting.distance_unit} of any location EXCEPT #{locations}"
       end
 
     description = "Confirmed instances of #{pathology_blurb}, #{location_blurb}."
