@@ -200,11 +200,12 @@ defmodule PlantAid.Mapping do
           :suspected_pathology,
           :country,
           :primary_subdivision,
-          secondary_subdivision: ^from(s in SecondarySubdivision, select: %{s | geog: nil})
+          secondary_subdivision: ^from(s in SecondarySubdivision, select: %{s | geog: nil}),
+          sample: [:pathology]
         ]
       )
       |> scope(user)
-      |> Flop.with_named_bindings(flop, &join_user_assoc/2, opts)
+      |> Flop.with_named_bindings(flop, &join_observation_assocs/2, opts)
       |> Flop.filter(flop, opts)
 
     observations =
@@ -219,7 +220,7 @@ defmodule PlantAid.Mapping do
         o in Observation,
         select: fragment("ST_Envelope(ST_Collect(?::geometry))", o.position)
       )
-      |> Flop.with_named_bindings(flop, &join_user_assoc/2, opts)
+      |> Flop.with_named_bindings(flop, &join_observation_assocs/2, opts)
       |> Flop.filter(flop, opts)
       |> Repo.one()
       |> (fn geom ->
@@ -279,11 +280,19 @@ defmodule PlantAid.Mapping do
     end
   end
 
-  defp join_user_assoc(query, :user) do
+  defp join_observation_assocs(query, :user) do
     from(
       o in query,
       left_join: u in assoc(o, :user),
       as: :user
+    )
+  end
+
+  defp join_observation_assocs(query, :sample) do
+    from(
+      o in query,
+      left_join: s in assoc(o, :sample),
+      as: :sample
     )
   end
 
@@ -325,13 +334,5 @@ defmodule PlantAid.Mapping do
       | location:
           "#{secondary_subdivision.name} #{secondary_subdivision.category}, #{psd_abbreviation}, #{country.iso3166_1_alpha2}"
     }
-  end
-
-  defp join_observation_assocs(query, :sample) do
-    from(
-      o in query,
-      left_join: s in assoc(o, :sample),
-      as: :sample
-    )
   end
 end
