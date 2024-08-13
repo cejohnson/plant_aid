@@ -56,6 +56,7 @@ defmodule PlantAid.MixProject do
       # General additional dependencies
       {:bodyguard, "~> 2.4"},
       {:ecto_psql_extras, "~> 0.6"},
+      {:error_tracker, "~> 0.2"},
       # Specific project dependencies
       {:geo_postgis, "~> 3.4"},
       {:nimble_csv, "~> 1.2"},

@@ -92,6 +92,11 @@ defmodule PlantAidWeb.UserAuth do
   def fetch_current_user(conn, _opts) do
     {user_token, conn} = ensure_user_token(conn)
     user = user_token && Accounts.get_user_by_session_token(user_token)
+
+    if user do
+      ErrorTracker.set_context(%{user_id: user.id, user_email: user.email})
+    end
+
     assign(conn, :current_user, user)
   end
 
@@ -198,7 +203,13 @@ defmodule PlantAidWeb.UserAuth do
     case session do
       %{"user_token" => user_token} ->
         Phoenix.Component.assign_new(socket, :current_user, fn ->
-          Accounts.get_user_by_session_token(user_token)
+          user = Accounts.get_user_by_session_token(user_token)
+
+          if user do
+            ErrorTracker.set_context(%{user_id: user.id, user_email: user.email})
+          end
+
+          user
         end)
 
       %{} ->

@@ -61,6 +61,10 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+config :error_tracker,
+  repo: PlantAid.Repo,
+  otp_app: :plant_aid
+
 config :geo_postgis,
   json_library: Jason
 

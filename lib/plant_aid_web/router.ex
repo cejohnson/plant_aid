@@ -1,5 +1,6 @@
 defmodule PlantAidWeb.Router do
   use PlantAidWeb, :router
+  use ErrorTracker.Web, :router
 
   import PlantAidWeb.UserAuth
 
@@ -186,5 +187,6 @@ defmodule PlantAidWeb.Router do
     pipe_through [:browser, :require_authenticated_user, :require_superuser]
 
     live_dashboard "/dashboard", metrics: PlantAidWeb.Telemetry
+    error_tracker_dashboard("/errors")
   end
 end
