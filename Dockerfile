@@ -47,12 +47,13 @@ RUN mix deps.compile
 
 COPY priv priv
 
+COPY lib lib
+
 COPY assets assets
 
 # compile assets
+# It seems this needs to be run after copying lib or CSS doesn't work
 RUN mix assets.deploy
-
-COPY lib lib
 
 # Compile the release
 RUN mix compile
