@@ -47,12 +47,12 @@ RUN mix deps.compile
 
 COPY priv priv
 
-COPY lib lib
-
 COPY assets assets
 
 # compile assets
 RUN mix assets.deploy
+
+COPY lib lib
 
 # Compile the release
 RUN mix compile
