@@ -44,6 +44,25 @@ if config_env() == :prod do
     socket_options: maybe_ipv6,
     prepare: :unnamed
 
+  [username, password, hostname, port, database] =
+    Regex.run(~r/^ecto:\/\/(.+):(.+)@(.+):(.+)\/(.+)\?ssl=true$/, database_url)
+
+  config :libcluster,
+    topologies: [
+      plantaid: [
+        strategy: LibclusterPostgres.Strategy,
+        config: [
+          hostname: hostname,
+          username: username,
+          password: password,
+          database: database,
+          port: port,
+          # optional, defaults to false
+          ssl: true
+        ]
+      ]
+    ]
+
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you
   # want to use a different value for prod and you most likely don't want

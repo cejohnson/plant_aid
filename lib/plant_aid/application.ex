@@ -7,11 +7,15 @@ defmodule PlantAid.Application do
 
   @impl true
   def start(_type, _args) do
+    topologies = Application.get_env(:libcluster, :topologies)
+
     children = [
       # Start the Telemetry supervisor
       PlantAidWeb.Telemetry,
       # Start the Ecto repository
       PlantAid.Repo,
+      # Start libcluster
+      {Cluster.Supervisor, [topologies]},
       # Start the PubSub system
       {Phoenix.PubSub, name: PlantAid.PubSub},
       PlantAid.ConnectionMonitor,
