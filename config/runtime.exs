@@ -57,6 +57,7 @@ if config_env() == :prod do
           password: password,
           database: database,
           port: port,
+          parameters: [],
           # optional, defaults to false
           ssl: true
         ]
