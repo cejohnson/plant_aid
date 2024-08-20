@@ -45,7 +45,7 @@ if config_env() == :prod do
     prepare: :unnamed
 
   [username, password, hostname, port, database] =
-    Regex.run(~r/^ecto:\/\/(.+):(.+)@(.+):(.+)\/(.+)\?ssl=true$/, database_url)
+    Regex.run(~r/^ecto:\/\/(.+):(.+)@(.+):(.+)\/(.+)\?/, database_url)
 
   config :libcluster,
     topologies: [
