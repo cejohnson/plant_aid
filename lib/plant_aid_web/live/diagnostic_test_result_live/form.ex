@@ -28,354 +28,36 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
           options={@diagnostic_method_options}
           phx-change="change-diagnostic-method"
         />
-
         <%= if Changeset.get_field(@form.source, :diagnostic_method_id) do %>
-          <%= if length(Changeset.get_field(@form.source, :fields)) > 0 do %>
-            <.label>Fields</.label>
-            <.inputs_for :let={f_field} field={@form[:fields]}>
-              <%= case Changeset.get_field(f_field.source, :type) do %>
-                <% :string -> %>
-                  <.input
-                    field={f_field[:value]}
-                    type="text"
-                    label={Changeset.get_field(f_field.source, :name)}
-                  />
-                <% :image -> %>
-                  <.label><%= Changeset.get_field(f_field.source, :name) %></.label>
-                  <%= if f_field.data.value do %>
-                    <.label>Current Image</.label>
-                    <.input field={f_field[:delete]} type="checkbox" label="Delete" />
-                    <img src={f_field.data.value} height="200" width="200" />
-                  <% end %>
-                  <.live_file_input upload={@uploads[Changeset.get_field(f_field.source, :id)]} />
-                  <section
-                    class="pt-2"
-                    phx-drop-target={@uploads[Changeset.get_field(f_field.source, :id)].ref}
-                  >
-                    <%= for entry <- @uploads[Changeset.get_field(f_field.source, :id)].entries do %>
-                      <article>
-                        <figure>
-                          <.live_img_preview entry={entry} width={200} />
-                          <figcaption><%= entry.client_name %></figcaption>
-                        </figure>
-
-                        <progress value={entry.progress} max="100"><%= entry.progress %>%</progress>
-
-                        <.button
-                          type="button"
-                          class="bg-stone-500"
-                          phx-click="cancel-upload"
-                          phx-value-ref={"#{Changeset.get_field(f_field.source, :id)}|#{entry.ref}"}
-                          aria-label="cancel"
-                        >
-                          &times;
-                        </.button>
-
-                        <%= for err <- upload_errors(@uploads[Changeset.get_field(f_field.source, :id)], entry) do %>
-                          <p><%= error_to_string(err) %></p>
-                        <% end %>
-                      </article>
-                    <% end %>
-
-                    <%= for err <- upload_errors(@uploads[Changeset.get_field(f_field.source, :id)]) do %>
-                      <p><%= error_to_string(err) %></p>
-                    <% end %>
-                  </section>
-                <% :select -> %>
-                  <.input
-                    field={f_field[:value]}
-                    type="select"
-                    label={Changeset.get_field(f_field.source, :name)}
-                    prompt="Select"
-                    options={
-                      Enum.map(Changeset.get_field(f_field.source, :select_options), & &1.value)
-                    }
-                  />
-                <% :list -> %>
-                  <.label><%= Changeset.get_field(f_field.source, :name) %></.label>
-                  <%= case Changeset.get_field(f_field.source, :subtype) do %>
+          <div class="items-top p-4 bg-neutral-200">
+            <%= if length(Changeset.get_field(@form.source, :fields)) > 0 do %>
+              <.label>Fields for the selected Diagnostic Method:</.label>
+              <.inputs_for :let={f_field} field={@form[:fields]}>
+                <div class="">
+                  <%= case Changeset.get_field(f_field.source, :type) do %>
                     <% :string -> %>
-                      <div>
-                        <.inputs_for :let={f_entry} field={f_field[:list_entries]}>
-                          <input
-                            type="hidden"
-                            name={"test_result[fields][#{f_field.index}][list_entries_sort][]"}
-                            value={f_entry.index}
-                          />
-                          <.input field={f_entry[:value]} type="text" />
-                          <button
-                            type="button"
-                            name={"test_result[fields][#{f_field.index}][list_entries_drop][]"}
-                            value={f_entry.index}
-                            phx-click={JS.dispatch("change")}
-                          >
-                            <.icon name="hero-x-mark" class="w-6 h-6 relative top-2" />
-                          </button>
-                        </.inputs_for>
-                      </div>
-                      <input
-                        type="hidden"
-                        name={"test_result[fields][#{f_field.index}][list_entries_drop][]"}
-                      />
-
-                      <button
-                        type="button"
-                        name={"test_result[fields][#{f_field.index}][list_entries_sort][]"}
-                        value="new"
-                        phx-click={JS.dispatch("change")}
-                      >
-                        <.icon name="hero-plus-circle" /><span class="align-middle">Add Entry</span>
-                      </button>
-                    <% :image -> %>
-                      <%= if length(f_field.data.list_entries) > 0 do %>
-                        <.label>Current Images</.label>
-                        <.inputs_for :let={f_entry} field={f_field[:list_entries]}>
-                          <.input field={f_entry[:delete]} type="checkbox" label="Delete" />
-                          <img src={f_entry.data.value} height="200" width="200" />
-                        </.inputs_for>
-                      <% end %>
-                      <.live_file_input upload={@uploads[Changeset.get_field(f_field.source, :id)]} />
-                      <section
-                        class="pt-2"
-                        phx-drop-target={@uploads[Changeset.get_field(f_field.source, :id)].ref}
-                      >
-                        <%= for entry <- @uploads[Changeset.get_field(f_field.source, :id)].entries do %>
-                          <article>
-                            <figure>
-                              <.live_img_preview entry={entry} width={200} />
-                              <figcaption><%= entry.client_name %></figcaption>
-                            </figure>
-
-                            <progress value={entry.progress} max="100">
-                              <%= entry.progress %>%
-                            </progress>
-
-                            <.button
-                              type="button"
-                              class="bg-stone-500"
-                              phx-click="cancel-upload"
-                              phx-value-ref={"#{Changeset.get_field(f_field.source, :id)}|#{entry.ref}"}
-                              aria-label="cancel"
-                            >
-                              &times;
-                            </.button>
-
-                            <%= for err <- upload_errors(@uploads[Changeset.get_field(f_field.source, :id)], entry) do %>
-                              <p><%= error_to_string(err) %></p>
-                            <% end %>
-                          </article>
-                        <% end %>
-
-                        <%= for err <- upload_errors(@uploads[Changeset.get_field(f_field.source, :id)]) do %>
-                          <p><%= error_to_string(err) %></p>
-                        <% end %>
-                      </section>
-                  <% end %>
-                <% :map -> %>
-                  <.label><%= Changeset.get_field(f_field.source, :name) %></.label>
-                  <div>
-                    <.inputs_for :let={f_entry} field={f_field[:map_entries]}>
-                      <input
-                        type="hidden"
-                        name={"test_result[fields][#{f_field.index}][map_entries_sort][]"}
-                        value={f_entry.index}
-                      />
-                      <.input field={f_entry[:key]} type="text" label="Key" />
-                      <%= case Changeset.get_field(f_field.source, :subtype) do %>
-                        <% :string -> %>
-                          <.input field={f_entry[:value]} type="text" label="Value" />
-                        <% :select -> %>
-                          <.input
-                            field={f_entry[:value]}
-                            type="select"
-                            label="Value"
-                            prompt="Select"
-                            options={
-                              Enum.map(
-                                Changeset.get_field(f_field.source, :select_options),
-                                & &1.value
-                              )
-                            }
-                          />
-                      <% end %>
-                      <button
-                        type="button"
-                        name={"test_result[fields][#{f_field.index}][map_entries_drop][]"}
-                        value={f_entry.index}
-                        phx-click={JS.dispatch("change")}
-                      >
-                        <.icon name="hero-x-mark" class="w-6 h-6 relative top-2" />
-                      </button>
-                    </.inputs_for>
-                  </div>
-
-                  <input
-                    type="hidden"
-                    name={"test_result[fields][#{f_field.index}][map_entries_drop][]"}
-                  />
-
-                  <button
-                    type="button"
-                    name={"test_result[fields][#{f_field.index}][map_entries_sort][]"}
-                    value="new"
-                    phx-click={JS.dispatch("change")}
-                  >
-                    <.icon name="hero-plus-circle" /><span class="align-middle">Add Entry</span>
-                  </button>
-              <% end %>
-            </.inputs_for>
-          <% end %>
-
-          <.inputs_for :let={f_pathology_result} field={@form[:pathology_results]}>
-            <.label>
-              <%= Changeset.get_field(f_pathology_result.source, :pathology).common_name %>
-            </.label>
-            <.radio_group field={f_pathology_result[:result]} label="Result">
-              <:radio value="positive">Positive</:radio>
-              <:radio value="negative">Negative</:radio>
-            </.radio_group>
-            <%= if Changeset.get_field(f_pathology_result.source, :result) == :positive and length(Changeset.get_field(f_pathology_result.source, :pathology).genotypes) > 0 do %>
-              <.input
-                field={f_pathology_result[:genotype_id]}
-                type="select"
-                label="Genotype"
-                prompt="Select"
-                options={
-                  Enum.map(
-                    Changeset.get_field(f_pathology_result.source, :pathology).genotypes,
-                    &{&1.name, &1.id}
-                  )
-                }
-              />
-            <% end %>
-            <%= if length(Changeset.get_field(f_pathology_result.source, :fields)) > 0 do %>
-              <.label>Fields</.label>
-              <.inputs_for :let={f_field} field={f_pathology_result[:fields]}>
-                <%= case Changeset.get_field(f_field.source, :type) do %>
-                  <% :string -> %>
-                    <.input
-                      field={f_field[:value]}
-                      type="text"
-                      label={Changeset.get_field(f_field.source, :name)}
-                    />
-                  <% :image -> %>
-                    <% IO.puts("printing image") %>
-                    <.label><%= Changeset.get_field(f_field.source, :name) %></.label>
-                    <%= if f_field.data.value do %>
-                      <.label>Current Image</.label>
-                      <img src={f_field.data.value} height="200" width="200" />
-                    <% end %>
-                    <.live_file_input upload={
-                      @uploads[
-                        Changeset.get_field(f_field.source, :id)
-                      ]
-                    } />
-                    <section
-                      class="pt-2"
-                      phx-drop-target={
-                        @uploads[
-                          Changeset.get_field(f_field.source, :id)
-                        ].ref
-                      }
-                    >
-                      <%= for entry <- @uploads[Changeset.get_field(f_field.source, :id)].entries do %>
-                        <article>
-                          <figure>
-                            <.live_img_preview entry={entry} width={200} />
-                            <figcaption><%= entry.client_name %></figcaption>
-                          </figure>
-
-                          <progress value={entry.progress} max="100"><%= entry.progress %>%</progress>
-
-                          <.button
-                            type="button"
-                            class="bg-stone-500"
-                            phx-click="cancel-upload"
-                            phx-value-ref={"#{Changeset.get_field(f_field.source, :id)}|#{entry.ref}"}
-                            aria-label="cancel"
-                          >
-                            &times;
-                          </.button>
-
-                          <%= for err <- upload_errors(@uploads[Changeset.get_field(f_field.source, :id)], entry) do %>
-                            <p><%= error_to_string(err) %></p>
-                          <% end %>
-                        </article>
-                      <% end %>
-
-                      <%= for err <- upload_errors(@uploads[Changeset.get_field(f_field.source, :id)]) do %>
-                        <p><%= error_to_string(err) %></p>
-                      <% end %>
-                    </section>
-                  <% :select -> %>
-                    <.input
-                      field={f_field[:value]}
-                      type="select"
-                      label={Changeset.get_field(f_field.source, :name)}
-                      prompt="Select"
-                      options={
-                        Enum.map(Changeset.get_field(f_field.source, :select_options), & &1.value)
-                      }
-                    />
-                  <% :list -> %>
-                    <.label><%= Changeset.get_field(f_field.source, :name) %></.label>
-                    <%= case Changeset.get_field(f_field.source, :subtype) do %>
-                      <% :string -> %>
-                        <div>
-                          <.inputs_for :let={f_entry} field={f_field[:list_entries]}>
-                            <input
-                              type="hidden"
-                              name={"test_result[pathology_results][#{f_pathology_result.index}][fields][#{f_field.index}][list_entries_sort][]"}
-                              value={f_entry.index}
-                            />
-                            <.input field={f_entry[:value]} type="text" />
-                            <button
-                              type="button"
-                              name={"test_result[pathology_results][#{f_pathology_result.index}][fields][#{f_field.index}][list_entries_drop][]"}
-                              value={f_entry.index}
-                              phx-click={JS.dispatch("change")}
-                            >
-                              <.icon name="hero-x-mark" class="w-6 h-6 relative top-2" />
-                            </button>
-                          </.inputs_for>
-                        </div>
-
-                        <input
-                          type="hidden"
-                          name={"test_result[pathology_results][#{f_pathology_result.index}][fields][#{f_field.index}][list_entries_drop][]"}
+                      <div class="bg-white p-2 my-2">
+                        <.input
+                          field={f_field[:value]}
+                          type="text"
+                          label={Changeset.get_field(f_field.source, :name)}
                         />
-
-                        <button
-                          type="button"
-                          name={"test_result[pathology_results][#{f_pathology_result.index}][fields][#{f_field.index}][list_entries_sort][]"}
-                          value="new"
-                          phx-click={JS.dispatch("change")}
-                        >
-                          <.icon name="hero-plus-circle" /><span class="align-middle">Add Entry</span>
-                        </button>
-                      <% :image -> %>
-                        <% IO.puts("printing images") %>
-                        <%= if length(f_field.data.list_entries) > 0 do %>
-                          <.label>Current Images</.label>
-                          <%= for entry <- f_field.data.list_entries do %>
-                            <img src={entry.value} height="200" width="200" />
-                          <% end %>
+                      </div>
+                    <% :image -> %>
+                      <div class="bg-white p-2 my-2">
+                        <.label><%= Changeset.get_field(f_field.source, :name) %></.label>
+                        <%= if f_field.data.value do %>
+                          <.label>Current Image</.label>
+                          <.input field={f_field[:delete]} type="checkbox" label="Delete" />
+                          <img src={f_field.data.value} height="200" width="200" />
                         <% end %>
-                        <.live_file_input upload={
-                          @uploads[
-                            Changeset.get_field(f_field.source, :id)
-                          ]
-                        } />
+                        <.live_file_input upload={@uploads[Changeset.get_field(f_field.source, :id)]} />
                         <section
                           class="pt-2"
-                          phx-drop-target={
-                            @uploads[
-                              Changeset.get_field(f_field.source, :id)
-                            ].ref
-                          }
+                          phx-drop-target={@uploads[Changeset.get_field(f_field.source, :id)].ref}
                         >
                           <%= for entry <- @uploads[Changeset.get_field(f_field.source, :id)].entries do %>
-                            <article>
+                            <article class="py-2">
                               <figure>
                                 <.live_img_preview entry={entry} width={200} />
                                 <figcaption><%= entry.client_name %></figcaption>
@@ -396,34 +78,277 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
                               </.button>
 
                               <%= for err <- upload_errors(@uploads[Changeset.get_field(f_field.source, :id)], entry) do %>
-                                <p><%= error_to_string(err) %></p>
+                                <p class="text-red-600 font-semibold"><%= error_to_string(err) %></p>
                               <% end %>
                             </article>
                           <% end %>
 
                           <%= for err <- upload_errors(@uploads[Changeset.get_field(f_field.source, :id)]) do %>
-                            <p><%= error_to_string(err) %></p>
+                            <p class="text-red-600 font-semibold"><%= error_to_string(err) %></p>
                           <% end %>
                         </section>
-                    <% end %>
-                  <% :map -> %>
-                    <.label><%= Changeset.get_field(f_field.source, :name) %></.label>
-                    <div>
-                      <.inputs_for :let={f_entry} field={f_field[:map_entries]}>
-                        <input
-                          type="hidden"
-                          name={"test_result[pathology_results][#{f_pathology_result.index}][fields][#{f_field.index}][map_entries_sort][]"}
-                          value={f_entry.index}
+                      </div>
+                    <% :select -> %>
+                      <div class="bg-white p-2 my-2">
+                        <.input
+                          field={f_field[:value]}
+                          type="select"
+                          label={Changeset.get_field(f_field.source, :name)}
+                          prompt="Select"
+                          options={
+                            Enum.map(Changeset.get_field(f_field.source, :select_options), & &1.value)
+                          }
                         />
-                        <.input field={f_entry[:key]} type="text" label="Key" />
+                      </div>
+                    <% :list -> %>
+                      <div class="bg-white p-2 my-2">
+                        <.label><%= Changeset.get_field(f_field.source, :name) %></.label>
                         <%= case Changeset.get_field(f_field.source, :subtype) do %>
                           <% :string -> %>
-                            <.input field={f_entry[:value]} type="text" label="Value" />
+                            <div class=" px-2">
+                              <.inputs_for :let={f_entry} field={f_field[:list_entries]}>
+                                <div class="flex ">
+                                  <div class="grow">
+                                    <input
+                                      type="hidden"
+                                      name={"test_result[fields][#{f_field.index}][list_entries_sort][]"}
+                                      value={f_entry.index}
+                                    />
+                                    <.input field={f_entry[:value]} type="text" />
+                                  </div>
+                                  <button
+                                    type="button"
+                                    name={"test_result[fields][#{f_field.index}][list_entries_drop][]"}
+                                    value={f_entry.index}
+                                    phx-click={JS.dispatch("change")}
+                                  >
+                                    <.icon name="hero-x-mark" class="w-6 h-6 relative top-2" />
+                                  </button>
+                                </div>
+                              </.inputs_for>
+                            </div>
+                            <input
+                              type="hidden"
+                              name={"test_result[fields][#{f_field.index}][list_entries_drop][]"}
+                            />
+
+                            <button
+                              type="button"
+                              class="px-2"
+                              name={"test_result[fields][#{f_field.index}][list_entries_sort][]"}
+                              value="new"
+                              phx-click={JS.dispatch("change")}
+                            >
+                              <.icon name="hero-plus-circle" />
+                              <span class="align-middle">
+                                Add Entry
+                              </span>
+                            </button>
+                          <% :image -> %>
+                            <%= if length(f_field.data.list_entries) > 0 do %>
+                              <.label>Current Images</.label>
+                              <.inputs_for :let={f_entry} field={f_field[:list_entries]}>
+                                <.input field={f_entry[:delete]} type="checkbox" label="Delete" />
+                                <img src={f_entry.data.value} height="200" width="200" />
+                              </.inputs_for>
+                            <% end %>
+                            <.live_file_input upload={
+                              @uploads[Changeset.get_field(f_field.source, :id)]
+                            } />
+                            <section
+                              class="pt-2"
+                              phx-drop-target={@uploads[Changeset.get_field(f_field.source, :id)].ref}
+                            >
+                              <%= for entry <- @uploads[Changeset.get_field(f_field.source, :id)].entries do %>
+                                <article class="py-2">
+                                  <figure>
+                                    <.live_img_preview entry={entry} width={200} />
+                                    <figcaption><%= entry.client_name %></figcaption>
+                                  </figure>
+
+                                  <progress value={entry.progress} max="100">
+                                    <%= entry.progress %>%
+                                  </progress>
+
+                                  <.button
+                                    type="button"
+                                    class="bg-stone-500"
+                                    phx-click="cancel-upload"
+                                    phx-value-ref={"#{Changeset.get_field(f_field.source, :id)}|#{entry.ref}"}
+                                    aria-label="cancel"
+                                  >
+                                    &times;
+                                  </.button>
+
+                                  <%= for err <- upload_errors(@uploads[Changeset.get_field(f_field.source, :id)], entry) do %>
+                                    <p class="text-red-600 font-semibold">
+                                      <%= error_to_string(err) %>
+                                    </p>
+                                  <% end %>
+                                </article>
+                              <% end %>
+
+                              <%= for err <- upload_errors(@uploads[Changeset.get_field(f_field.source, :id)]) do %>
+                                <p class="text-red-600 font-semibold"><%= error_to_string(err) %></p>
+                              <% end %>
+                            </section>
+                        <% end %>
+                      </div>
+                    <% :map -> %>
+                      <div class="bg-white p-2 my-2">
+                        <.label><%= Changeset.get_field(f_field.source, :name) %></.label>
+                        <.inputs_for :let={f_entry} field={f_field[:map_entries]}>
+                          <div class="flex space-x-2">
+                            <input
+                              type="hidden"
+                              name={"test_result[fields][#{f_field.index}][map_entries_sort][]"}
+                              value={f_entry.index}
+                            />
+                            <.input field={f_entry[:key]} type="text" label="Key" />
+                            <%= case Changeset.get_field(f_field.source, :subtype) do %>
+                              <% :string -> %>
+                                <.input field={f_entry[:value]} type="text" label="Value" />
+                              <% :select -> %>
+                                <.input
+                                  field={f_entry[:value]}
+                                  type="select"
+                                  label="Value"
+                                  prompt="Select"
+                                  options={
+                                    Enum.map(
+                                      Changeset.get_field(f_field.source, :select_options),
+                                      & &1.value
+                                    )
+                                  }
+                                />
+                            <% end %>
+                            <button
+                              type="button"
+                              class="px-2"
+                              name={"test_result[fields][#{f_field.index}][map_entries_drop][]"}
+                              value={f_entry.index}
+                              phx-click={JS.dispatch("change")}
+                            >
+                              <.icon name="hero-x-mark" class="w-6 h-6 relative top-2" />
+                            </button>
+                          </div>
+                        </.inputs_for>
+
+                        <input
+                          type="hidden"
+                          name={"test_result[fields][#{f_field.index}][map_entries_drop][]"}
+                        />
+
+                        <button
+                          type="button"
+                          class="px-2"
+                          name={"test_result[fields][#{f_field.index}][map_entries_sort][]"}
+                          value="new"
+                          phx-click={JS.dispatch("change")}
+                        >
+                          <.icon name="hero-plus-circle" /><span class="align-middle">Add Entry</span>
+                        </button>
+                      </div>
+                  <% end %>
+                </div>
+              </.inputs_for>
+            <% end %>
+            <div class="">
+              <.inputs_for :let={f_pathology_result} field={@form[:pathology_results]}>
+                <div class="bg-white p-4 my-2">
+                  <.label>
+                    <div class="text-lg">
+                      <%= Changeset.get_field(f_pathology_result.source, :pathology).common_name %>
+                    </div>
+                  </.label>
+                  <.radio_group class="py-2" field={f_pathology_result[:result]} label="Result">
+                    <:radio value="positive">Positive</:radio>
+                    <:radio value="negative">Negative</:radio>
+                  </.radio_group>
+                  <%= if Changeset.get_field(f_pathology_result.source, :result) == :positive and length(Changeset.get_field(f_pathology_result.source, :pathology).genotypes) > 0 do %>
+                    <.input
+                      field={f_pathology_result[:genotype_id]}
+                      type="select"
+                      label="Genotype"
+                      prompt="Select"
+                      options={
+                        Enum.map(
+                          Changeset.get_field(f_pathology_result.source, :pathology).genotypes,
+                          &{&1.name, &1.id}
+                        )
+                      }
+                    />
+                  <% end %>
+                  <%= if length(Changeset.get_field(f_pathology_result.source, :fields)) > 0 do %>
+                    <div class="font-bold">Fields</div>
+                    <.inputs_for :let={f_field} field={f_pathology_result[:fields]}>
+                      <div class="px-4">
+                        <%= case Changeset.get_field(f_field.source, :type) do %>
+                          <% :string -> %>
+                            <.input
+                              field={f_field[:value]}
+                              type="text"
+                              label={Changeset.get_field(f_field.source, :name)}
+                            />
+                          <% :image -> %>
+                            <.label><%= Changeset.get_field(f_field.source, :name) %></.label>
+                            <%= if f_field.data.value do %>
+                              <.label>Current Image</.label>
+                              <.input field={f_field[:delete]} type="checkbox" label="Delete" />
+                              <img src={f_field.data.value} height="200" width="200" />
+                            <% end %>
+
+                            <.live_file_input upload={
+                              @uploads[
+                                Changeset.get_field(f_field.source, :id)
+                              ]
+                            } />
+                            <section
+                              class="pt-2"
+                              phx-drop-target={
+                                @uploads[
+                                  Changeset.get_field(f_field.source, :id)
+                                ].ref
+                              }
+                            >
+                              <%= for entry <- @uploads[Changeset.get_field(f_field.source, :id)].entries do %>
+                                <article class="py-2">
+                                  <figure>
+                                    <.live_img_preview entry={entry} width={200} />
+                                    <figcaption><%= entry.client_name %></figcaption>
+                                  </figure>
+
+                                  <progress value={entry.progress} max="100">
+                                    <%= entry.progress %>%
+                                  </progress>
+
+                                  <.button
+                                    type="button"
+                                    class="bg-stone-500"
+                                    phx-click="cancel-upload"
+                                    phx-value-ref={"#{Changeset.get_field(f_field.source, :id)}|#{entry.ref}"}
+                                    aria-label="cancel"
+                                  >
+                                    &times;
+                                  </.button>
+
+                                  <%= for err <- upload_errors(@uploads[Changeset.get_field(f_field.source, :id)], entry) do %>
+                                    <p class="text-red-600 font-semibold">
+                                      <%= error_to_string(err) %>
+                                    </p>
+                                  <% end %>
+                                </article>
+                              <% end %>
+
+                              <%= for err <- upload_errors(@uploads[Changeset.get_field(f_field.source, :id)]) do %>
+                                <p class="text-red-600 font-semibold"><%= error_to_string(err) %></p>
+                              <% end %>
+                            </section>
                           <% :select -> %>
                             <.input
-                              field={f_entry[:value]}
+                              field={f_field[:value]}
                               type="select"
-                              label="Value"
+                              label={Changeset.get_field(f_field.source, :name)}
                               prompt="Select"
                               options={
                                 Enum.map(
@@ -432,35 +357,172 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
                                 )
                               }
                             />
+                          <% :list -> %>
+                            <.label><%= Changeset.get_field(f_field.source, :name) %></.label>
+                            <%= case Changeset.get_field(f_field.source, :subtype) do %>
+                              <% :string -> %>
+                                <div>
+                                  <.inputs_for :let={f_entry} field={f_field[:list_entries]}>
+                                    <div class="flex ">
+                                      <div class="grow">
+                                        <input
+                                          type="hidden"
+                                          name={"test_result[pathology_results][#{f_pathology_result.index}][fields][#{f_field.index}][list_entries_sort][]"}
+                                          value={f_entry.index}
+                                        />
+                                        <.input field={f_entry[:value]} type="text" />
+                                      </div>
+                                      <button
+                                        type="button"
+                                        name={"test_result[pathology_results][#{f_pathology_result.index}][fields][#{f_field.index}][list_entries_drop][]"}
+                                        value={f_entry.index}
+                                        phx-click={JS.dispatch("change")}
+                                      >
+                                        <.icon name="hero-x-mark" class="w-6 h-6 relative top-2" />
+                                      </button>
+                                    </div>
+                                  </.inputs_for>
+                                </div>
+
+                                <input
+                                  type="hidden"
+                                  name={"test_result[pathology_results][#{f_pathology_result.index}][fields][#{f_field.index}][list_entries_drop][]"}
+                                />
+
+                                <button
+                                  type="button"
+                                  class="px-2"
+                                  name={"test_result[pathology_results][#{f_pathology_result.index}][fields][#{f_field.index}][list_entries_sort][]"}
+                                  value="new"
+                                  phx-click={JS.dispatch("change")}
+                                >
+                                  <.icon name="hero-plus-circle" />
+                                  <span class="align-middle">
+                                    Add Entry
+                                  </span>
+                                </button>
+                              <% :image -> %>
+                                <%= if length(f_field.data.list_entries) > 0 do %>
+                                  <.label>Current Images</.label>
+                                  <.inputs_for :let={f_entry} field={f_field[:list_entries]}>
+                                    <.input field={f_entry[:delete]} type="checkbox" label="Delete" />
+                                    <img src={f_entry.data.value} height="200" width="200" />
+                                  </.inputs_for>
+                                <% end %>
+                                <.live_file_input upload={
+                                  @uploads[
+                                    Changeset.get_field(f_field.source, :id)
+                                  ]
+                                } />
+                                <section
+                                  class="pt-2"
+                                  phx-drop-target={
+                                    @uploads[
+                                      Changeset.get_field(f_field.source, :id)
+                                    ].ref
+                                  }
+                                >
+                                  <%= for entry <- @uploads[Changeset.get_field(f_field.source, :id)].entries do %>
+                                    <article class="py-2">
+                                      <figure>
+                                        <.live_img_preview entry={entry} width={200} />
+                                        <figcaption><%= entry.client_name %></figcaption>
+                                      </figure>
+
+                                      <progress value={entry.progress} max="100">
+                                        <%= entry.progress %>%
+                                      </progress>
+
+                                      <.button
+                                        type="button"
+                                        class="bg-stone-500"
+                                        phx-click="cancel-upload"
+                                        phx-value-ref={"#{Changeset.get_field(f_field.source, :id)}|#{entry.ref}"}
+                                        aria-label="cancel"
+                                      >
+                                        &times;
+                                      </.button>
+
+                                      <%= for err <- upload_errors(@uploads[Changeset.get_field(f_field.source, :id)], entry) do %>
+                                        <p class="text-red-600 font-semibold">
+                                          <%= error_to_string(err) %>
+                                        </p>
+                                      <% end %>
+                                    </article>
+                                  <% end %>
+
+                                  <%= for err <- upload_errors(@uploads[Changeset.get_field(f_field.source, :id)]) do %>
+                                    <p class="text-red-600 font-semibold">
+                                      <%= error_to_string(err) %>
+                                    </p>
+                                  <% end %>
+                                </section>
+                            <% end %>
+                          <% :map -> %>
+                            <.label><%= Changeset.get_field(f_field.source, :name) %></.label>
+                            <div>
+                              <.inputs_for :let={f_entry} field={f_field[:map_entries]}>
+                                <div class="flex space-x-2">
+                                  <input
+                                    type="hidden"
+                                    name={"test_result[pathology_results][#{f_pathology_result.index}][fields][#{f_field.index}][map_entries_sort][]"}
+                                    value={f_entry.index}
+                                  />
+                                  <.input field={f_entry[:key]} type="text" label="Key" />
+                                  <%= case Changeset.get_field(f_field.source, :subtype) do %>
+                                    <% :string -> %>
+                                      <.input field={f_entry[:value]} type="text" label="Value" />
+                                    <% :select -> %>
+                                      <.input
+                                        field={f_entry[:value]}
+                                        type="select"
+                                        label="Value"
+                                        prompt="Select"
+                                        options={
+                                          Enum.map(
+                                            Changeset.get_field(f_field.source, :select_options),
+                                            & &1.value
+                                          )
+                                        }
+                                      />
+                                  <% end %>
+                                  <button
+                                    type="button"
+                                    name={"test_result[pathology_results][#{f_pathology_result.index}][fields][#{f_field.index}][map_entries_drop][]"}
+                                    value={f_entry.index}
+                                    phx-click={JS.dispatch("change")}
+                                  >
+                                    <.icon name="hero-x-mark" class="w-6 h-6 relative top-2" />
+                                  </button>
+                                </div>
+                              </.inputs_for>
+                            </div>
+
+                            <input
+                              type="hidden"
+                              name={"test_result[pathology_results][#{f_pathology_result.index}][fields][#{f_field.index}][map_entries_drop][]"}
+                            />
+
+                            <button
+                              type="button"
+                              class="px-2"
+                              name={"test_result[pathology_results][#{f_pathology_result.index}][fields][#{f_field.index}][map_entries_sort][]"}
+                              value="new"
+                              phx-click={JS.dispatch("change")}
+                            >
+                              <.icon name="hero-plus-circle" />
+                              <span class="align-middle">
+                                Add Entry
+                              </span>
+                            </button>
                         <% end %>
-                        <button
-                          type="button"
-                          name={"test_result[pathology_results][#{f_pathology_result.index}][fields][#{f_field.index}][map_entries_drop][]"}
-                          value={f_entry.index}
-                          phx-click={JS.dispatch("change")}
-                        >
-                          <.icon name="hero-x-mark" class="w-6 h-6 relative top-2" />
-                        </button>
-                      </.inputs_for>
-                    </div>
-
-                    <input
-                      type="hidden"
-                      name={"test_result[pathology_results][#{f_pathology_result.index}][fields][#{f_field.index}][map_entries_drop][]"}
-                    />
-
-                    <button
-                      type="button"
-                      name={"test_result[pathology_results][#{f_pathology_result.index}][fields][#{f_field.index}][map_entries_sort][]"}
-                      value="new"
-                      phx-click={JS.dispatch("change")}
-                    >
-                      <.icon name="hero-plus-circle" /><span class="align-middle">Add Entry</span>
-                    </button>
-                <% end %>
+                      </div>
+                    </.inputs_for>
+                  <% end %>
+                </div>
               </.inputs_for>
-            <% end %>
-          </.inputs_for>
+            </div>
+          </div>
         <% end %>
 
         <:actions>

@@ -44,7 +44,18 @@ defmodule PlantAidWeb.DiagnosticMethodLive.Form do
         </div>
 
         <.inputs_for :let={f_field} field={@form[:fields]}>
-          <div class="flex space-x-2 items-center">
+          <div class="flex space-x-2 items-top p-4 bg-neutral-100">
+            <div class="pt-8">
+              <button
+                class=""
+                type="button"
+                name="diagnostic_method[fields_drop][]"
+                value={f_field.index}
+                phx-click={JS.dispatch("change")}
+              >
+                <.icon name="hero-trash" class="w-6 h-6 relative top-2" />
+              </button>
+            </div>
             <input type="hidden" name="diagnostic_method[fields_sort][]" value={f_field.index} />
             <.input field={f_field[:name]} type="text" label="Name" />
             <.input
@@ -78,23 +89,25 @@ defmodule PlantAidWeb.DiagnosticMethodLive.Form do
             <% end %>
 
             <%= if Ecto.Changeset.get_field(f_field.source, :type) == :select or Ecto.Changeset.get_field(f_field.source, :subtype) == :select do %>
-              <div>
+              <div class="pt-8">
                 <.inputs_for :let={f_option} field={f_field[:select_options]}>
                   <input
                     type="hidden"
                     name={"diagnostic_method[fields][#{f_field.index}][select_options_sort][]"}
                     value={f_option.index}
                   />
-                  <.input field={f_option[:value]} type="text" label="Option" />
-                  <label class="cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name={"diagnostic_method[fields][#{f_field.index}][select_options_drop][]"}
-                      class="hidden"
-                      value={f_option.index}
-                    />
-                    <.icon name="hero-x-mark" />
-                  </label>
+                  <div class="flex items-end ">
+                    <.input field={f_option[:value]} type="text" label="Option" />
+                    <label class="cursor-pointer pb-3">
+                      <input
+                        type="checkbox"
+                        name={"diagnostic_method[fields][#{f_field.index}][select_options_drop][]"}
+                        class="hidden"
+                        value={f_option.index}
+                      />
+                      <.icon name="hero-x-mark" />
+                    </label>
+                  </div>
                 </.inputs_for>
                 <label class="cursor-pointer">
                   <input
@@ -106,15 +119,6 @@ defmodule PlantAidWeb.DiagnosticMethodLive.Form do
                 </label>
               </div>
             <% end %>
-
-            <button
-              type="button"
-              name="diagnostic_method[fields_drop][]"
-              value={f_field.index}
-              phx-click={JS.dispatch("change")}
-            >
-              <.icon name="hero-x-mark" class="w-6 h-6 relative top-2" />
-            </button>
           </div>
         </.inputs_for>
 
