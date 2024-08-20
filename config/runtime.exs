@@ -44,6 +44,38 @@ if config_env() == :prod do
     socket_options: maybe_ipv6,
     prepare: :unnamed
 
+  # Libcluster
+  channel_name =
+    System.get_env("LIBCLUSTER_CHANNEL_NAME") ||
+      raise """
+      environment variable LIBCLUSTER_CHANNEL_NAME is missing.
+      Ex: plantaid_staging
+      """
+
+  [username, password, hostname, port, database] =
+    Regex.run(~r/^ecto:\/\/(.+):(.+)@(.+):(.+)\/(.+)\?/, database_url, capture: :all_but_first)
+
+  config :libcluster,
+    topologies: [
+      plantaid: [
+        strategy: LibclusterPostgres.Strategy,
+        config: [
+          hostname: hostname,
+          username: username,
+          password: password,
+          database: database,
+          port: port,
+          parameters: [],
+          # optional, defaults to false
+          ssl: true,
+          ssl_opts: [
+            verify: :verify_none
+          ],
+          channel_name: channel_name
+        ]
+      ]
+    ]
+
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you
   # want to use a different value for prod and you most likely don't want
@@ -70,31 +102,6 @@ if config_env() == :prod do
       port: port
     ],
     secret_key_base: secret_key_base
-
-  # Libcluster
-  [username, password, hostname, port, database] =
-    Regex.run(~r/^ecto:\/\/(.+):(.+)@(.+):(.+)\/(.+)\?/, database_url, capture: :all_but_first)
-
-  config :libcluster,
-    topologies: [
-      plantaid: [
-        strategy: LibclusterPostgres.Strategy,
-        config: [
-          hostname: hostname,
-          username: username,
-          password: password,
-          database: database,
-          port: port,
-          parameters: [],
-          # optional, defaults to false
-          ssl: true,
-          ssl_opts: [
-            verify: :verify_none
-          ],
-          channel_name: host
-        ]
-      ]
-    ]
 
   # Object storage
   raise_object_storage_config_error = fn variable ->
