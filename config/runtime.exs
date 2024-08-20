@@ -59,7 +59,10 @@ if config_env() == :prod do
           port: port,
           parameters: [],
           # optional, defaults to false
-          ssl: true
+          ssl: true,
+          ssl_opts: [
+            verify: :verify_none
+          ]
         ]
       ]
     ]
