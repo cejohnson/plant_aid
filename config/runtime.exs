@@ -77,11 +77,11 @@ if config_env() == :prod do
   #   ]
 
   # Libcluster
-  app_name =
-    System.get_env("LIBCLUSTER_APP_NAME") ||
-      raise """
-      environment variable LIBCLUSTER_APP_NAME is missing.
-      """
+  # app_name =
+  #   System.get_env("LIBCLUSTER_APP_NAME") ||
+  #     raise """
+  #     environment variable LIBCLUSTER_APP_NAME is missing.
+  #     """
 
   service_name =
     System.get_env("LIBCLUSTER_SERVICE_NAME") ||
@@ -95,7 +95,7 @@ if config_env() == :prod do
         strategy: Elixir.Cluster.Strategy.Kubernetes.DNS,
         config: [
           service: service_name,
-          application_name: app_name
+          application_name: "plant_aid"
         ]
       ]
     ]
