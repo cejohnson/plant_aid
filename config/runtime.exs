@@ -45,33 +45,57 @@ if config_env() == :prod do
     prepare: :unnamed
 
   # Libcluster
-  channel_name =
-    System.get_env("LIBCLUSTER_CHANNEL_NAME") ||
+  # channel_name =
+  #   System.get_env("LIBCLUSTER_CHANNEL_NAME") ||
+  #     raise """
+  #     environment variable LIBCLUSTER_CHANNEL_NAME is missing.
+  #     Ex: plantaid_staging
+  #     """
+
+  # [username, password, hostname, port, database] =
+  #   Regex.run(~r/^ecto:\/\/(.+):(.+)@(.+):(.+)\/(.+)\?/, database_url, capture: :all_but_first)
+
+  # config :libcluster,
+  #   topologies: [
+  #     plantaid: [
+  #       strategy: LibclusterPostgres.Strategy,
+  #       config: [
+  #         hostname: hostname,
+  #         username: username,
+  #         password: password,
+  #         database: database,
+  #         port: port,
+  #         parameters: [],
+  #         # optional, defaults to false
+  #         ssl: true,
+  #         ssl_opts: [
+  #           verify: :verify_none
+  #         ],
+  #         channel_name: channel_name
+  #       ]
+  #     ]
+  #   ]
+
+  # Libcluster
+  app_name =
+    System.get_env("LIBCLUSTER_APP_NAME") ||
       raise """
-      environment variable LIBCLUSTER_CHANNEL_NAME is missing.
-      Ex: plantaid_staging
+      environment variable LIBCLUSTER_APP_NAME is missing.
       """
 
-  [username, password, hostname, port, database] =
-    Regex.run(~r/^ecto:\/\/(.+):(.+)@(.+):(.+)\/(.+)\?/, database_url, capture: :all_but_first)
+  service_name =
+    System.get_env("LIBCLUSTER_SERVICE_NAME") ||
+      raise """
+      environment variable LIBCLUSTER_SERVICE_NAME is missing.
+      """
 
   config :libcluster,
     topologies: [
       plantaid: [
-        strategy: LibclusterPostgres.Strategy,
+        strategy: Elixir.Cluster.Strategy.Kubernetes.DNS,
         config: [
-          hostname: hostname,
-          username: username,
-          password: password,
-          database: database,
-          port: port,
-          parameters: [],
-          # optional, defaults to false
-          ssl: true,
-          ssl_opts: [
-            verify: :verify_none
-          ],
-          channel_name: channel_name
+          service: service_name,
+          application_name: app_name
         ]
       ]
     ]
