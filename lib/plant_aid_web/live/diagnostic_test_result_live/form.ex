@@ -614,9 +614,7 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
         %{"test_result" => %{"diagnostic_method_id" => diagnostic_method_id}},
         socket
       ) do
-    overrides =
-      DiagnosticTests.get_diagnostic_method_overrides(diagnostic_method_id)
-      |> IO.inspect(label: "field overrides")
+    overrides = DiagnosticTests.get_diagnostic_method_overrides(diagnostic_method_id)
 
     changeset =
       socket.assigns.form.params
@@ -749,9 +747,7 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
       changeset
       |> Changeset.get_embed(:fields)
       |> Enum.map(&handle_field_upload_urls(&1, socket))
-      |> IO.inspect(label: "fields changesets")
       |> then(&Changeset.put_embed(changeset, :fields, &1))
-      |> IO.inspect(label: "changeset with added fields with urls")
 
     changeset
     |> Changeset.get_assoc(:pathology_results)
@@ -762,17 +758,13 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
       |> then(&Changeset.put_embed(pathology_result_changeset, :fields, &1))
     end)
     |> then(&Changeset.put_assoc(changeset, :pathology_results, &1))
-    |> IO.inspect(label: "final put_upload_urls changeset")
   end
 
   defp handle_field_upload_urls(field_changeset, socket) do
     field_changeset
     |> Changeset.get_field(:id)
-    |> IO.inspect(label: "field id")
     |> get_upload_urls(socket)
-    |> IO.inspect(label: "field urls")
     |> put_field_upload_urls(field_changeset)
-    |> IO.inspect(label: "field changeset")
   end
 
   defp get_upload_urls(upload_key, socket) do
@@ -802,7 +794,7 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
         field_changeset
         |> Changeset.get_field(:list_entries)
         |> Enum.concat(list_entries)
-        |> then(&Changeset.put_change(field_changeset, :list_entries, &1))
+        |> then(&Changeset.put_embed(field_changeset, :list_entries, &1))
     end
   end
 

@@ -199,7 +199,7 @@ defmodule PlantAid.DiagnosticTests do
 
   defp maybe_drop_list_entries(field_changeset) do
     list_entries = Changeset.get_embed(field_changeset, :list_entries)
-    to_drop = Enum.filter(list_entries, &Changeset.get_change(&1, :delete))
+    to_drop = Enum.filter(list_entries, &Changeset.get_field(&1, :delete))
 
     if length(to_drop) > 0 do
       Changeset.put_change(field_changeset, :list_entries, list_entries -- to_drop)

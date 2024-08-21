@@ -52,7 +52,7 @@ defmodule PlantAid.ObjectStorage do
         uri = URI.new!(url)
 
         uri.path
-        |> String.slice(1..-1)
+        |> String.slice(1..-1//1)
       end)
 
     ExAws.S3.delete_multiple_objects(object_storage[:bucket], objects)
