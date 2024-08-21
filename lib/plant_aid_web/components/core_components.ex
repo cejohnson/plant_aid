@@ -411,6 +411,7 @@ defmodule PlantAidWeb.CoreComponents do
   attr :name, :any
   attr :label, :string, default: nil
   attr :value, :any
+  attr :class, :string, default: nil
 
   attr :field, Phoenix.HTML.FormField
   attr :errors, :list, default: []
@@ -432,7 +433,7 @@ defmodule PlantAidWeb.CoreComponents do
 
   def radio_group(assigns) do
     ~H"""
-    <div phx-feedback-for={@name}>
+    <div class={@class} phx-feedback-for={@name}>
       <.label for={@id}><%= @label %></.label>
       <%= render_slot(@inner_block) %>
       <div :for={{%{value: value} = rad, idx} <- Enum.with_index(@radio)}>
@@ -442,9 +443,9 @@ defmodule PlantAidWeb.CoreComponents do
           id={"#{@id}-#{idx}"}
           value={value}
           checked={to_string(@value) == to_string(value)}
-          class="rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6"
+          class="rounded-lg text-zinc-900 focus:ring-0 text-sm leading-6"
         />
-        <label for={"#{@id}-#{idx}"}><%= render_slot(rad) %></label>
+        <label class="text-sm" for={"#{@id}-#{idx}"}><%= render_slot(rad) %></label>
       </div>
       <.error :for={msg <- @errors}><%= msg %></.error>
     </div>

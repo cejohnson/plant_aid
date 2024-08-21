@@ -42,29 +42,13 @@
       <:col :let={field} label="Type"><%= field.type %></:col>
       <:col :let={field} label="Subtype"><%= field.subtype %></:col>
       <:col :let={field} label="Data">
-        <%= case field.type do %>
-          <% :select -> %>
-            <.label>Select Options</.label>
-            <ul>
-              <%= for option <- field.select_options do %>
-                <li><%= option.value %></li>
-              <% end %>
-            </ul>
-          <% :list -> %>
-            <.label>List Type</.label>
-            <div><%= field.list_data.type %></div>
-          <% :map -> %>
-            <.label>Map Value Type</.label>
-            <div><%= field.map_data.value_type %></div>
-            <%= if field.map_data.value_type == :select do %>
-              <.label>Select Options</.label>
-              <ul>
-                <%= for option <- field.map_data.select_options do %>
-                  <li><%= option.value %></li>
-                <% end %>
-              </ul>
+        <%= if field.type == :select or field.subtype == :select do %>
+          <.label>Select Options</.label>
+          <ul>
+            <%= for option <- field.select_options do %>
+              <li><%= option.value %></li>
             <% end %>
-          <% _ -> %>
+          </ul>
         <% end %>
       </:col>
     </.table>
