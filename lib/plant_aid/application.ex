@@ -7,15 +7,11 @@ defmodule PlantAid.Application do
 
   @impl true
   def start(_type, _args) do
-    topologies = Application.get_env(:libcluster, :topologies)
-
     children = [
       # Start the Telemetry supervisor
       PlantAidWeb.Telemetry,
       # Start the Ecto repository
       PlantAid.Repo,
-      # Start libcluster
-      {Cluster.Supervisor, [topologies]},
       # Start the PubSub system
       {Phoenix.PubSub, name: PlantAid.PubSub},
       PlantAid.ConnectionMonitor,
@@ -27,6 +23,16 @@ defmodule PlantAid.Application do
       # Start a worker by calling: PlantAid.Worker.start_link(arg)
       # {PlantAid.Worker, arg}
     ]
+
+    topologies = Application.get_env(:libcluster, :topologies)
+
+    children =
+      if topologies do
+        # Start libcluster
+        [{Cluster.Supervisor, [topologies]} | children]
+      else
+        children
+      end
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
