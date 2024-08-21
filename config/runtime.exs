@@ -43,57 +43,25 @@ if config_env() == :prod do
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "2"),
     socket_options: maybe_ipv6
 
-  # prepare: :unnamed
+  # prepare: :unnamed  # required if using PgBouncer
 
   # Libcluster
-  channel_name =
-    System.get_env("LIBCLUSTER_CHANNEL_NAME") ||
+  service_name =
+    System.get_env("LIBCLUSTER_SERVICE_NAME") ||
       raise """
-      environment variable LIBCLUSTER_CHANNEL_NAME is missing.
-      Ex: plantaid_staging
+      environment variable LIBCLUSTER_SERVICE_NAME is missing.
       """
-
-  [username, password, hostname, port, database] =
-    Regex.run(~r/^ecto:\/\/(.+):(.+)@(.+):(.+)\/(.+)\?/, database_url, capture: :all_but_first)
 
   config :libcluster,
     topologies: [
       plantaid: [
-        strategy: LibclusterPostgres.Strategy,
+        strategy: Elixir.Cluster.Strategy.Kubernetes.DNS,
         config: [
-          hostname: hostname,
-          username: username,
-          password: password,
-          database: database,
-          port: port,
-          parameters: [],
-          # optional, defaults to false
-          ssl: true,
-          ssl_opts: [
-            verify: :verify_none
-          ],
-          channel_name: channel_name
+          service: service_name,
+          application_name: "plant_aid"
         ]
       ]
     ]
-
-  # Libcluster
-  # service_name =
-  #   System.get_env("LIBCLUSTER_SERVICE_NAME") ||
-  #     raise """
-  #     environment variable LIBCLUSTER_SERVICE_NAME is missing.
-  #     """
-
-  # config :libcluster,
-  #   topologies: [
-  #     plantaid: [
-  #       strategy: Elixir.Cluster.Strategy.Kubernetes.DNS,
-  #       config: [
-  #         service: service_name,
-  #         application_name: "plant_aid"
-  #       ]
-  #     ]
-  #   ]
 
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you
