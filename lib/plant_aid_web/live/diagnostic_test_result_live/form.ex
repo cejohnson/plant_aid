@@ -551,10 +551,15 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
   @impl true
   def handle_params(params, url, socket) do
     test_result = get_test_result(socket.assigns.live_action, params)
+    observation_id = Map.get(params, "observation_id")
 
-    changeset = DiagnosticTests.change_test_result(test_result)
+    changeset =
+      if observation_id do
+        DiagnosticTests.change_test_result(test_result, %{"observation_id" => observation_id})
+      else
+        DiagnosticTests.change_test_result(test_result)
+      end
 
-    # TODO: handle observation_id query param
     {:noreply,
      socket
      |> allow_field_upload(changeset)

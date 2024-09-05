@@ -9,7 +9,33 @@
 </.header>
 
 <.list>
-  <:item title="Observation ID"><%= @test_result.observation_id %></:item>
+  <:item title="Observation">
+    <div class="hover:bg-zinc-50">
+      <.link
+        :if={@test_result.observation}
+        patch={~p"/observations/#{@test_result.observation.id}"}
+        phx-click={JS.push_focus()}
+      >
+        <.list>
+          <:item title="ID">
+            <%= @test_result.observation.id %>
+          </:item>
+          <:item title="Date">
+            <%= @test_result.observation && @test_result.observation.observation_date %>
+          </:item>
+          <:item title="Host">
+            <%= @test_result.observation && @test_result.observation.host &&
+              @test_result.observation.host.common_name %>
+          </:item>
+          <:item title="Suspected Pathology">
+            <%= @test_result.observation && @test_result.observation.suspected_pathology &&
+              @test_result.observation.suspected_pathology.common_name %>
+          </:item>
+        </.list>
+      </.link>
+    </div>
+  </:item>
+
   <:item title="Created By">
     <%= @test_result.inserted_by.email %>
   </:item>
@@ -25,9 +51,9 @@
   <:item title="Comments"><%= @test_result.comments %></:item>
   <:item title="Fields">
     <%= if length(@test_result.fields) > 0 do %>
-      <.table id="fields" rows={@test_result.fields}>
-        <:col :let={field} label="Name"><%= field.name %></:col>
-        <:col :let={field} label="Data">
+      <.table id="fields" rows={@test_result.fields} header={false}>
+        <:col :let={field}><%= field.name %></:col>
+        <:col :let={field}>
           <%= case field.type do %>
             <% :image -> %>
               <a :if={field.value} href={field.value} target="_blank">
@@ -65,7 +91,7 @@
     <% end %>
   </:item>
   <:item :if={length(@test_result.pathology_results) > 0} title="Pathology Results">
-    <.table id="pathology_results" rows={@test_result.pathology_results}>
+    <.table id="pathology_results" rows={@test_result.pathology_results} align_top>
       <:col :let={pathology_result} label="Pathology">
         <%= pathology_result.pathology.common_name %>
       </:col>
@@ -78,9 +104,10 @@
           <.table
             id={"pathology_results_#{pathology_result.id}_fields"}
             rows={pathology_result.fields}
+            header={false}
           >
-            <:col :let={field} label="Name"><%= field.name %></:col>
-            <:col :let={field} label="Data">
+            <:col :let={field}><%= field.name %></:col>
+            <:col :let={field}>
               <%= case field.type do %>
                 <% :image -> %>
                   <a :if={field.value} href={field.value} target="_blank">

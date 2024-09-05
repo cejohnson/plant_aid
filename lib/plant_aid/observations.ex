@@ -72,7 +72,11 @@ defmodule PlantAid.Observations do
         :country,
         :primary_subdivision,
         secondary_subdivision: ^from(s in SecondarySubdivision, select: %{s | geog: nil}),
-        sample: [:pathology, :genotype]
+        sample: [:pathology, :genotype],
+        test_results: [
+          :diagnostic_method,
+          pathology_results: [:pathology, :genotype, test_result: [:diagnostic_method]]
+        ]
       ]
     )
     |> scope(user)
@@ -106,7 +110,11 @@ defmodule PlantAid.Observations do
           :country,
           :primary_subdivision,
           secondary_subdivision: ^from(s in SecondarySubdivision, select: %{s | geog: nil}),
-          sample: [:pathology, :genotype]
+          sample: [:pathology, :genotype],
+          test_results: [
+            :diagnostic_method,
+            pathology_results: [:pathology, :genotype, test_result: [:diagnostic_method]]
+          ]
         ]
       )
       |> scope(user)
@@ -226,7 +234,11 @@ defmodule PlantAid.Observations do
       :country,
       :primary_subdivision,
       :secondary_subdivision,
-      sample: [:pathology, :genotype]
+      sample: [:pathology, :genotype],
+      test_results: [
+        :diagnostic_method,
+        pathology_results: [:pathology, :genotype, test_result: [:diagnostic_method]]
+      ]
     ])
     |> populate_virtual_fields()
   end

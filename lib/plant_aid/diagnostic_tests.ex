@@ -319,7 +319,8 @@ defmodule PlantAid.DiagnosticTests do
       :inserted_by,
       :updated_by,
       :diagnostic_method,
-      pathology_results: [:genotype, pathology: [:genotypes]]
+      pathology_results: [:genotype, pathology: [:genotypes]],
+      observation: [:host, :suspected_pathology]
     ])
   end
 
@@ -332,6 +333,15 @@ defmodule PlantAid.DiagnosticTests do
   end
 
   def populate_virtual_fields(%TestResult{} = test_result) do
+    test_result
+    |> maybe_populate_observation_id()
+  end
+
+  defp maybe_populate_observation_id(%TestResult{observation: observation} = test_result) do
+    %{test_result | observation_id: observation.id}
+  end
+
+  defp maybe_populate_observation_id(%TestResult{} = test_result) do
     test_result
   end
 end
