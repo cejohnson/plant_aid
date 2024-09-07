@@ -52,7 +52,7 @@ defmodule PlantAid.MixProject do
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 0.20"},
       {:jason, "~> 1.2"},
-      {:plug_cowboy, "~> 2.5"},
+      {:bandit, "~> 1.5"},
       # General additional dependencies
       {:bodyguard, "~> 2.4"},
       {:ecto_psql_extras, "~> 0.6"},

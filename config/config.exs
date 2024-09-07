@@ -15,6 +15,7 @@ config :plant_aid, PlantAid.Repo, types: PlantAid.PostgresTypes
 # Configures the endpoint
 config :plant_aid, PlantAidWeb.Endpoint,
   url: [host: "localhost"],
+  adapter: Bandit.PhoenixAdapter,
   render_errors: [
     formats: [html: PlantAidWeb.ErrorHTML, json: PlantAidWeb.ErrorJSON],
     layout: false
