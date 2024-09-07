@@ -7,39 +7,104 @@
   </:actions>
 </.header>
 
-<.table
-  id="test_results"
-  rows={@streams.test_results}
-  row_click={fn {_id, test_result} -> JS.navigate(~p"/test_results/#{test_result}") end}
->
-  <:col :let={{_id, test_result}} label="ID"><%= test_result.id %></:col>
-  <:col :let={{_id, test_result}} label="Observation ID"><%= test_result.observation_id %></:col>
-  <:col :let={{_id, test_result}} label="Created By"><%= test_result.inserted_by.email %></:col>
-  <:col :let={{_id, test_result}} label="Created On">
-    <%= DateTime.to_date(test_result.inserted_at) %>
-  </:col>
-  <:col :let={{_id, test_result}} label="Updated By"><%= test_result.updated_by.email %></:col>
-  <:col :let={{_id, test_result}} label="Updated On">
-    <%= DateTime.to_date(test_result.updated_at) %>
-  </:col>
-  <:col :let={{_id, test_result}} label="Diagnostic Method">
-    <%= test_result.diagnostic_method && test_result.diagnostic_method.name %>
-  </:col>
-  <:action :let={{_id, test_result}}>
-    <div class="sr-only">
-      <.link navigate={~p"/test_results/#{test_result}"}>Show</.link>
-    </div>
-    <.link patch={~p"/test_results/#{test_result}/edit"}>Edit</.link>
-  </:action>
-  <:action :let={{id, test_result}}>
-    <.link
-      phx-click={JS.push("delete", value: %{id: test_result.id}) |> hide("##{id}")}
-      data-confirm="Are you sure?"
+<div class="flex flex-row">
+  <div class="basis-5/6 pr-4">
+    <.table
+      id="test_results"
+      rows={@streams.test_results}
+      row_click={fn {_id, test_result} -> JS.navigate(~p"/test_results/#{test_result}") end}
     >
-      Delete
-    </.link>
-  </:action>
-</.table>
+      <:col :let={{_id, test_result}} label="Observation Date">
+        <%= test_result.observation.observation_date %>
+      </:col>
+      <:col :let={{_id, test_result}} label="Reported By">
+        <%= test_result.observation.user.email %>
+      </:col>
+      <:col :let={{_id, test_result}} label="Host">
+        <%= test_result.observation.host.common_name %>
+      </:col>
+      <:col :let={{_id, test_result}} label="Pathologies Tested">
+        <%= Enum.map(test_result.pathology_results, &(&1.pathology && &1.pathology.common_name))
+        |> Enum.join(", ") %>
+      </:col>
+      <:col :let={{_id, test_result}} label="Results">
+        <%= Enum.map(test_result.pathology_results, & &1.result)
+        |> Enum.join(", ") %>
+      </:col>
+      <:col :let={{_id, test_result}} label="Genotypes">
+        <%= Enum.map(
+          test_result.pathology_results,
+          &(&1.genotype && &1.genotype.name)
+        )
+        |> Enum.join(", ") %>
+      </:col>
+      <:col :let={{_id, test_result}} label="Last Modified By">
+        <%= test_result.updated_by.email %>
+      </:col>
+      <:col :let={{_id, test_result}} label="Last Modified On">
+        <%= DateTime.to_date(test_result.updated_at) %>
+      </:col>
+      <:action :let={{_id, test_result}}>
+        <div class="sr-only">
+          <.link navigate={~p"/test_results/#{test_result}"}>Show</.link>
+        </div>
+        <.link
+          :if={
+            Bodyguard.permit?(
+              PlantAid.DiagnosticTests,
+              :update_test_result,
+              @current_user,
+              test_result
+            )
+          }
+          patch={~p"/test_results/#{test_result}/edit"}
+        >
+          Edit
+        </.link>
+      </:action>
+      <:action :let={{id, test_result}}>
+        <.link
+          :if={
+            Bodyguard.permit?(
+              PlantAid.DiagnosticTests,
+              :delete_test_result,
+              @current_user,
+              test_result
+            )
+          }
+          phx-click={JS.push("delete", value: %{id: test_result.id}) |> hide("##{id}")}
+          data-confirm="Are you sure?"
+        >
+          Delete
+        </.link>
+      </:action>
+    </.table>
+
+    <Flop.Phoenix.pagination meta={@meta} path={~p"/test_results"} />
+  </div>
+
+  <div class="basis-1/6 bg-stone-300 mt-11">
+    <div class="p-2 text-md font-normal">
+      <%= case @meta.total_count do %>
+        <% 1  -> %>
+          1 test result matches filters
+        <% count -> %>
+          <%= count %> test results match filters
+      <% end %>
+    </div>
+    <div class="overflow-auto bg-stone-300">
+      <.filter_form id="test-result-filter-form" meta={@meta} fields={@filter_fields} />
+    </div>
+    <%!-- <.live_component
+          module={PlantAidWeb.ObservationFilterForm}
+          id="observation-filter-form"
+          meta={@meta}
+          filter_users={
+            Bodyguard.permit?(PlantAid.Observations, :list_all_observations, @current_user)
+          }
+        /> --%>
+  </div>
+</div>
 
 <%!-- <.modal
   :if={@live_action in [:new, :edit]}

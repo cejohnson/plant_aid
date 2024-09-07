@@ -85,19 +85,15 @@
   <:col :let={{_id, pathology_result}} label="Test ID">
     <%= pathology_result.test_result.id %>
   </:col>
-  <:col :let={{_id, pathology_result}} label="Pathology">
+  <:col :let={{_id, pathology_result}} label="Pathology Tested">
     <%= pathology_result.pathology.common_name %>
   </:col>
   <:col :let={{_id, pathology_result}} label="Result"><%= pathology_result.result %></:col>
   <:col :let={{_id, pathology_result}} label="Genotype">
     <%= pathology_result.genotype && pathology_result.genotype.name %>
   </:col>
-  <:col :let={{_id, pathology_result}} label="Date">
+  <:col :let={{_id, pathology_result}} label="Last Updated On">
     <%= DateTime.to_date(pathology_result.test_result.updated_at) %>
-  </:col>
-  <:col :let={{_id, pathology_result}} label="Diagnostic Method">
-    <%= pathology_result.test_result.diagnostic_method &&
-      pathology_result.test_result.diagnostic_method.name %>
   </:col>
 </.table>
 

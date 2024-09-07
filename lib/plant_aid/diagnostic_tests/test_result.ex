@@ -8,6 +8,58 @@ defmodule PlantAid.DiagnosticTests.TestResult do
 
   @timestamps_opts [type: :utc_datetime]
 
+  @derive {
+    Flop.Schema,
+    filterable: [
+      :observation_date,
+      :updated_on,
+      :result,
+      :pathology_id,
+      :genotype_id,
+      :host_id
+    ],
+    sortable: [
+      :observation_date,
+      :updated_at
+    ],
+    adapter_opts: [
+      join_fields: [
+        result: [
+          binding: :pathology_results,
+          field: :result,
+          ecto_type: {:ecto_enum, [positive: "positive", negative: "negative"]}
+        ],
+        pathology_id: [
+          binding: :pathology_results,
+          field: :pathology_id
+        ],
+        genotype_id: [
+          binding: :pathology_results,
+          field: :genotype_id
+        ],
+        host_id: [
+          binding: :observation,
+          field: :host_id
+        ],
+        observation_date: [
+          binding: :observation,
+          field: :observation_date
+        ]
+      ],
+      custom_fields: [
+        updated_on: [
+          filter: {PlantAid.CustomFilters, :datetime_to_date_filter, [source: :updated_at]},
+          ecto_type: :date,
+          operators: [:<=, :>=]
+        ]
+      ]
+    ],
+    default_order: %{
+      order_by: [:updated_at],
+      order_directions: [:desc_nulls_last]
+    }
+  }
+
   schema "diagnostic_test_results" do
     field :metadata, :map
     field :comments, :string

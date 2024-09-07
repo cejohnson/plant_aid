@@ -39,10 +39,63 @@ defmodule PlantAid.DiagnosticTests do
       [%TestResult{}, ...]
 
   """
-  def list_test_results do
-    Repo.all(TestResult)
-    |> preload()
-    |> Enum.map(&populate_virtual_fields/1)
+  def list_test_results(%User{} = user) do
+    list_test_results(user, %Flop{})
+  end
+
+  def list_test_results(%User{} = user, %Flop{} = flop) do
+    opts = [for: TestResult]
+
+    from(
+      tr in TestResult,
+      preload: [
+        :inserted_by,
+        :updated_by,
+        :diagnostic_method,
+        pathology_results: [:genotype, pathology: [:genotypes]],
+        observation: [:host, :user]
+      ]
+    )
+    |> scope(user)
+    |> Flop.with_named_bindings(flop, &join_assocs/2, opts)
+    |> Flop.run(flop, opts)
+    |> populate_virtual_fields()
+  end
+
+  def list_test_results(%User{} = user, %{} = params) do
+    with {:ok, flop} <- Flop.validate(params, for: TestResult) do
+      {:ok, list_test_results(user, flop)}
+    end
+  end
+
+  defp scope(query, %User{} = user) do
+    case User.has_role?(user, [:superuser, :admin, :researcher]) do
+      true ->
+        query
+
+      _ ->
+        from(
+          tr in query,
+          inner_join: o in assoc(tr, :observation),
+          where: o.user_id == ^user.id
+        )
+    end
+  end
+
+  defp join_assocs(query, :observation) do
+    from(
+      tr in query,
+      left_join: o in assoc(tr, :observation),
+      as: :observation
+    )
+  end
+
+  defp join_assocs(query, :pathology_results) do
+    from(
+      tr in query,
+      left_join: pr in assoc(tr, :pathology_results),
+      as: :pathology_results
+    )
   end
 
   @doc """
@@ -314,8 +367,15 @@ defmodule PlantAid.DiagnosticTests do
     resp
   end
 
-  def preload(test_result) do
-    Repo.preload(test_result, [
+  def preload({test_results, meta}) do
+    {
+      preload(test_results),
+      meta
+    }
+  end
+
+  def preload(test_result_or_results) do
+    Repo.preload(test_result_or_results, [
       :inserted_by,
       :updated_by,
       :diagnostic_method,
@@ -330,6 +390,13 @@ defmodule PlantAid.DiagnosticTests do
 
   def populate_virtual_fields({:error, _} = resp) do
     resp
+  end
+
+  def populate_virtual_fields({test_results, meta}) do
+    {
+      Enum.map(test_results, &populate_virtual_fields/1),
+      meta
+    }
   end
 
   def populate_virtual_fields(%TestResult{} = test_result) do

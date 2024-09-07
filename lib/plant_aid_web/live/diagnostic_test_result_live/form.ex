@@ -14,7 +14,7 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
     <div>
       <.header>
         <%= @page_title %>
-        <:subtitle>Use this form to manage test_result records in your database.</:subtitle>
+        <:subtitle>Add or update test results for an observation sample.</:subtitle>
       </.header>
 
       <.simple_form for={@form} id="test_result-form" phx-change="validate" phx-submit="save">
