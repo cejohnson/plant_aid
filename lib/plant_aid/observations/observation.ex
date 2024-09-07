@@ -83,6 +83,7 @@ defmodule PlantAid.Observations.Observation do
     belongs_to :secondary_subdivision, PlantAid.Geography.SecondarySubdivision
 
     has_one :sample, PlantAid.Observations.Sample
+    has_many :test_results, PlantAid.DiagnosticTests.TestResult
 
     timestamps()
   end

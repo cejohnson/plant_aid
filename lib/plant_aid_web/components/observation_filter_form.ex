@@ -260,7 +260,7 @@ defmodule PlantAidWeb.ObservationFilterForm do
   end
 
   defp prepend_default_option(options) do
-    [{"Any", nil}] ++ options
+    [{"Any", nil} | options]
   end
 
   defp join_with_or([]) do

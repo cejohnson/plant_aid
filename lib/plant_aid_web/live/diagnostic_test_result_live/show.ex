@@ -1,7 +1,7 @@
-defmodule PlantAidWeb.DiagnosticMethodLive.Show do
+defmodule PlantAidWeb.DiagnosticTestResultLive.Show do
   use PlantAidWeb, :live_view
 
-  alias PlantAid.DiagnosticMethods
+  alias PlantAid.DiagnosticTests
 
   @impl true
   def mount(_params, _session, socket) do
@@ -13,9 +13,9 @@ defmodule PlantAidWeb.DiagnosticMethodLive.Show do
     {:noreply,
      socket
      |> assign(:page_title, page_title(socket.assigns.live_action))
-     |> assign(:diagnostic_method, DiagnosticMethods.get_diagnostic_method!(id))}
+     |> assign(:test_result, DiagnosticTests.get_test_result!(id))}
   end
 
-  defp page_title(:show), do: "Show Diagnostic method"
-  defp page_title(:edit), do: "Edit Diagnostic method"
+  defp page_title(:show), do: "Show Diagnostic test result"
+  defp page_title(:edit), do: "Edit Diagnostic test result"
 end

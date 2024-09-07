@@ -69,12 +69,12 @@
                 <%= observation.suspected_pathology && observation.suspected_pathology.common_name %>
               </:col>
               <:col :let={observation} label="Confirmed Disease">
-                <%= observation.sample && observation.sample.pathology &&
-                  observation.sample.pathology.common_name %>
-              </:col>
-              <:col :let={observation} label="Genotype">
-                <%= observation.sample && observation.sample.genotype &&
-                  observation.sample.genotype.name %>
+                <%= observation.test_results
+                |> Enum.flat_map(& &1.pathology_results)
+                |> Enum.filter(&(&1.result == :positive))
+                |> Enum.uniq()
+                |> Enum.map(& &1.pathology.common_name)
+                |> Enum.join(", ") %>
               </:col>
               <:col :let={observation} label="Host">
                 <%= (observation.host && observation.host.common_name) || observation.host_other %>

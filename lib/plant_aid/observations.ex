@@ -72,7 +72,11 @@ defmodule PlantAid.Observations do
         :country,
         :primary_subdivision,
         secondary_subdivision: ^from(s in SecondarySubdivision, select: %{s | geog: nil}),
-        sample: [:pathology, :genotype]
+        sample: [:pathology, :genotype],
+        test_results: [
+          :diagnostic_method,
+          pathology_results: [:pathology, :genotype, test_result: [:diagnostic_method]]
+        ]
       ]
     )
     |> scope(user)
@@ -106,7 +110,11 @@ defmodule PlantAid.Observations do
           :country,
           :primary_subdivision,
           secondary_subdivision: ^from(s in SecondarySubdivision, select: %{s | geog: nil}),
-          sample: [:pathology, :genotype]
+          sample: [:pathology, :genotype],
+          test_results: [
+            :diagnostic_method,
+            pathology_results: [:pathology, :genotype, test_result: [:diagnostic_method]]
+          ]
         ]
       )
       |> scope(user)
@@ -217,17 +225,7 @@ defmodule PlantAid.Observations do
   """
   def get_observation!(id) do
     Repo.get!(Observation, id)
-    |> Repo.preload([
-      :user,
-      :host,
-      :host_variety,
-      :location_type,
-      :suspected_pathology,
-      :country,
-      :primary_subdivision,
-      :secondary_subdivision,
-      sample: [:pathology, :genotype]
-    ])
+    |> preload()
     |> populate_virtual_fields()
   end
 
@@ -248,6 +246,7 @@ defmodule PlantAid.Observations do
     |> Observation.changeset(attrs)
     |> Observation.put_user(user)
     |> Repo.insert()
+    |> preload()
     |> populate_virtual_fields()
     |> after_save(after_save)
   end
@@ -268,6 +267,7 @@ defmodule PlantAid.Observations do
     observation
     |> Observation.changeset(attrs)
     |> Repo.update()
+    |> preload()
     |> populate_virtual_fields()
     |> after_save(after_save)
   end
@@ -307,6 +307,39 @@ defmodule PlantAid.Observations do
     Observation.changeset(observation, attrs)
   end
 
+  def preload({:ok, struct}) do
+    {:ok, preload(struct)}
+  end
+
+  def preload({:error, _} = resp) do
+    resp
+  end
+
+  def preload({observations, meta}) do
+    {
+      preload(observations),
+      meta
+    }
+  end
+
+  def preload(observation_or_observations) do
+    Repo.preload(observation_or_observations, [
+      :user,
+      :host,
+      :host_variety,
+      :location_type,
+      :suspected_pathology,
+      :country,
+      :primary_subdivision,
+      :secondary_subdivision,
+      sample: [:pathology, :genotype],
+      test_results: [
+        :diagnostic_method,
+        pathology_results: [:pathology, :genotype, test_result: [:diagnostic_method]]
+      ]
+    ])
+  end
+
   def populate_virtual_fields({:ok, observation}) do
     {:ok, populate_virtual_fields(observation)}
   end
@@ -324,7 +357,7 @@ defmodule PlantAid.Observations do
 
   def populate_virtual_fields(%Observation{} = observation) do
     observation
-    |> Repo.preload([:country, :primary_subdivision, :secondary_subdivision])
+    # |> Repo.preload([:country, :primary_subdivision, :secondary_subdivision])
     |> maybe_populate_lat_long()
     |> maybe_populate_location()
     |> add_data_source()

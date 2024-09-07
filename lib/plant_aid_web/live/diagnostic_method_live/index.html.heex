@@ -1,8 +1,8 @@
 <.header>
   Listing Diagnostic methods
   <:actions>
-    <.link patch={~p"/admin/diagnostic_methods/new"}>
-      <.button>New Diagnostic method</.button>
+    <.link navigate={~p"/admin/diagnostic_methods/new"}>
+      <.button variant="primary">New Diagnostic method</.button>
     </.link>
   </:actions>
 </.header>
@@ -17,6 +17,18 @@
   }
 >
   <:col :let={{_id, diagnostic_method}} label="Name"><%= diagnostic_method.name %></:col>
+  <:col :let={{_id, diagnostic_method}} label="Created By">
+    <%= diagnostic_method.inserted_by.email %>
+  </:col>
+  <:col :let={{_id, diagnostic_method}} label="Created On">
+    <%= DateTime.to_date(diagnostic_method.inserted_at) %>
+  </:col>
+  <:col :let={{_id, diagnostic_method}} label="Last Updated By">
+    <%= diagnostic_method.updated_by.email %>
+  </:col>
+  <:col :let={{_id, diagnostic_method}} label="Last Updated On">
+    <%= DateTime.to_date(diagnostic_method.updated_at) %>
+  </:col>
   <:action :let={{_id, diagnostic_method}}>
     <div class="sr-only">
       <.link navigate={~p"/admin/diagnostic_methods/#{diagnostic_method}"}>Show</.link>
@@ -32,19 +44,3 @@
     </.link>
   </:action>
 </.table>
-
-<.modal
-  :if={@live_action in [:new, :edit]}
-  id="diagnostic_method-modal"
-  show
-  on_cancel={JS.patch(~p"/admin/diagnostic_methods")}
->
-  <.live_component
-    module={PlantAidWeb.DiagnosticMethodLive.FormComponent}
-    id={@diagnostic_method.id || :new}
-    title={@page_title}
-    action={@live_action}
-    diagnostic_method={@diagnostic_method}
-    patch={~p"/admin/diagnostic_methods"}
-  />
-</.modal>

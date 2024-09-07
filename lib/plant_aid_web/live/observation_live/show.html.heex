@@ -6,7 +6,7 @@
       <.button>Submit Sample</.button>
     </.link>
     <.link navigate={~p"/observations/#{@observation}/edit"} phx-click={JS.push_focus()}>
-      <.button>Edit observation</.button>
+      <.button variant="primary">Edit observation</.button>
     </.link>
   </:actions>
 </.header>
@@ -56,51 +56,84 @@
   </:item>
 </.list>
 
-<%= cond do %>
-  <% @observation.sample -> %>
-    <div class="mt-16">
-      <.header>
-        Sample Results
-        <:actions>
-          <%= if User.has_role?(@current_user, [:researcher, :admin, :superuser]) do %>
-            <.link
-              navigate={~p"/observations/#{@observation}/sample/edit"}
-              phx-click={JS.push_focus()}
-            >
-              <.button>Edit sample results</.button>
-            </.link>
-          <% end %>
-        </:actions>
-      </.header>
-      <.list>
-        <:item title="Result">
-          <%= @observation.sample.result |> Atom.to_string() |> String.capitalize() %>
-        </:item>
-        <:item title="Confidence">
-          <%= @observation.sample.confidence %>
-        </:item>
-        <:item title="Pathology">
-          <%= @observation.sample.pathology && @observation.sample.pathology.common_name %>
-        </:item>
-        <:item title="Genotype">
-          <%= @observation.sample.genotype && @observation.sample.genotype.name %>
-        </:item>
-        <:item title="Comments">
-          <%= @observation.sample.comments %>
-        </:item>
-        <:item title="Data">
-          <%= for %{key: k, value: v} <- @observation.sample.data do %>
-            <div><%= "#{k}: #{v}" %></div>
-          <% end %>
-        </:item>
-      </.list>
-    </div>
-  <% User.has_role?(@current_user, [:researcher, :admin, :superuser]) -> %>
-    <.link navigate={~p"/observations/#{@observation}/sample/new"} phx-click={JS.push_focus()}>
-      <.button variant="primary">Add Sample Results</.button>
+<.header class="py-4">
+  Test Results
+  <:actions>
+    <.link
+      :if={User.has_role?(@current_user, [:researcher, :admin, :superuser])}
+      navigate={~p"/test_results/new?observation_id=#{@observation}"}
+      phx-click={JS.push_focus()}
+    >
+      <.button variant="primary">Add Test Result</.button>
     </.link>
-  <% true -> %>
-<% end %>
+  </:actions>
+</.header>
+
+<.table
+  id="test_results"
+  rows={
+    Enum.flat_map(@observation.test_results, fn test_result ->
+      Enum.map(test_result.pathology_results, &{&1.id, &1})
+    end)
+  }
+  row_click={
+    fn {_id, pathology_result} ->
+      JS.navigate(~p"/test_results/#{pathology_result.test_result}")
+    end
+  }
+>
+  <:col :let={{_id, pathology_result}} label="Test ID">
+    <%= pathology_result.test_result.id %>
+  </:col>
+  <:col :let={{_id, pathology_result}} label="Pathology Tested">
+    <%= pathology_result.pathology.common_name %>
+  </:col>
+  <:col :let={{_id, pathology_result}} label="Result"><%= pathology_result.result %></:col>
+  <:col :let={{_id, pathology_result}} label="Genotype">
+    <%= pathology_result.genotype && pathology_result.genotype.name %>
+  </:col>
+  <:col :let={{_id, pathology_result}} label="Last Updated On">
+    <%= DateTime.to_date(pathology_result.test_result.updated_at) %>
+  </:col>
+</.table>
+
+<div :if={@observation.sample} class="mt-16">
+  <.header>
+    Sample Results
+    <:actions>
+      <%= if User.has_role?(@current_user, [:researcher, :admin, :superuser]) do %>
+        <.link
+          navigate={~p"/observations/#{@observation}/sample/edit"}
+          phx-click={JS.push_focus()}
+        >
+          <.button>Edit sample results</.button>
+        </.link>
+      <% end %>
+    </:actions>
+  </.header>
+  <.list>
+    <:item title="Result">
+      <%= @observation.sample.result |> Atom.to_string() |> String.capitalize() %>
+    </:item>
+    <:item title="Confidence">
+      <%= @observation.sample.confidence %>
+    </:item>
+    <:item title="Pathology">
+      <%= @observation.sample.pathology && @observation.sample.pathology.common_name %>
+    </:item>
+    <:item title="Genotype">
+      <%= @observation.sample.genotype && @observation.sample.genotype.name %>
+    </:item>
+    <:item title="Comments">
+      <%= @observation.sample.comments %>
+    </:item>
+    <:item title="Data">
+      <%= for %{key: k, value: v} <- @observation.sample.data do %>
+        <div><%= "#{k}: #{v}" %></div>
+      <% end %>
+    </:item>
+  </.list>
+</div>
 
 <.back navigate={~p"/observations"}>Back to observations</.back>
 

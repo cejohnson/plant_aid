@@ -3,40 +3,56 @@
   <:subtitle>This is a diagnostic_method record from your database.</:subtitle>
   <:actions>
     <.link
-      patch={~p"/admin/diagnostic_methods/#{@diagnostic_method}/show/edit"}
+      navigate={~p"/admin/diagnostic_methods/#{@diagnostic_method}/show/edit"}
       phx-click={JS.push_focus()}
     >
-      <.button>Edit diagnostic_method</.button>
+      <.button variant="primary">Edit Diagnostic Method</.button>
     </.link>
   </:actions>
 </.header>
 
 <.list>
   <:item title="Name"><%= @diagnostic_method.name %></:item>
+  <:item title="Created By">
+    <%= @diagnostic_method.inserted_by.email %>
+  </:item>
+  <:item title="Created On">
+    <%= DateTime.to_date(@diagnostic_method.inserted_at) %>
+  </:item>
+  <:item title="Updated By">
+    <%= @diagnostic_method.updated_by.email %>
+  </:item>
+  <:item title="Updated On">
+    <%= DateTime.to_date(@diagnostic_method.updated_at) %>
+  </:item>
   <:item title="Description"><%= @diagnostic_method.description %></:item>
+  <:item title="Tested Pathologies">
+    <ul>
+      <%= for pathology <- @diagnostic_method.pathologies do %>
+        <li><%= pathology.common_name %></li>
+      <% end %>
+    </ul>
+  </:item>
   <:item title="Fields">
     <.table id="fields" rows={@diagnostic_method.fields}>
       <:col :let={field} label="Name"><%= field.name %></:col>
+      <:col :let={field} label="Frequency">
+        <%= if field.per_pathology, do: "Per Pathology", else: "Per Test" %>
+      </:col>
       <:col :let={field} label="Type"><%= field.type %></:col>
-      <:col :let={field} label="Data"><%= field.data %></:col>
+      <:col :let={field} label="Subtype"><%= field.subtype %></:col>
+      <:col :let={field} label="Data">
+        <%= if field.type == :select or field.subtype == :select do %>
+          <.label>Select Options</.label>
+          <ul>
+            <%= for option <- field.select_options do %>
+              <li><%= option.value %></li>
+            <% end %>
+          </ul>
+        <% end %>
+      </:col>
     </.table>
   </:item>
 </.list>
 
 <.back navigate={~p"/admin/diagnostic_methods"}>Back to diagnostic_methods</.back>
-
-<.modal
-  :if={@live_action == :edit}
-  id="diagnostic_method-modal"
-  show
-  on_cancel={JS.patch(~p"/admin/diagnostic_methods/#{@diagnostic_method}")}
->
-  <.live_component
-    module={PlantAidWeb.DiagnosticMethodLive.FormComponent}
-    id={@diagnostic_method.id}
-    title={@page_title}
-    action={@live_action}
-    diagnostic_method={@diagnostic_method}
-    patch={~p"/admin/diagnostic_methods/#{@diagnostic_method}"}
-  />
-</.modal>
