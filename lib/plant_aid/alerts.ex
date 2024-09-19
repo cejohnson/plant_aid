@@ -7,39 +7,45 @@ defmodule PlantAid.Alerts do
   require Geo.PostGIS
   require Phoenix.VerifiedRoutes
 
+  require Logger
   alias PlantAid.Repo
 
   alias PlantAid.Accounts.User
-  alias PlantAid.Accounts.UserNotifier
   alias PlantAid.Alerts.Alert
-  alias PlantAid.Alerts.Alert
-  alias PlantAid.Alerts.AlertSetting
+  alias PlantAid.Alerts.AlertSubscription
+  alias PlantAid.DiagnosticTests.TestResult
+  alias PlantAid.Geography.SecondarySubdivision
   alias PlantAid.Locations.Location
-  alias PlantAid.Observations
-  alias PlantAid.Observations.Sample
+  alias PlantAid.Observations.Observation
+  alias PlantAid.Utilities
 
-  def authorize(:list_alert_settings, %User{}, _), do: :ok
+  def authorize(:list_alert_subscriptions, %User{}, _), do: :ok
 
-  def authorize(:get_alert_setting, %User{id: user_id}, %AlertSetting{user_id: user_id}), do: :ok
+  def authorize(:get_alert_subscription, %User{id: user_id}, %AlertSubscription{user_id: user_id}),
+    do: :ok
 
-  def authorize(:get_alert_setting, %User{} = user, _) do
+  def authorize(:get_alert_subscription, %User{} = user, _) do
     User.has_role?(user, [:superuser, :admin, :researcher])
   end
 
-  def authorize(:create_alert_setting, %User{}, _), do: :ok
+  def authorize(:create_alert_subscription, %User{}, _), do: :ok
 
-  def authorize(:update_alert_setting, %User{id: user_id}, %AlertSetting{user_id: user_id}),
-    do: :ok
+  def authorize(:update_alert_subscription, %User{id: user_id}, %AlertSubscription{
+        user_id: user_id
+      }),
+      do: :ok
 
-  def authorize(:update_alert_setting, %User{} = user, _) do
+  def authorize(:update_alert_subscription, %User{} = user, _) do
     User.has_role?(user, [:superuser, :admin])
   end
 
-  def authorize(:delete_alert_setting, %User{id: user_id}, %AlertSetting{user_id: user_id}) do
+  def authorize(:delete_alert_subscription, %User{id: user_id}, %AlertSubscription{
+        user_id: user_id
+      }) do
     :ok
   end
 
-  def authorize(:delete_alert_setting, %User{} = user, _) do
+  def authorize(:delete_alert_subscription, %User{} = user, _) do
     User.has_role?(user, [:superuser, :admin])
   end
 
@@ -61,193 +67,120 @@ defmodule PlantAid.Alerts do
 
   def authorize(_, _, _), do: false
 
-  def handle_positive_sample(%Sample{} = sample) do
-    sample =
-      sample
-      |> Repo.preload([
-        :pathology,
-        observation: [:country, :primary_subdivision, :secondary_subdivision]
-      ])
-
-    pathology_id = sample.pathology_id
-    position = sample.observation.position
-
-    alert_settings =
-      from(
-        a in AlertSetting,
-        left_join: l in Location,
-        on: a.user_id == l.user_id,
-        left_join: acp in "alert_settings_pathologies",
-        on: acp.alert_setting_id == a.id,
-        left_join: acl in "alert_settings_locations",
-        on: acl.alert_setting_id == a.id,
-        where: a.enabled,
-        where:
-          a.pathologies_selector == :any or
-            (a.pathologies_selector == :include and ^pathology_id == acp.pathology_id) or
-            (a.pathologies_selector == :exclude and ^pathology_id != acp.pathology_id),
-        where:
-          a.locations_selector == :global or
-            (a.locations_selector == :any and
-               Geo.PostGIS.st_distance(^position, l.position) <= a.distance_meters) or
-            (a.locations_selector == :include and l.id == acl.location_id and
-               Geo.PostGIS.st_distance(^position, l.position) <= a.distance_meters) or
-            (a.locations_selector == :exclude and l.id != acl.location_id and
-               Geo.PostGIS.st_distance(^position, l.position) <= a.distance_meters),
-        distinct: true
-      )
-      |> Repo.all()
-
-    alert_settings
-    |> Enum.group_by(fn alert_setting ->
-      alert_setting.user_id
-    end)
-    |> Enum.map(fn {user_id, alert_settings} ->
-      {:ok, alert} = create_alert(user_id, alert_settings, sample)
-      alert
-    end)
-    |> Repo.preload([
-      :user,
-      sample: [
-        :pathology,
-        observation: [:country, :primary_subdivision, :secondary_subdivision]
-      ]
-    ])
-    |> Enum.map(fn alert ->
-      observation = Observations.populate_virtual_fields(alert.sample.observation)
-      put_in(alert.sample.observation, observation)
-    end)
-    |> Enum.each(fn alert ->
-      alert_url =
-        Phoenix.VerifiedRoutes.url(
-          PlantAidWeb.Endpoint,
-          PlantAidWeb.Router,
-          ~p"/alerts/#{alert}"
-        )
-
-      alert_settings_url =
-        Phoenix.VerifiedRoutes.url(
-          PlantAidWeb.Endpoint,
-          PlantAidWeb.Router,
-          ~p"/alerts/settings"
-        )
-
-      UserNotifier.deliver_alert(
-        alert.user,
-        alert.sample.pathology,
-        alert.sample.observation,
-        alert_url,
-        alert_settings_url
-      )
-    end)
-  end
-
-  @doc """
-  Returns the list of alert_settings.
-
-  ## Examples
-
-      iex> list_alert_settings()
-      [%AlertSetting{}, ...]
-
-  """
-  def list_alert_settings(user) do
-    AlertSetting
+  def list_alert_subscriptions(user) do
+    AlertSubscription
     |> Bodyguard.scope(user)
-    |> order_by([as], as.id)
+    # |> order_by([as], as.id)
     |> Repo.all()
-    |> Repo.preload([:pathologies, :locations])
+    |> preload_alert_subscription_fields()
     |> Enum.map(&populate_virtual_fields/1)
   end
 
-  @doc """
-  Gets a single alert_setting.
-
-  Raises `Ecto.NoResultsError` if the Alert setting does not exist.
-
-  ## Examples
-
-      iex> get_alert_setting!(123)
-      %AlertSetting{}
-
-      iex> get_alert_setting!(456)
-      ** (Ecto.NoResultsError)
-
-  """
-  def get_alert_setting!(id) do
-    Repo.get!(AlertSetting, id)
-    |> Repo.preload([:pathologies, :locations])
+  def get_alert_subscription!(id) do
+    Repo.get!(AlertSubscription, id)
+    |> preload_alert_subscription_fields()
     |> populate_virtual_fields()
   end
 
-  @doc """
-  Creates a alert_setting.
-
-  ## Examples
-
-      iex> create_alert_setting(%{field: value})
-      {:ok, %AlertSetting{}}
-
-      iex> create_alert_setting(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def create_alert_setting(user, attrs \\ %{}) do
-    %AlertSetting{user: user}
-    |> AlertSetting.changeset(attrs)
-    |> AlertSetting.populate_nonvirtual_fields()
+  def create_alert_subscription(user, attrs \\ %{}) do
+    %AlertSubscription{user: user}
+    |> AlertSubscription.changeset(attrs)
+    |> AlertSubscription.populate_nonvirtual_fields()
     |> Repo.insert()
+    |> preload_alert_subscription_fields()
     |> populate_virtual_fields()
   end
 
-  @doc """
-  Updates a alert_setting.
-
-  ## Examples
-
-      iex> update_alert_setting(alert_setting, %{field: new_value})
-      {:ok, %AlertSetting{}}
-
-      iex> update_alert_setting(alert_setting, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def update_alert_setting(%AlertSetting{} = alert_setting, attrs) do
-    alert_setting
-    |> Repo.preload([:locations, :pathologies])
-    |> AlertSetting.changeset(attrs)
-    |> AlertSetting.populate_nonvirtual_fields()
+  def update_alert_subscription(%AlertSubscription{} = alert_subscription, attrs \\ %{}) do
+    alert_subscription
+    |> preload_alert_subscription_fields()
+    |> AlertSubscription.changeset(attrs)
+    |> AlertSubscription.populate_nonvirtual_fields()
     |> Repo.update()
+    |> preload_alert_subscription_fields()
     |> populate_virtual_fields()
   end
 
-  @doc """
-  Deletes a alert_setting.
-
-  ## Examples
-
-      iex> delete_alert_setting(alert_setting)
-      {:ok, %AlertSetting{}}
-
-      iex> delete_alert_setting(alert_setting)
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def delete_alert_setting(%AlertSetting{} = alert_setting) do
-    Repo.delete(alert_setting)
+  def delete_alert_subscription(%AlertSubscription{} = alert_subscription) do
+    Repo.delete(alert_subscription)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking alert_setting changes.
+  def change_alert_subscription(%AlertSubscription{} = alert_subscription, attrs \\ %{}) do
+    AlertSubscription.changeset(alert_subscription, attrs)
+  end
 
-  ## Examples
+  def find_alert_subscriptions(%Observation{} = observation) do
+    pathology_ids = [observation.suspected_pathology_id]
+    find_alert_subscriptions(observation, pathology_ids, observation.user_id, :disease_reported)
+  end
 
-      iex> change_alert_setting(alert_setting)
-      %Ecto.Changeset{data: %AlertSetting{}}
+  def find_alert_subscriptions(%TestResult{} = test_result) do
+    case test_result.pathology_results
+         |> Enum.filter(&(&1.result == :positive))
+         |> Enum.map(& &1.pathology_id) do
+      [] ->
+        []
 
-  """
-  def change_alert_setting(%AlertSetting{} = alert_setting, attrs \\ %{}) do
-    AlertSetting.changeset(alert_setting, attrs)
+      pathology_ids ->
+        find_alert_subscriptions(
+          test_result.observation,
+          pathology_ids,
+          test_result.inserted_by_id,
+          :disease_confirmed
+        )
+    end
+  end
+
+  defp find_alert_subscriptions(
+         %Observation{} = observation,
+         pathology_ids,
+         exclude_user_id,
+         events_selector
+       ) do
+    country_id = observation.country_id
+    primary_subdivision_id = observation.primary_subdivision_id
+    secondary_subdivision_id = observation.secondary_subdivision_id
+    position = observation.position
+
+    from(
+      a in AlertSubscription,
+      left_join: l in Location,
+      on: a.user_id == l.user_id,
+      left_join: asp in "alert_subscriptions_pathologies",
+      on: asp.alert_subscription_id == a.id,
+      left_join: asl in "alert_subscriptions_locations",
+      on: asl.alert_subscription_id == a.id,
+      left_join: asc in "alert_subscriptions_countries",
+      on: asc.alert_subscription_id == a.id,
+      left_join: aspsd in "alert_subscriptions_primary_subdivisions",
+      on: aspsd.alert_subscription_id == a.id,
+      left_join: asssd in "alert_subscriptions_secondary_subdivisions",
+      on: asssd.alert_subscription_id == a.id,
+      where: a.enabled,
+      where: a.user_id != ^exclude_user_id,
+      where: a.events_selector == :any or a.events_selector == ^events_selector,
+      where:
+        a.pathologies_selector == :any or
+          (a.pathologies_selector == :include and asp.pathology_id in ^pathology_ids) or
+          (a.pathologies_selector == :exclude and asp.pathology_id not in ^pathology_ids),
+      where:
+        a.geographical_selector == :any or
+          (a.geographical_selector == :regions and
+             (asssd.secondary_subdivision_id == ^secondary_subdivision_id or
+                (aspsd.primary_subdivision_id == ^primary_subdivision_id and is_nil(asssd)) or
+                (asc.country_id == ^country_id and is_nil(aspsd) and is_nil(asssd)))) or
+          (a.geographical_selector == :locations and
+             ((a.locations_selector == :any and
+                 Geo.PostGIS.st_distance(^position, l.position) <= a.distance_meters) or
+                (a.locations_selector == :include and l.id == asl.location_id and
+                   Geo.PostGIS.st_distance(^position, l.position) <= a.distance_meters) or
+                (a.locations_selector == :exclude and l.id != asl.location_id and
+                   Geo.PostGIS.st_distance(^position, l.position) <= a.distance_meters))),
+      distinct: true
+    )
+    |> Repo.all()
+    |> preload_alert_subscription_fields()
+    |> Enum.map(&populate_virtual_fields/1)
   end
 
   @doc """
@@ -270,14 +203,15 @@ defmodule PlantAid.Alerts do
     |> Repo.all()
     |> Repo.preload([
       [
-        alert_settings: [:pathologies, :locations],
-        sample: [
-          :pathology,
-          observation: [:country, :primary_subdivision, :secondary_subdivision]
+        :pathology,
+        :test_result,
+        observation: [
+          secondary_subdivision:
+            {from(s in SecondarySubdivision, select: %{s | geog: nil}),
+             [primary_subdivision: :country]}
         ]
       ]
     ])
-    |> Enum.map(&populate_virtual_fields/1)
   end
 
   @doc """
@@ -295,17 +229,91 @@ defmodule PlantAid.Alerts do
 
   """
   def get_alert!(id) do
-    Repo.get!(Alert, id)
+    Alert
+    |> Repo.get!(id)
     |> Repo.preload([
       [
-        alert_settings: [:pathologies, :locations],
-        sample: [
-          :pathology,
-          observation: [:country, :primary_subdivision, :secondary_subdivision]
+        :pathology,
+        :test_result,
+        :observation,
+        alert_subscriptions: [
+          :pathologies,
+          :locations,
+          :countries,
+          primary_subdivisions: [:country],
+          secondary_subdivisions:
+            {from(s in SecondarySubdivision, select: %{s | geog: nil}),
+             [primary_subdivision: :country]}
+        ],
+        observation: [
+          secondary_subdivision:
+            {from(s in SecondarySubdivision, select: %{s | geog: nil}),
+             [primary_subdivision: :country]}
         ]
       ]
     ])
     |> populate_virtual_fields()
+  end
+
+  def create_alerts(%Observation{} = observation, alert_subscriptions) do
+    create_alerts(
+      :disease_reported,
+      observation.suspected_pathology_id,
+      observation.id,
+      nil,
+      alert_subscriptions
+    )
+  end
+
+  def create_alerts(%TestResult{} = test_result, alert_subscriptions) do
+    positive_pathologies =
+      test_result.pathology_results
+      |> Enum.filter(&(&1.result == :positive))
+      |> Enum.map(& &1.pathology)
+
+    pathology_subscriptions =
+      Enum.map(positive_pathologies, fn pathology ->
+        {pathology,
+         Enum.filter(alert_subscriptions, fn alert_subscription ->
+           alert_subscription.pathologies_selector == :any ||
+             (alert_subscription.pathologies_selector == :include &&
+                pathology.id in alert_subscription.pathology_ids) ||
+             (alert_subscription.pathologies_selector == :exclude &&
+                pathology.id not in alert_subscription.pathology_ids)
+         end)}
+      end)
+
+    Enum.each(pathology_subscriptions, fn {pathology, subscriptions} ->
+      create_alerts(
+        :disease_confirmed,
+        pathology.id,
+        test_result.observation_id,
+        test_result.id,
+        subscriptions
+      )
+    end)
+  end
+
+  defp create_alerts(
+         alert_type,
+         pathology_id,
+         observation_id,
+         test_result_id,
+         alert_subscriptions
+       ) do
+    # TODO: consider Repo.insert_all(), but note that the many_to_many alert_subscriptions complicates matters
+    alert_subscriptions
+    |> Enum.group_by(& &1.user_id)
+    |> Enum.each(fn {user_id, subscriptions} ->
+      create_alert(
+        alert_type,
+        user_id,
+        pathology_id,
+        observation_id,
+        test_result_id,
+        subscriptions
+      )
+    end)
   end
 
   @doc """
@@ -320,11 +328,21 @@ defmodule PlantAid.Alerts do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_alert(user_id, alert_settings, sample) do
+  def create_alert(
+        alert_type,
+        user_id,
+        pathology_id,
+        observation_id,
+        test_result_id,
+        alert_subscriptions
+      ) do
     %Alert{
+      alert_type: alert_type,
       user_id: user_id,
-      sample: sample,
-      alert_settings: alert_settings
+      pathology_id: pathology_id,
+      observation_id: observation_id,
+      test_result_id: test_result_id,
+      alert_subscriptions: alert_subscriptions
     }
     |> Repo.insert()
   end
@@ -363,129 +381,209 @@ defmodule PlantAid.Alerts do
     Repo.delete(alert)
   end
 
-  def populate_virtual_fields({:ok, alert_or_alert_setting}) do
-    {:ok, populate_virtual_fields(alert_or_alert_setting)}
+  def preload_alert_subscription_fields({:ok, value}) do
+    {:ok, preload_alert_subscription_fields(value)}
+  end
+
+  def preload_alert_subscription_fields({:error, _} = resp) do
+    resp
+  end
+
+  def preload_alert_subscription_fields(alert_subscription_or_subscriptions) do
+    Repo.preload(alert_subscription_or_subscriptions, [
+      :pathologies,
+      :locations,
+      :countries,
+      primary_subdivisions: [:country],
+      secondary_subdivisions:
+        {from(s in SecondarySubdivision, select: %{s | geog: nil}),
+         [primary_subdivision: :country]}
+    ])
+  end
+
+  def populate_virtual_fields({:ok, value}) do
+    {:ok, populate_virtual_fields(value)}
   end
 
   def populate_virtual_fields({:error, _} = resp) do
     resp
   end
 
-  def populate_virtual_fields(%AlertSetting{} = alert_setting) do
-    alert_setting
-    |> maybe_put_alert_setting_distance()
+  def populate_virtual_fields(%AlertSubscription{} = alert_subscription) do
+    alert_subscription
+    |> maybe_put_alert_subscription_distance()
     |> maybe_put_pathology_ids()
     |> maybe_put_location_ids()
-    |> put_alert_setting_description()
+    |> maybe_put_country_ids()
+    |> maybe_put_primary_subdivision_ids()
+    |> maybe_put_secondary_subdivision_ids()
+    |> maybe_put_alert_subscription_auto_description()
   end
 
   def populate_virtual_fields(%Alert{} = alert) do
-    alert_settings =
-      alert.alert_settings
+    alert_subscriptions =
+      alert.alert_subscriptions
       |> Enum.map(&populate_virtual_fields/1)
 
-    observation = Observations.populate_virtual_fields(alert.sample.observation)
-
-    alert =
-      alert
-      |> Map.put(:alert_settings, alert_settings)
-
-    put_in(alert.sample.observation, observation)
+    Map.put(alert, :alert_subscriptions, alert_subscriptions)
   end
 
-  defp maybe_put_alert_setting_distance(%AlertSetting{distance_meters: nil} = alert_setting) do
-    alert_setting
+  defp maybe_put_alert_subscription_distance(
+         %AlertSubscription{distance_meters: nil} = alert_subscription
+       ) do
+    alert_subscription
   end
 
-  defp maybe_put_alert_setting_distance(%AlertSetting{} = alert_setting) do
-    %{alert_setting | distance: AlertSetting.get_distance(alert_setting)}
+  defp maybe_put_alert_subscription_distance(%AlertSubscription{} = alert_subscription) do
+    %{alert_subscription | distance: AlertSubscription.get_distance(alert_subscription)}
   end
 
-  defp maybe_put_pathology_ids(%AlertSetting{pathologies: pathologies} = alert_setting)
+  defp maybe_put_pathology_ids(%AlertSubscription{pathologies: pathologies} = alert_subscription)
        when is_list(pathologies) do
-    %{alert_setting | pathology_ids: Enum.map(pathologies, fn p -> p.id end)}
+    %{alert_subscription | pathology_ids: Enum.map(pathologies, fn p -> p.id end)}
   end
 
-  defp maybe_put_pathology_ids(%AlertSetting{} = alert_setting) do
-    alert_setting
+  defp maybe_put_pathology_ids(%AlertSubscription{} = alert_subscription) do
+    alert_subscription
   end
 
-  defp maybe_put_location_ids(%AlertSetting{locations: locations} = alert_setting)
+  defp maybe_put_location_ids(%AlertSubscription{locations: locations} = alert_subscription)
        when is_list(locations) do
-    %{alert_setting | location_ids: Enum.map(locations, fn l -> l.id end)}
+    %{alert_subscription | location_ids: Enum.map(locations, fn l -> l.id end)}
   end
 
-  defp maybe_put_location_ids(%AlertSetting{} = alert_setting) do
-    alert_setting
+  defp maybe_put_location_ids(%AlertSubscription{} = alert_subscription) do
+    alert_subscription
   end
 
-  defp put_alert_setting_description(alert_setting) do
+  defp maybe_put_country_ids(%AlertSubscription{countries: countries} = alert_subscription)
+       when is_list(countries) do
+    %{alert_subscription | country_ids: Enum.map(countries, fn c -> c.id end)}
+  end
+
+  defp maybe_put_country_ids(%AlertSubscription{} = alert_subscription) do
+    alert_subscription
+  end
+
+  defp maybe_put_primary_subdivision_ids(
+         %AlertSubscription{primary_subdivisions: primary_subdivisions} = alert_subscription
+       )
+       when is_list(primary_subdivisions) do
+    %{
+      alert_subscription
+      | primary_subdivision_ids: Enum.map(primary_subdivisions, fn p -> p.id end)
+    }
+  end
+
+  defp maybe_put_primary_subdivision_ids(%AlertSubscription{} = alert_subscription) do
+    alert_subscription
+  end
+
+  defp maybe_put_secondary_subdivision_ids(
+         %AlertSubscription{secondary_subdivisions: secondary_subdivisions} = alert_subscription
+       )
+       when is_list(secondary_subdivisions) do
+    %{
+      alert_subscription
+      | secondary_subdivision_ids: Enum.map(secondary_subdivisions, fn p -> p.id end)
+    }
+  end
+
+  defp maybe_put_secondary_subdivision_ids(%AlertSubscription{} = alert_subscription) do
+    alert_subscription
+  end
+
+  defp maybe_put_alert_subscription_auto_description(
+         %AlertSubscription{description: nil} = alert_subscription
+       ) do
+    event_blurb =
+      case alert_subscription.events_selector do
+        :any ->
+          "Reported or confirmed"
+
+        :disease_reported ->
+          "Reported"
+
+        :disease_confirmed ->
+          "Confirmed"
+      end
+
     pathology_blurb =
-      case alert_setting.pathologies_selector do
+      case alert_subscription.pathologies_selector do
         :any ->
           "any pathology"
 
         :include ->
-          alert_setting.pathologies
+          alert_subscription.pathologies
           |> Enum.map(fn p -> p.common_name end)
-          |> join_with_or()
+          |> Utilities.english_join("or")
 
         :exclude ->
           pathologies =
-            alert_setting.pathologies
+            alert_subscription.pathologies
             |> Enum.map(fn p -> p.common_name end)
-            |> join_with_or()
+            |> Utilities.english_join("or")
 
           "any pathology EXCEPT #{pathologies}"
       end
 
-    location_blurb =
-      case alert_setting.locations_selector do
-        :global ->
+    geography_blurb =
+      case alert_subscription.geographical_selector do
+        :any ->
           "anywhere"
 
-        :any ->
-          "within #{alert_setting.distance} #{alert_setting.distance_unit} of any location"
+        :regions ->
+          regions =
+            cond do
+              length(alert_subscription.secondary_subdivisions) > 0 ->
+                alert_subscription.secondary_subdivisions
+                |> Enum.map(
+                  &"#{&1.name} #{&1.category}, #{String.slice(&1.primary_subdivision.iso3166_2, 3..5)}, #{&1.primary_subdivision.country.iso3166_1_alpha2}"
+                )
+                |> Utilities.english_join("or")
 
-        :include ->
-          locations =
-            alert_setting.locations
-            |> Enum.map(fn l -> l.name end)
-            |> join_with_or()
+              length(alert_subscription.primary_subdivisions) > 0 ->
+                alert_subscription.primary_subdivisions
+                |> Enum.map(&"#{&1.name}, #{&1.country.iso3166_1_alpha3}")
+                |> Utilities.english_join("or")
 
-          "within #{alert_setting.distance} #{alert_setting.distance_unit} of #{locations}"
+              length(alert_subscription.countries) > 0 ->
+                alert_subscription.countries
+                |> Enum.map(& &1.name)
+                |> Utilities.english_join("or")
 
-        :exclude ->
-          locations =
-            alert_setting.locations
-            |> Enum.map(fn l -> l.name end)
-            |> join_with_or()
+              true ->
+                Logger.warning("Alert subscription set to regions with no regions!")
+                "nowhere"
+            end
 
-          "within #{alert_setting.distance} #{alert_setting.distance_unit} of any location EXCEPT #{locations}"
+          "in #{regions}"
+
+        :locations ->
+          case alert_subscription.locations_selector do
+            :any ->
+              "within #{alert_subscription.distance} #{alert_subscription.distance_unit} of any of my locations"
+
+            :include ->
+              locations =
+                alert_subscription.locations
+                |> Enum.map(fn l -> l.name end)
+                |> Utilities.english_join("or")
+
+              "within #{alert_subscription.distance} #{alert_subscription.distance_unit} of #{locations}"
+
+            :exclude ->
+              locations =
+                alert_subscription.locations
+                |> Enum.map(fn l -> l.name end)
+                |> Utilities.english_join("or")
+
+              "within #{alert_subscription.distance} #{alert_subscription.distance_unit} of any location EXCEPT #{locations}"
+          end
       end
 
-    description = "Confirmed instances of #{pathology_blurb}, #{location_blurb}."
+    description = "#{event_blurb} instances of #{pathology_blurb} #{geography_blurb}."
 
-    %{alert_setting | description: description}
-  end
-
-  defp join_with_or([]) do
-    ""
-  end
-
-  defp join_with_or([first | []]) do
-    first
-  end
-
-  defp join_with_or([first | [last]]) do
-    first <> " or " <> last
-  end
-
-  defp join_with_or(list) do
-    [last | rest] = Enum.reverse(list)
-
-    (rest
-     |> Enum.reverse()
-     |> Enum.join(", ")) <> ", or #{last}"
+    %{alert_subscription | auto_description: description}
   end
 end

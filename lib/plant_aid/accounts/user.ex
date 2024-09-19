@@ -48,6 +48,13 @@ defmodule PlantAid.Accounts.User do
 
     field :last_seen, :utc_datetime, virtual: true
 
+    embeds_one :notifications_settings, NotificationsSettings do
+      field :enabled, :boolean, default: false
+      field :utc_hour, :integer
+      field :timezone, :string
+      field :local_time, :time, virtual: true
+    end
+
     timestamps()
   end
 
@@ -120,6 +127,12 @@ defmodule PlantAid.Accounts.User do
     else
       changeset
     end
+  end
+
+  def notifications_changeset(user, attrs) do
+    user
+    |> cast(attrs, [])
+    |> cast_embed(:notifications_settings)
   end
 
   @doc """

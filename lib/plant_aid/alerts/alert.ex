@@ -8,12 +8,15 @@ defmodule PlantAid.Alerts.Alert do
 
   schema "alerts" do
     field :viewed_at, :utc_datetime
+    field :alert_type, Ecto.Enum, values: [:disease_reported, :disease_confirmed]
 
-    belongs_to :user, PlantAid.Accounts.User
-    belongs_to :sample, PlantAid.Observations.Sample
+    belongs_to :user, User
+    belongs_to :pathology, PlantAid.Pathologies.Pathology
+    belongs_to :observation, PlantAid.Observations.Observation
+    belongs_to :test_result, PlantAid.DiagnosticTests.TestResult
 
-    many_to_many :alert_settings, PlantAid.Alerts.AlertSetting,
-      join_through: "alerts_alert_settings",
+    many_to_many :alert_subscriptions, PlantAid.Alerts.AlertSubscription,
+      join_through: "alerts_alert_subscriptions",
       on_replace: :delete
 
     timestamps()

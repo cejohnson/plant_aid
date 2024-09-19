@@ -139,6 +139,11 @@ defmodule PlantAid.DiagnosticTests do
     |> Changeset.put_change(:inserted_by_id, user.id)
     |> Changeset.put_change(:updated_by_id, user.id)
     |> Repo.insert()
+    |> tap(fn {:ok, test_result} ->
+      %{diagnostic_test_result_id: test_result.id}
+      |> PlantAid.Workers.CreateAlerts.new()
+      |> Oban.insert()
+    end)
     |> preload()
     |> populate_virtual_fields()
     |> after_save(after_save)

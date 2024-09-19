@@ -210,6 +210,10 @@ defmodule PlantAid.Accounts do
 
   ## Settings
 
+  def change_user_notifications_settings(%User{} = user, attrs \\ %{}) do
+    User.notifications_changeset(user, attrs)
+  end
+
   @doc """
   Returns an `%Ecto.Changeset{}` for changing the user email.
 

@@ -1,9 +1,21 @@
 <.header>
   Listing Alerts
-  <:subtitle>To receive disease alerts, update your alert settings -></:subtitle>
+  <:subtitle>
+    Customize your
+    <.link navigate={~p"/alerts/subscriptions"} class="text-primary hover:underline">
+      alert subscriptions
+    </.link>
+    to choose which events create alerts.
+    <br />If you would like to receive daily emails with new alerts, enable that in <.link
+      navigate={~p"/users/settings"}
+      class="text-primary hover:underline"
+    >
+      settings
+    </.link>.
+  </:subtitle>
   <:actions>
-    <.link navigate={~p"/alerts/settings"}>
-      <.button variant="primary">Settings</.button>
+    <.link navigate={~p"/alerts/subscriptions"}>
+      <.button variant="primary">Subscriptions</.button>
     </.link>
   </:actions>
 </.header>
@@ -13,15 +25,19 @@
   rows={@streams.alerts}
   row_click={fn {_id, alert} -> JS.navigate(~p"/alerts/#{alert}") end}
 >
-  <:col :let={{_id, alert}} label="Created At">
-    <%= alert.inserted_at %>
+  <:col :let={{_id, alert}} label="Type">
+    <%= PlantAid.Utilities.pretty_print(alert.alert_type) %>
   </:col>
-  <:col :let={{_id, alert}} label="Pathology"><%= alert.sample.pathology.common_name %></:col>
-  <:col :let={{_id, alert}} label="Location"><%= alert.sample.observation.location %></:col>
-  <:col :let={{_id, alert}} label="Reported On">
-    <%= alert.sample.observation.observation_date %>
+  <:col :let={{_id, alert}} label="Pathology"><%= alert.pathology.common_name %></:col>
+  <:col :let={{_id, alert}} label="Location">
+    <%= PlantAid.Geography.pretty_print(alert.observation.secondary_subdivision) %>
   </:col>
-  <:col :let={{_id, alert}} label="Confirmed At"><%= alert.sample.inserted_at %></:col>
+  <:col :let={{_id, alert}} label="Observation Date">
+    <%= alert.observation.observation_date %>
+  </:col>
+  <:col :let={{_id, alert}} label="Confirmed At">
+    <%= alert.test_result && alert.test_result.inserted_at %>
+  </:col>
   <:action :let={{_id, alert}}>
     <div class="sr-only">
       <.link navigate={~p"/alerts/#{alert}"}>Show</.link>

@@ -1,0 +1,55 @@
+<.header>
+  Listing Alert Subscriptions
+  <:subtitle>Subscriptions for receiving alerts based on pathology and/or geography.</:subtitle>
+  <:actions>
+    <.link patch={~p"/alerts/subscriptions/new"}>
+      <.button variant="primary">New Alert Subscription</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table
+  id="alert_subscriptions"
+  rows={@streams.alert_subscriptions}
+  row_click={
+    fn {_id, alert_subscription} ->
+      JS.navigate(~p"/alerts/subscriptions/#{alert_subscription}")
+    end
+  }
+>
+  <:col :let={{_id, alert_subscription}} label="Enabled"><%= alert_subscription.enabled %></:col>
+  <:col :let={{_id, alert_subscription}} label="Description">
+    <%= alert_subscription.description || alert_subscription.auto_description %>
+  </:col>
+  <:action :let={{_id, alert_subscription}}>
+    <div class="sr-only">
+      <.link navigate={~p"/alerts/subscriptions/#{alert_subscription}"}>Show</.link>
+    </div>
+    <.link patch={~p"/alerts/subscriptions/#{alert_subscription}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={{id, alert_subscription}}>
+    <.link
+      phx-click={JS.push("delete", value: %{id: alert_subscription.id}) |> hide("##{id}")}
+      data-confirm="Are you sure?"
+    >
+      Delete
+    </.link>
+  </:action>
+</.table>
+
+<.modal
+  :if={@live_action in [:new, :edit]}
+  id="alert_subscription-modal"
+  show
+  on_cancel={JS.patch(~p"/alerts/subscriptions")}
+>
+  <.live_component
+    module={PlantAidWeb.AlertSubscriptionLive.FormComponent}
+    id={@alert_subscription.id || :new}
+    title={@page_title}
+    action={@live_action}
+    current_user={@current_user}
+    alert_subscription={@alert_subscription}
+    patch={~p"/alerts/subscriptions"}
+  />
+</.modal>

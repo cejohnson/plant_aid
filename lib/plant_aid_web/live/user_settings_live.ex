@@ -1,10 +1,50 @@
 defmodule PlantAidWeb.UserSettingsLive do
   use PlantAidWeb, :live_view
 
+  import Ecto.Query
+
   alias PlantAid.Accounts
 
   def render(assigns) do
     ~H"""
+    <.header>Notifications</.header>
+
+    <%!-- <div>
+      PlantAid can send you an email up to once a day with any new alerts from the previous 24 hours. This email will only be sent if there are new alerts to report.
+    </div>
+    <div>
+      If you would like to receive these notifications, enable them here and choose when to receive them.
+    </div> --%>
+
+    <.simple_form
+      for={@notifications_form}
+      id="notifications_form"
+      phx-submit="update_notifications_settings"
+      phx-change="validate_notifications_settings"
+      phx-hook="GetTimezone"
+    >
+      <.label>Daily Alerts</.label>
+      <div>
+        Send an email up to once a day with any new alerts from the previous 24 hours. An email will only be sent if there are new alerts to report.
+      </div>
+      <.input
+        field={@notifications_form[:alerts_enabled]}
+        type="checkbox"
+        label="Send Alert Notifications"
+      />
+      <.input field={@notifications_form[:usage_summary_enabled]} type="checkbox" label="Send " />
+      <.input field={@notifications_form[:time]} type="time" label="Time" />
+      <.input
+        field={@notifications_form[:timezone]}
+        type="select"
+        label="Timezone"
+        options={@timezones}
+      />
+      <:actions>
+        <.button phx-disable-with="Changing...">Change Notifications Settings</.button>
+      </:actions>
+    </.simple_form>
+
     <.header>Change Email</.header>
 
     <.simple_form
@@ -98,6 +138,18 @@ defmodule PlantAidWeb.UserSettingsLive do
     email_changeset = Accounts.change_user_email(user)
     password_changeset = Accounts.change_user_password(user)
     name_changeset = Accounts.change_user_name(user)
+    notifications_changeset = Accounts.change_user_notifications_settings(user)
+
+    # select * from users_notifications as un where extract(hour from concat((now() at time zone un.timezone)::date, ' ', un.time, ' ', un.timezone)::time with time zone at time zone 'UTC') = 15;
+
+    timezones =
+      from(
+        tz in "pg_timezone_names",
+        select: [:name],
+        order_by: [:utc_offset, :name]
+      )
+      |> PlantAid.Repo.all()
+      |> Enum.map(& &1.name)
 
     socket =
       socket
@@ -105,12 +157,50 @@ defmodule PlantAidWeb.UserSettingsLive do
       |> assign(:email_form_current_password, nil)
       |> assign(:name_form_current_password, nil)
       |> assign(:current_email, user.email)
+      |> assign(:timezones, [{"Select", nil} | timezones])
+      |> assign(:notifications_form, to_form(notifications_changeset))
       |> assign(:email_form, to_form(email_changeset))
       |> assign(:password_form, to_form(password_changeset))
       |> assign(:name_form, to_form(name_changeset))
       |> assign(:trigger_submit, false)
 
     {:ok, socket}
+  end
+
+  def handle_event("browser_timezone", %{"timezone" => timezone}, socket) do
+    case Phoenix.HTML.Form.input_value(socket.assigns.notifications_form, :timezone) do
+      nil ->
+        notifications_form =
+          socket.assigns.current_user
+          |> Accounts.change_user_notifications_settings(
+            Map.put(socket.assigns.notifications_form.params, "timezone", timezone)
+          )
+          |> to_form()
+
+        {:noreply, assign(socket, :notifications_form, notifications_form)}
+
+      _ ->
+        {:noreply, socket}
+    end
+  end
+
+  def handle_event("validate_notifications_settings", params, socket) do
+    IO.inspect(params, label: "vns params")
+    %{"user" => user_params} = params
+
+    notifications_form =
+      socket.assigns.current_user
+      |> Accounts.change_user_notifications_settings(user_params)
+      |> Map.put(:action, :validate)
+      |> to_form()
+
+    {:noreply, assign(socket, :notifications_form, notifications_form)}
+  end
+
+  def handle_event("update_notifications_settings", params, socket) do
+    IO.inspect(params, label: "uns params")
+
+    {:noreply, socket}
   end
 
   def handle_event("validate_email", params, socket) do

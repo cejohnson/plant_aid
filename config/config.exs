@@ -23,6 +23,12 @@ config :plant_aid, PlantAidWeb.Endpoint,
   pubsub_server: PlantAid.PubSub,
   live_view: [signing_salt: "8x/hdzVe"]
 
+# Configures the job runner
+config :plant_aid, Oban,
+  engine: Oban.Engines.Basic,
+  queues: [default: 10],
+  repo: PlantAid.Repo
+
 # Configures the mailer
 #
 # By default it uses the "Local" adapter which stores the emails

@@ -26,6 +26,21 @@ mapboxgl.accessToken = "pk.eyJ1Ijoic2hhbmtqNjg3IiwiYSI6ImNsNHlneGluejFqaDkzam5rN
 
 let Hooks = {}
 
+Hooks.GetTimezone = {
+  mounted() {
+    timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    let event = "browser_timezone";
+    let payload = { timezone: timezone };
+    let target = this.el.getAttribute("phx-target");
+
+    if (target) {
+      this.pushEventTo(target, event, payload)
+    } else {
+      this.pushEvent(event, payload)
+    }
+  }
+}
+
 Hooks.GetCurrentPosition = {
   mounted() {
     this.el.addEventListener("click", e => {
@@ -420,6 +435,7 @@ Uploaders.S3 = function (entries, onViewError) {
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {
+  longPollFallbackMs: 2500,
   params: { _csrf_token: csrfToken, user_token: window.userToken },
   hooks: Hooks,
   uploaders: Uploaders

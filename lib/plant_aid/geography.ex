@@ -67,4 +67,23 @@ defmodule PlantAid.Geography do
     |> Repo.one()
     |> Repo.preload(primary_subdivision: :country)
   end
+
+  def pretty_print(%Country{name: name}) do
+    name
+  end
+
+  def pretty_print(%PrimarySubdivision{name: name, country: %Country{iso3166_1_alpha3: country}}) do
+    "#{name}, #{country}"
+  end
+
+  def pretty_print(%SecondarySubdivision{
+        name: name,
+        category: category,
+        primary_subdivision: %PrimarySubdivision{
+          iso3166_2: primary_subdivision,
+          country: %Country{iso3166_1_alpha2: country}
+        }
+      }) do
+    "#{name} #{category}, #{String.slice(primary_subdivision, 3..5)}, #{country}"
+  end
 end

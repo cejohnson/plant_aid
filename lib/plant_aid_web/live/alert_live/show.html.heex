@@ -4,17 +4,41 @@
 </.header>
 
 <.list>
+  <:item title="Alert Type"><%= PlantAid.Utilities.pretty_print(@alert.alert_type) %></:item>
   <:item title="Created At"><%= @alert.inserted_at %></:item>
-  <:item title="Pathology"><%= @alert.sample.pathology.common_name %></:item>
-  <:item title="Location"><%= @alert.sample.observation.location %></:item>
-  <:item title="Reported On"><%= @alert.sample.observation.observation_date %></:item>
-  <:item title="Confirmed At"><%= @alert.sample.inserted_at %></:item>
+  <:item title="Pathology"><%= @alert.pathology.common_name %></:item>
+  <:item title="Location">
+    <%= PlantAid.Geography.pretty_print(@alert.observation.secondary_subdivision) %>
+  </:item>
+  <:item title="Observation Date"><%= @alert.observation.observation_date %></:item>
+  <:item
+    :if={Bodyguard.permit?(PlantAid.Observations, :get_observation, @current_user)}
+    title="Observation"
+  >
+    <.link navigate={~p"/observations/#{@alert.observation}"} class="text-primary hover:underline">
+      <%= @alert.observation.id %>
+    </.link>
+  </:item>
+  <:item :if={@alert.alert_type == :disease_confirmed} title="Confirmed At">
+    <%= @alert.test_result.inserted_at %>
+  </:item>
+  <:item
+    :if={
+      @alert.alert_type == :disease_confirmed &&
+        Bodyguard.permit?(PlantAid.DiagnosticTests, :get_test_result, @current_user)
+    }
+    title="Test Result"
+  >
+    <.link navigate={~p"/test_results/#{@alert.test_result}"} class="text-primary hover:underline">
+      <%= @alert.test_result.id %>
+    </.link>
+  </:item>
   <:item title="Triggered By">
     <ul>
-      <%= for alert_setting <- @alert.alert_settings do %>
+      <%= for alert_subscription <- @alert.alert_subscriptions do %>
         <li>
-          <.link navigate={~p"/alerts/settings/#{alert_setting}"}>
-            <%= alert_setting.description %>
+          <.link navigate={~p"/alerts/subscriptions/#{alert_subscription}"}>
+            <%= alert_subscription.description || alert_subscription.auto_description %>
           </.link>
         </li>
       <% end %>

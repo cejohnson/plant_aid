@@ -7,11 +7,15 @@ defmodule PlantAid.Application do
 
   @impl true
   def start(_type, _args) do
+    Oban.Telemetry.attach_default_logger()
+
     children = [
       # Start the Telemetry supervisor
       PlantAidWeb.Telemetry,
       # Start the Ecto repository
       PlantAid.Repo,
+      # Start Oban
+      {Oban, Application.fetch_env!(:plant_aid, Oban)},
       # Start the PubSub system
       {Phoenix.PubSub, name: PlantAid.PubSub},
       PlantAid.ConnectionMonitor,

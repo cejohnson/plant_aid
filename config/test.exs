@@ -23,6 +23,9 @@ config :plant_aid, PlantAidWeb.Endpoint,
   secret_key_base: "/MT1f1gf9CTovxxkRTAWVoY8FWXr2GDhuYZ0dtx97h81tTOeu5W+M0ILoaprBKe1",
   server: false
 
+# Inline jobs during tests
+config :plant_aid, Oban, testing: :inline
+
 # In test we don't send emails.
 config :plant_aid, PlantAid.Mailer, adapter: Swoosh.Adapters.Test
 

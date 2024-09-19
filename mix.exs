@@ -58,6 +58,7 @@ defmodule PlantAid.MixProject do
       {:ecto_psql_extras, "~> 0.6"},
       {:error_tracker, "~> 0.2"},
       {:libcluster, "~> 3.3"},
+      {:oban, "~> 2.17"},
       # Specific project dependencies
       {:geo_postgis, "~> 3.4"},
       {:nimble_csv, "~> 1.2"},

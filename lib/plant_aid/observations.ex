@@ -246,6 +246,11 @@ defmodule PlantAid.Observations do
     |> Observation.changeset(attrs)
     |> Observation.put_user(user)
     |> Repo.insert()
+    |> tap(fn {:ok, observation} ->
+      %{observation_id: observation.id}
+      |> PlantAid.Workers.CreateAlerts.new()
+      |> Oban.insert()
+    end)
     |> preload()
     |> populate_virtual_fields()
     |> after_save(after_save)

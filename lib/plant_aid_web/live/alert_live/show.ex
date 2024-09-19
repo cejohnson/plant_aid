@@ -10,9 +10,12 @@ defmodule PlantAidWeb.AlertLive.Show do
 
   @impl true
   def handle_params(%{"id" => id}, _, socket) do
-    alert = Alerts.get_alert!(id)
+    alert =
+      Alerts.get_alert!(id)
 
     with :ok <- Bodyguard.permit(Alerts, :get_alert, socket.assigns.current_user, alert) do
+      Alerts.view_alert(alert)
+
       {:noreply,
        socket
        |> assign(:page_title, page_title(socket.assigns.live_action))
