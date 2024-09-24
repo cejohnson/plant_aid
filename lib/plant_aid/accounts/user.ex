@@ -49,10 +49,9 @@ defmodule PlantAid.Accounts.User do
     field :last_seen, :utc_datetime, virtual: true
 
     embeds_one :notifications_settings, NotificationsSettings do
-      field :enabled, :boolean, default: false
-      field :utc_hour, :integer
+      field :enable_daily_email_digest, :boolean, default: false
+      field :time, :time, default: ~T[09:00:00]
       field :timezone, :string
-      field :local_time, :time, virtual: true
     end
 
     timestamps()
@@ -129,10 +128,16 @@ defmodule PlantAid.Accounts.User do
     end
   end
 
-  def notifications_changeset(user, attrs) do
+  def notifications_changeset(%User{} = user, attrs) do
     user
     |> cast(attrs, [])
-    |> cast_embed(:notifications_settings)
+    |> cast_embed(:notifications_settings, with: &notifications_settings_changeset/2)
+  end
+
+  defp notifications_settings_changeset(notifications_settings, attrs) do
+    notifications_settings
+    |> cast(attrs, [:enable_daily_email_digest, :time, :timezone])
+    |> validate_required([:enable_daily_email_digest, :time, :timezone])
   end
 
   @doc """

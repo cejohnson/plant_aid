@@ -28,15 +28,8 @@ let Hooks = {}
 
 Hooks.GetTimezone = {
   mounted() {
-    timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    let event = "browser_timezone";
-    let payload = { timezone: timezone };
-    let target = this.el.getAttribute("phx-target");
-
-    if (target) {
-      this.pushEventTo(target, event, payload)
-    } else {
-      this.pushEvent(event, payload)
+    if (!this.el.value) {
+      this.el.value = Intl.DateTimeFormat().resolvedOptions().timeZone;
     }
   }
 }

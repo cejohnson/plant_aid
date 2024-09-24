@@ -9,37 +9,28 @@ defmodule PlantAidWeb.UserSettingsLive do
     ~H"""
     <.header>Notifications</.header>
 
-    <%!-- <div>
-      PlantAid can send you an email up to once a day with any new alerts from the previous 24 hours. This email will only be sent if there are new alerts to report.
-    </div>
-    <div>
-      If you would like to receive these notifications, enable them here and choose when to receive them.
-    </div> --%>
-
     <.simple_form
       for={@notifications_form}
       id="notifications_form"
       phx-submit="update_notifications_settings"
       phx-change="validate_notifications_settings"
-      phx-hook="GetTimezone"
     >
-      <.label>Daily Alerts</.label>
-      <div>
-        Send an email up to once a day with any new alerts from the previous 24 hours. An email will only be sent if there are new alerts to report.
-      </div>
-      <.input
-        field={@notifications_form[:alerts_enabled]}
-        type="checkbox"
-        label="Send Alert Notifications"
-      />
-      <.input field={@notifications_form[:usage_summary_enabled]} type="checkbox" label="Send " />
-      <.input field={@notifications_form[:time]} type="time" label="Time" />
-      <.input
-        field={@notifications_form[:timezone]}
-        type="select"
-        label="Timezone"
-        options={@timezones}
-      />
+      <.inputs_for :let={f_notifications_form} field={@notifications_form[:notifications_settings]}>
+        <.label>Emails</.label>
+        <.input
+          field={f_notifications_form[:enable_daily_email_digest]}
+          type="checkbox"
+          label="Daily Email Digest (will only be sent if there is anything new to report)"
+        />
+        <.input field={f_notifications_form[:time]} type="time" label="Time" />
+        <.input
+          field={f_notifications_form[:timezone]}
+          type="select"
+          label="Timezone"
+          options={@timezones}
+          phx-hook="GetTimezone"
+        />
+      </.inputs_for>
       <:actions>
         <.button phx-disable-with="Changing...">Change Notifications Settings</.button>
       </:actions>
@@ -167,23 +158,6 @@ defmodule PlantAidWeb.UserSettingsLive do
     {:ok, socket}
   end
 
-  def handle_event("browser_timezone", %{"timezone" => timezone}, socket) do
-    case Phoenix.HTML.Form.input_value(socket.assigns.notifications_form, :timezone) do
-      nil ->
-        notifications_form =
-          socket.assigns.current_user
-          |> Accounts.change_user_notifications_settings(
-            Map.put(socket.assigns.notifications_form.params, "timezone", timezone)
-          )
-          |> to_form()
-
-        {:noreply, assign(socket, :notifications_form, notifications_form)}
-
-      _ ->
-        {:noreply, socket}
-    end
-  end
-
   def handle_event("validate_notifications_settings", params, socket) do
     IO.inspect(params, label: "vns params")
     %{"user" => user_params} = params
@@ -200,7 +174,17 @@ defmodule PlantAidWeb.UserSettingsLive do
   def handle_event("update_notifications_settings", params, socket) do
     IO.inspect(params, label: "uns params")
 
-    {:noreply, socket}
+    %{"user" => user_params} = params
+
+    case Accounts.update_user_notifications_settings(socket.assigns.current_user, user_params) do
+      {:ok, _user} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Notifications settings updated successfully.")}
+
+      {:error, changeset} ->
+        {:noreply, assign(socket, name_form: to_form(changeset))}
+    end
   end
 
   def handle_event("validate_email", params, socket) do

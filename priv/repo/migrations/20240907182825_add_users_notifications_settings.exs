@@ -3,7 +3,7 @@ defmodule PlantAid.Repo.Migrations.AddUsersNotificationsSettings do
 
   def change do
     alter table(:users) do
-      add :notifications_settings, :map, null: false, default: %{enabled: false}
+      add :notifications_settings, :map
     end
   end
 end

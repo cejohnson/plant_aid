@@ -211,7 +211,17 @@ defmodule PlantAid.Accounts do
   ## Settings
 
   def change_user_notifications_settings(%User{} = user, attrs \\ %{}) do
+    # attrs = %{"notifications_settings" => attrs}
     User.notifications_changeset(user, attrs)
+  end
+
+  def update_user_notifications_settings(%User{} = user, attrs) do
+    # attrs = %{"notifications_settings" => attrs}
+
+    user
+    |> User.notifications_changeset(attrs)
+    |> IO.inspect(label: "new user?")
+    |> Repo.update()
   end
 
   @doc """
