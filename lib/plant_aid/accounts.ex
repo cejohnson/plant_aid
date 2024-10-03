@@ -211,17 +211,74 @@ defmodule PlantAid.Accounts do
   ## Settings
 
   def change_user_notifications_settings(%User{} = user, attrs \\ %{}) do
-    # attrs = %{"notifications_settings" => attrs}
     User.notifications_changeset(user, attrs)
   end
 
   def update_user_notifications_settings(%User{} = user, attrs) do
-    # attrs = %{"notifications_settings" => attrs}
+    {:ok, user} =
+      user
+      |> User.notifications_changeset(attrs)
+      |> Repo.update()
 
-    user
-    |> User.notifications_changeset(attrs)
-    |> IO.inspect(label: "new user?")
-    |> Repo.update()
+    # Cancel existing job(s)
+    from(
+      j in Oban.Job,
+      where: j.worker == "PlantAid.Workers.SendEmailDigest",
+      where: j.args["user_id"] == ^user.id
+    )
+    |> Oban.cancel_all_jobs()
+
+    # Schedule new job
+    schedule_email_digest_job(user)
+
+    {:ok, user}
+  end
+
+  def schedule_email_digest_job(user) do
+    if user.notifications_settings.enabled do
+      timezone = user.notifications_settings.timezone
+      datetime = DateTime.now!(timezone)
+
+      time = user.notifications_settings.time
+
+      datetime =
+        if DateTime.to_time(datetime) |> Time.compare(time) != :lt do
+          DateTime.shift(datetime, day: 1)
+        else
+          datetime
+        end
+
+      date =
+        case user.notifications_settings.frequency do
+          :daily ->
+            DateTime.to_date(datetime)
+
+          :weekly ->
+            days = %{
+              monday: 1,
+              tuesday: 2,
+              wednesday: 3,
+              thursday: 4,
+              friday: 5,
+              saturday: 6,
+              sunday: 7
+            }
+
+            day_of_week = Map.get(days, user.notifications_settings.day_of_week)
+
+            datetime
+            |> DateTime.to_date()
+            |> Kday.first_kday(day_of_week)
+        end
+
+      schedule_at = DateTime.new!(date, time, timezone)
+
+      %{user_id: user.id}
+      |> PlantAid.Workers.SendEmailDigest.new(
+        scheduled_at: DateTime.shift_zone!(schedule_at, "Etc/UTC")
+      )
+      |> Oban.insert()
+    end
   end
 
   @doc """

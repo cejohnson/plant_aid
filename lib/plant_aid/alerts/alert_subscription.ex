@@ -12,6 +12,8 @@ defmodule PlantAid.Alerts.AlertSubscription do
   alias PlantAid.Repo
   alias PlantAid.Accounts.User
 
+  @timestamps_opts [type: :utc_datetime]
+
   schema "alert_subscriptions" do
     field :enabled, :boolean, default: true
     field :description, :string
@@ -25,10 +27,6 @@ defmodule PlantAid.Alerts.AlertSubscription do
     field :distance_meters, :float
     field :distance_unit, Ecto.Enum, values: [:miles, :kilometers]
 
-    # field :countries_selector, Ecto.Enum, values: [:any, :include, :exclude]
-    # field :primary_subdivisions_selector, Ecto.Enum, values: [:any, :include, :exclude]
-    # field :secondary_subdivisions_selector, Ecto.Enum, values: [:any, :include, :exclude]
-
     field :auto_description, :string, virtual: true
     field :distance, :float, virtual: true, default: 100.0
     field :location_ids, {:array, :integer}, virtual: true
@@ -38,10 +36,6 @@ defmodule PlantAid.Alerts.AlertSubscription do
     field :secondary_subdivision_ids, {:array, :integer}, virtual: true, default: []
 
     belongs_to :user, PlantAid.Accounts.User
-
-    # belongs_to :country, PlantAid.Geography.Country
-    # belongs_to :primary_subdivision, PlantAid.Geography.PrimarySubdivision
-    # belongs_to :secondary_subdivision, PlantAid.Geography.SecondarySubdivision
 
     many_to_many :locations, PlantAid.Locations.Location,
       join_through: "alert_subscriptions_locations",
@@ -83,7 +77,6 @@ defmodule PlantAid.Alerts.AlertSubscription do
       :location_ids,
       :pathology_ids
     ])
-    # |> cast_geographic_ids(attrs)
     |> validate_required([
       :enabled,
       :events_selector,
@@ -93,8 +86,6 @@ defmodule PlantAid.Alerts.AlertSubscription do
     |> validate_pathology_ids(attrs)
     |> validate_location_ids(attrs)
     |> validate_country_ids(attrs)
-    # |> validate_primary_subdivision_ids(attrs)
-    # |> validate_secondary_subdivision_ids(attrs)
     |> validate_distance()
   end
 
@@ -127,11 +118,6 @@ defmodule PlantAid.Alerts.AlertSubscription do
     |> put_secondary_subdivisions()
     |> put_distance_meters()
   end
-
-  # defp cast_geographic_ids(changeset, attrs) do
-  #   alert_subscription = changeset.data
-
-  # end
 
   defp validate_pathology_ids(changeset, attrs) do
     case get_field(changeset, :pathologies_selector) do
@@ -189,14 +175,6 @@ defmodule PlantAid.Alerts.AlertSubscription do
         changeset
     end
   end
-
-  # defp validate_primary_subdivision_ids(changeset, attrs) do
-  #   changeset
-  # end
-
-  # defp validate_secondary_subdivision_ids(changeset, attrs) do
-  #   changeset
-  # end
 
   defp validate_distance(changeset) do
     case get_field(changeset, :locations_selector) do

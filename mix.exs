@@ -59,6 +59,9 @@ defmodule PlantAid.MixProject do
       {:error_tracker, "~> 0.2"},
       {:libcluster, "~> 3.3"},
       {:oban, "~> 2.17"},
+      {:tz, "~> 0.28"},
+      {:tz_extra, "~> 0.45"},
+      {:kday, "~> 1.1"},
       # Specific project dependencies
       {:geo_postgis, "~> 3.4"},
       {:nimble_csv, "~> 1.2"},

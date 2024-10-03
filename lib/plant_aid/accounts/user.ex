@@ -49,9 +49,16 @@ defmodule PlantAid.Accounts.User do
     field :last_seen, :utc_datetime, virtual: true
 
     embeds_one :notifications_settings, NotificationsSettings do
-      field :enable_daily_email_digest, :boolean, default: false
+      field :enabled, :boolean, default: false
+      field :frequency, Ecto.Enum, values: [:daily, :weekly], default: :daily
+
+      field :day_of_week, Ecto.Enum,
+        values: [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday],
+        default: :monday
+
       field :time, :time, default: ~T[09:00:00]
       field :timezone, :string
+      field :last_run, :utc_datetime
     end
 
     timestamps()
@@ -136,8 +143,9 @@ defmodule PlantAid.Accounts.User do
 
   defp notifications_settings_changeset(notifications_settings, attrs) do
     notifications_settings
-    |> cast(attrs, [:enable_daily_email_digest, :time, :timezone])
-    |> validate_required([:enable_daily_email_digest, :time, :timezone])
+    |> cast(attrs, [:enabled, :frequency, :day_of_week, :time, :timezone])
+    |> validate_required([:enabled, :frequency, :time, :timezone])
+    |> put_change(:last_run, DateTime.utc_now())
   end
 
   @doc """

@@ -24,6 +24,8 @@ defmodule PlantAid.Application do
       {Task.Supervisor, name: PlantAid.TaskSupervisor},
       # Start the Endpoint (http/https)
       PlantAidWeb.Endpoint
+      # TODO: add tz/tzextra updater once this issue is resolved
+      # https://github.com/mathieuprog/tz/issues/32
       # Start a worker by calling: PlantAid.Worker.start_link(arg)
       # {PlantAid.Worker, arg}
     ]

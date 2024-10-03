@@ -124,4 +124,45 @@ defmodule PlantAid.Accounts.UserNotifier do
     ==============================
     """)
   end
+
+  def deliver_alerts_digest(user, alerts, count, alerts_url, alert_settings_url) do
+    alert_descriptions =
+      alerts
+      |> Enum.map(&get_alert_description(&1, alerts_url))
+      |> Enum.join("\n")
+
+    deliver(user.email, "PlantAid: You have #{count} new alerts", """
+
+    ==============================
+
+    Hi #{user.email},
+
+    You have #{count} new alerts:
+
+    #{alert_descriptions}
+
+    You can view your alerts by visiting the URL below:
+
+    #{alerts_url}
+
+    You can change your notification settings by visiting the URL below:
+
+    #{alert_settings_url}
+
+    ==============================
+    """)
+  end
+
+  def get_alert_description(alert, alerts_url) do
+    alert_type =
+      case alert.alert_type do
+        :disease_reported ->
+          "Reported"
+
+        :disease_confirmed ->
+          "Confirmed"
+      end
+
+    "- #{alert_type} instance of #{alert.pathology.common_name} in #{PlantAid.Geography.pretty_print(alert.observation.secondary_subdivision)}: #{alerts_url}/#{alert.id}"
+  end
 end

@@ -1,8 +1,6 @@
 defmodule PlantAidWeb.UserSettingsLive do
   use PlantAidWeb, :live_view
 
-  import Ecto.Query
-
   alias PlantAid.Accounts
 
   def render(assigns) do
@@ -16,11 +14,24 @@ defmodule PlantAidWeb.UserSettingsLive do
       phx-change="validate_notifications_settings"
     >
       <.inputs_for :let={f_notifications_form} field={@notifications_form[:notifications_settings]}>
-        <.label>Emails</.label>
+        <.label>Alerts</.label>
         <.input
-          field={f_notifications_form[:enable_daily_email_digest]}
+          field={f_notifications_form[:enabled]}
           type="checkbox"
-          label="Daily Email Digest (will only be sent if there is anything new to report)"
+          label="Email Digest (will only be sent if there is anything new to report)"
+        />
+        <.input
+          field={f_notifications_form[:frequency]}
+          type="select"
+          label="Frequency"
+          options={@frequency_options}
+        />
+        <.input
+          :if={Ecto.Changeset.get_field(f_notifications_form.source, :frequency) == :weekly}
+          field={f_notifications_form[:day_of_week]}
+          type="select"
+          label="Day of Week"
+          options={@day_of_week_options}
         />
         <.input field={f_notifications_form[:time]} type="time" label="Time" />
         <.input
@@ -131,16 +142,15 @@ defmodule PlantAidWeb.UserSettingsLive do
     name_changeset = Accounts.change_user_name(user)
     notifications_changeset = Accounts.change_user_notifications_settings(user)
 
-    # select * from users_notifications as un where extract(hour from concat((now() at time zone un.timezone)::date, ' ', un.time, ' ', un.timezone)::time with time zone at time zone 'UTC') = 15;
+    frequency_options =
+      Ecto.Enum.mappings(PlantAid.Accounts.User.NotificationsSettings, :frequency)
+      |> Enum.map(fn {k, v} -> {k |> Atom.to_string() |> String.capitalize(), v} end)
 
-    timezones =
-      from(
-        tz in "pg_timezone_names",
-        select: [:name],
-        order_by: [:utc_offset, :name]
-      )
-      |> PlantAid.Repo.all()
-      |> Enum.map(& &1.name)
+    day_of_week_options =
+      Ecto.Enum.mappings(PlantAid.Accounts.User.NotificationsSettings, :day_of_week)
+      |> Enum.map(fn {k, v} -> {k |> Atom.to_string() |> String.capitalize(), v} end)
+
+    timezones = TzExtra.time_zone_ids()
 
     socket =
       socket
@@ -149,6 +159,8 @@ defmodule PlantAidWeb.UserSettingsLive do
       |> assign(:name_form_current_password, nil)
       |> assign(:current_email, user.email)
       |> assign(:timezones, [{"Select", nil} | timezones])
+      |> assign(:frequency_options, frequency_options)
+      |> assign(:day_of_week_options, day_of_week_options)
       |> assign(:notifications_form, to_form(notifications_changeset))
       |> assign(:email_form, to_form(email_changeset))
       |> assign(:password_form, to_form(password_changeset))
@@ -159,7 +171,6 @@ defmodule PlantAidWeb.UserSettingsLive do
   end
 
   def handle_event("validate_notifications_settings", params, socket) do
-    IO.inspect(params, label: "vns params")
     %{"user" => user_params} = params
 
     notifications_form =

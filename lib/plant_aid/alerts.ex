@@ -196,6 +196,25 @@ defmodule PlantAid.Alerts do
     Repo.all(Alert)
   end
 
+  def list_alerts(%User{} = user, %Flop{} = flop) do
+    opts = [for: Alert]
+
+    Alert
+    |> Bodyguard.scope(user)
+    |> Flop.run(flop, opts)
+    |> then(fn {alerts, meta} ->
+      {Repo.preload(alerts, [
+         :pathology,
+         :test_result,
+         observation: [
+           secondary_subdivision:
+             {from(s in SecondarySubdivision, select: %{s | geog: nil}),
+              [primary_subdivision: :country]}
+         ]
+       ]), meta}
+    end)
+  end
+
   def list_alerts(user) do
     Alert
     |> Bodyguard.scope(user)

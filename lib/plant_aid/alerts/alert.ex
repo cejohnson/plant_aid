@@ -6,6 +6,24 @@ defmodule PlantAid.Alerts.Alert do
 
   alias PlantAid.Accounts.User
 
+  @timestamps_opts [type: :utc_datetime]
+
+  @derive {
+    Flop.Schema,
+    filterable: [
+      :inserted_at,
+      :viewed_at,
+      :alert_type
+    ],
+    sortable: [
+      :inserted_at
+    ],
+    default_order: %{
+      order_by: [:inserted_at],
+      order_directions: [:desc_nulls_last]
+    }
+  }
+
   schema "alerts" do
     field :viewed_at, :utc_datetime
     field :alert_type, Ecto.Enum, values: [:disease_reported, :disease_confirmed]
