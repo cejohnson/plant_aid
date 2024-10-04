@@ -215,23 +215,21 @@ defmodule PlantAid.Accounts do
   end
 
   def update_user_notifications_settings(%User{} = user, attrs) do
-    {:ok, user} =
-      user
-      |> User.notifications_changeset(attrs)
-      |> Repo.update()
+    with {:ok, user} <-
+           user
+           |> User.notifications_changeset(attrs)
+           |> Repo.update() do
+      # Cancel existing job(s)
+      from(
+        j in Oban.Job,
+        where: j.worker == "PlantAid.Workers.SendEmailDigest",
+        where: j.args["user_id"] == ^user.id
+      )
+      |> Oban.cancel_all_jobs()
 
-    # Cancel existing job(s)
-    from(
-      j in Oban.Job,
-      where: j.worker == "PlantAid.Workers.SendEmailDigest",
-      where: j.args["user_id"] == ^user.id
-    )
-    |> Oban.cancel_all_jobs()
-
-    # Schedule new job
-    schedule_email_digest_job(user)
-
-    {:ok, user}
+      # Schedule new job
+      schedule_email_digest_job(user)
+    end
   end
 
   def schedule_email_digest_job(user) do

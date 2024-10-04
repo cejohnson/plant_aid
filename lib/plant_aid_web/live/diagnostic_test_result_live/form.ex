@@ -525,6 +525,14 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
           </div>
         <% end %>
 
+        <.input
+          name="notify_reporter"
+          type="checkbox"
+          label="Notify Observation Reporter"
+          value={true}
+        />
+        <.input name="create_alerts" type="checkbox" label="Create Alerts" value={true} />
+
         <:actions>
           <.button variant="primary" phx-disable-with="Saving...">
             Save Diagnostic test result
@@ -638,7 +646,15 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
     {:noreply, cancel_upload(socket, name, ref)}
   end
 
-  def handle_event("save", %{"test_result" => test_result_params}, socket) do
+  def handle_event(
+        "save",
+        %{
+          "test_result" => test_result_params,
+          "notify_reporter" => notify_reporter,
+          "create_alerts" => create_alerts
+        },
+        socket
+      ) do
     changeset =
       DiagnosticTests.change_test_result(
         socket.assigns.test_result,
@@ -647,10 +663,16 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
       )
       |> put_upload_urls(socket)
 
-    save_test_result(socket, socket.assigns.live_action, changeset)
+    save_test_result(
+      socket,
+      socket.assigns.live_action,
+      changeset,
+      notify_reporter,
+      create_alerts
+    )
   end
 
-  defp save_test_result(socket, :edit, changeset) do
+  defp save_test_result(socket, :edit, changeset, notify_reporter, create_alerts) do
     with :ok <-
            Bodyguard.permit(
              DiagnosticTests,
@@ -661,7 +683,9 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
       case DiagnosticTests.update_test_result(
              socket.assigns.current_user,
              changeset,
-             &consume_images(socket, &1)
+             after_save: &consume_images(socket, &1),
+             notify_reporter: notify_reporter,
+             create_alerts: create_alerts
            ) do
         {:ok, test_result} ->
           {:noreply,
@@ -680,7 +704,7 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
     end
   end
 
-  defp save_test_result(socket, :new, changeset) do
+  defp save_test_result(socket, :new, changeset, notify_reporter, create_alerts) do
     with :ok <-
            Bodyguard.permit(
              DiagnosticTests,
@@ -690,7 +714,9 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
       case DiagnosticTests.create_test_result(
              socket.assigns.current_user,
              changeset,
-             &consume_images(socket, &1)
+             after_save: &consume_images(socket, &1),
+             notify_reporter: notify_reporter,
+             create_alerts: create_alerts
            ) do
         {:ok, test_result} ->
           {:noreply,

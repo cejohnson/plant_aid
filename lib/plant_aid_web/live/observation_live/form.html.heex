@@ -175,6 +175,14 @@
       </section>
     </div>
 
+    <.input
+      :if={User.has_role?(@current_user, [:researcher, :admin, :superuser])}
+      name="create_alerts"
+      type="checkbox"
+      label="Create Alerts"
+      value={true}
+    />
+
     <:actions>
       <.button variant="primary" phx-disable-with="Saving...">Save Observation</.button>
     </:actions>

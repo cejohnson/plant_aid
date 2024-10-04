@@ -1,6 +1,7 @@
 defmodule PlantAidWeb.ObservationLive.Form do
   use PlantAidWeb, :live_view
 
+  alias PlantAid.Accounts.User
   alias PlantAid.Locations
   alias PlantAid.ObjectStorage
   alias PlantAid.Observations
@@ -120,8 +121,17 @@ defmodule PlantAidWeb.ObservationLive.Form do
      |> assign_form(changeset)}
   end
 
-  def handle_event("save", %{"observation" => observation_params}, socket) do
-    save_observation(socket, socket.assigns.live_action, observation_params)
+  def handle_event(
+        "save",
+        %{"observation" => observation_params} = params,
+        socket
+      ) do
+    save_observation(
+      socket,
+      socket.assigns.live_action,
+      observation_params,
+      Map.get(params, "create_alerts")
+    )
   end
 
   def handle_event(
@@ -212,13 +222,14 @@ defmodule PlantAidWeb.ObservationLive.Form do
     {:noreply, cancel_upload(socket, :image, ref)}
   end
 
-  defp save_observation(socket, :edit, observation_params) do
+  defp save_observation(socket, :edit, observation_params, create_alerts) do
     observation_params = put_upload_urls(observation_params, socket)
 
     case Observations.update_observation(
            socket.assigns.observation,
            observation_params,
-           &consume_images(socket, &1)
+           after_save: &consume_images(socket, &1),
+           create_alerts: create_alerts
          ) do
       {:ok, observation} ->
         {:noreply,
@@ -231,13 +242,14 @@ defmodule PlantAidWeb.ObservationLive.Form do
     end
   end
 
-  defp save_observation(socket, :new, observation_params) do
+  defp save_observation(socket, :new, observation_params, create_alerts) do
     observation_params = put_upload_urls(observation_params, socket)
 
     case Observations.create_observation(
            socket.assigns.current_user,
            observation_params,
-           &consume_images(socket, &1)
+           after_save: &consume_images(socket, &1),
+           create_alerts: create_alerts
          ) do
       {:ok, observation} ->
         {:noreply,

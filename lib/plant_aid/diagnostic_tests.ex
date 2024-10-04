@@ -133,20 +133,21 @@ defmodule PlantAid.DiagnosticTests do
   def create_test_result(
         user,
         changeset,
-        after_save \\ &{:ok, &1}
+        opts \\ []
       ) do
+    after_save = Keyword.get(opts, :after_save, &{:ok, &1})
+    notify_reporter = Keyword.get(opts, :notify_reporter)
+    create_alerts = Keyword.get(opts, :create_alerts)
+
     changeset
     |> Changeset.put_change(:inserted_by_id, user.id)
     |> Changeset.put_change(:updated_by_id, user.id)
     |> Repo.insert()
-    |> tap(fn {:ok, test_result} ->
-      %{diagnostic_test_result_id: test_result.id}
-      |> PlantAid.Workers.CreateAlerts.new()
-      |> Oban.insert()
-    end)
     |> preload()
     |> populate_virtual_fields()
     |> after_save(after_save)
+    |> notify_reporter(notify_reporter, "created")
+    |> create_alerts(create_alerts)
   end
 
   @doc """
@@ -164,8 +165,12 @@ defmodule PlantAid.DiagnosticTests do
   def update_test_result(
         user,
         changeset,
-        after_save \\ &{:ok, &1}
+        opts \\ []
       ) do
+    after_save = Keyword.get(opts, :after_save, &{:ok, &1})
+    notify_reporter = Keyword.get(opts, :notify_reporter, "true")
+    create_alerts = Keyword.get(opts, :create_alerts, "true")
+
     changeset
     |> drop_deleted_values()
     |> Changeset.put_change(:updated_by_id, user.id)
@@ -174,6 +179,8 @@ defmodule PlantAid.DiagnosticTests do
     |> populate_virtual_fields()
     |> cleanup_deleted_images(changeset.data)
     |> after_save(after_save)
+    |> notify_reporter(notify_reporter, "updated")
+    |> create_alerts(create_alerts)
   end
 
   @doc """
@@ -221,6 +228,30 @@ defmodule PlantAid.DiagnosticTests do
         attrs
       ) do
     TestResult.changeset(test_result, overrides, attrs)
+  end
+
+  defp notify_reporter({:ok, test_result}, "true", event) do
+    %{diagnostic_test_result_id: test_result.id, event: event}
+    |> PlantAid.Workers.NotifyReporter.new()
+    |> Oban.insert()
+
+    {:ok, test_result}
+  end
+
+  defp notify_reporter(result, _, _) do
+    result
+  end
+
+  defp create_alerts({:ok, test_result}, "true") do
+    %{diagnostic_test_result_id: test_result.id}
+    |> PlantAid.Workers.CreateAlerts.new()
+    |> Oban.insert()
+
+    {:ok, test_result}
+  end
+
+  defp create_alerts(result, _) do
+    result
   end
 
   defp drop_deleted_values(changeset) do
@@ -385,7 +416,7 @@ defmodule PlantAid.DiagnosticTests do
       :updated_by,
       :diagnostic_method,
       pathology_results: [:genotype, pathology: [:genotypes]],
-      observation: [:host, :suspected_pathology]
+      observation: [:user, :host, :suspected_pathology]
     ])
   end
 

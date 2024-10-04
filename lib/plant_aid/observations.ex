@@ -241,19 +241,24 @@ defmodule PlantAid.Observations do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_observation(%User{} = user, attrs \\ %{}, after_save \\ &{:ok, &1}) do
+  def create_observation(%User{} = user, attrs \\ %{}, opts \\ []) do
+    after_save = Keyword.get(opts, :after_save, &{:ok, &1})
+
+    create_alerts =
+      if User.has_role?(user, [:researcher, :admin, :superuser]) do
+        Keyword.get(opts, :create_alerts)
+      else
+        true
+      end
+
     %Observation{}
     |> Observation.changeset(attrs)
     |> Observation.put_user(user)
     |> Repo.insert()
-    |> tap(fn {:ok, observation} ->
-      %{observation_id: observation.id}
-      |> PlantAid.Workers.CreateAlerts.new()
-      |> Oban.insert()
-    end)
     |> preload()
     |> populate_virtual_fields()
     |> after_save(after_save)
+    |> create_alerts(create_alerts)
   end
 
   @doc """
@@ -268,13 +273,23 @@ defmodule PlantAid.Observations do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_observation(%Observation{} = observation, attrs, after_save \\ &{:ok, &1}) do
+  def update_observation(%Observation{} = observation, attrs, opts \\ []) do
+    after_save = Keyword.get(opts, :after_save, &{:ok, &1})
+
+    create_alerts =
+      if User.has_role?(observation.user, [:researcher, :admin, :superuser]) do
+        Keyword.get(opts, :create_alerts, "true")
+      else
+        "true"
+      end
+
     observation
     |> Observation.changeset(attrs)
     |> Repo.update()
     |> preload()
     |> populate_virtual_fields()
     |> after_save(after_save)
+    |> create_alerts(create_alerts)
   end
 
   defp after_save({:ok, observation}, func) do
@@ -282,6 +297,18 @@ defmodule PlantAid.Observations do
   end
 
   defp after_save(error, _func), do: error
+
+  defp create_alerts({:ok, observation}, "true") do
+    %{observation_id: observation.id}
+    |> PlantAid.Workers.CreateAlerts.new()
+    |> Oban.insert()
+
+    {:ok, observation}
+  end
+
+  defp create_alerts(result, _) do
+    result
+  end
 
   @doc """
   Deletes a observation.

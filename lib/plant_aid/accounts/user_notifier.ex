@@ -125,6 +125,34 @@ defmodule PlantAid.Accounts.UserNotifier do
     """)
   end
 
+  def deliver_test_result(user, event, observation_url, test_result_url) do
+    {event_type_subject, event_type_body} =
+      case event do
+        "created" ->
+          {"New", "a new"}
+
+        "updated" ->
+          {"Updated", "an updated"}
+      end
+
+    deliver(user.email, "PlantAid: #{event_type_subject} Test Result", """
+
+    ==============================
+
+    Hi #{user.email},
+
+    There is #{event_type_body} test result available for the following observation you submitted:
+
+    #{observation_url}
+
+    You can view the test result by visiting the URL below:
+
+    #{test_result_url}
+
+    ==============================
+    """)
+  end
+
   def deliver_alerts_digest(user, alerts, count, alerts_url, alert_settings_url) do
     alert_descriptions =
       alerts

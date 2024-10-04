@@ -183,8 +183,6 @@ defmodule PlantAidWeb.UserSettingsLive do
   end
 
   def handle_event("update_notifications_settings", params, socket) do
-    IO.inspect(params, label: "uns params")
-
     %{"user" => user_params} = params
 
     case Accounts.update_user_notifications_settings(socket.assigns.current_user, user_params) do
