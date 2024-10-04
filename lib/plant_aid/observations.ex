@@ -246,9 +246,9 @@ defmodule PlantAid.Observations do
 
     create_alerts =
       if User.has_role?(user, [:researcher, :admin, :superuser]) do
-        Keyword.get(opts, :create_alerts)
+        Keyword.get(opts, :create_alerts, "true")
       else
-        true
+        "true"
       end
 
     %Observation{}
