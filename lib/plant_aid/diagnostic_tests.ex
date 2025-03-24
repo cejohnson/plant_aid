@@ -388,6 +388,7 @@ defmodule PlantAid.DiagnosticTests do
       %Field{
         id: Ecto.UUID.autogenerate(),
         name: field.name,
+        description: field.description,
         type: field.type,
         subtype: field.subtype,
         select_options: field.select_options

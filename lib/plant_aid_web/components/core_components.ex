@@ -275,6 +275,7 @@ defmodule PlantAidWeb.CoreComponents do
   attr :name, :any
   attr :label, :string, default: nil
   attr :value, :any
+  attr :description, :string, default: nil
 
   attr :type, :string,
     default: "text",
@@ -322,7 +323,18 @@ defmodule PlantAidWeb.CoreComponents do
           class="rounded border-zinc-300 text-zinc-900 focus:ring-0"
           {@rest}
         />
-        <%= @label %>
+        <div class="flex">
+          <.label for={@id}><%= @label %></.label>
+          <div :if={@description} phx-click={JS.toggle(to: "##{@id}-description")}>
+            <.icon
+              name="hero-question-mark-circle-solid"
+              class="ml-1 h-4 w-4 text-zinc-700 cursor-pointer"
+            />
+          </div>
+        </div>
+        <div :if={@description} id={"#{@id}-description"} class="text-sm text-zinc-700" hidden>
+          <%= @description %>
+        </div>
       </label>
       <.error :for={msg <- @errors}><%= msg %></.error>
     </div>
@@ -332,7 +344,18 @@ defmodule PlantAidWeb.CoreComponents do
   def input(%{type: "select"} = assigns) do
     ~H"""
     <div phx-feedback-for={@name}>
-      <.label for={@id}><%= @label %></.label>
+      <div class="flex">
+        <.label for={@id}><%= @label %></.label>
+        <div :if={@description} phx-click={JS.toggle(to: "##{@id}-description")}>
+          <.icon
+            name="hero-question-mark-circle-solid"
+            class="ml-1 h-4 w-4 text-zinc-700 cursor-pointer"
+          />
+        </div>
+      </div>
+      <div :if={@description} id={"#{@id}-description"} class="text-sm text-zinc-700" hidden>
+        <%= @description %>
+      </div>
       <%= if @multiple do %>
         <div class="text-sm leading-6 text-zinc-600">
           Hold Ctrl/Cmd to select multiple options, or Shift to select a range.
@@ -341,7 +364,7 @@ defmodule PlantAidWeb.CoreComponents do
       <select
         id={@id}
         name={@name}
-        class="mt-2 block w-full rounded-md border border-gray-300 bg-white shadow-sm focus:border-zinc-400 focus:ring-0 sm:text-sm"
+        class="mt-2 block w-full rounded-lg border border-gray-300 bg-white shadow-sm focus:border-zinc-400 focus:ring-0 sm:text-sm sm:leading-6"
         multiple={@multiple}
         {@rest}
       >
@@ -356,7 +379,18 @@ defmodule PlantAidWeb.CoreComponents do
   def input(%{type: "textarea"} = assigns) do
     ~H"""
     <div phx-feedback-for={@name}>
-      <.label for={@id}><%= @label %></.label>
+      <div class="flex">
+        <.label for={@id}><%= @label %></.label>
+        <div :if={@description} phx-click={JS.toggle(to: "##{@id}-description")}>
+          <.icon
+            name="hero-question-mark-circle-solid"
+            class="ml-1 h-4 w-4 text-zinc-700 cursor-pointer"
+          />
+        </div>
+      </div>
+      <div :if={@description} id={"#{@id}-description"} class="text-sm text-zinc-700" hidden>
+        <%= @description %>
+      </div>
       <textarea
         id={@id}
         name={@name}
@@ -377,7 +411,18 @@ defmodule PlantAidWeb.CoreComponents do
   def input(assigns) do
     ~H"""
     <div phx-feedback-for={@name}>
-      <.label for={@id}><%= @label %></.label>
+      <div class="flex">
+        <.label for={@id}><%= @label %></.label>
+        <div :if={@description} phx-click={JS.toggle(to: "##{@id}-description")}>
+          <.icon
+            name="hero-question-mark-circle-solid"
+            class="ml-1 h-4 w-4 text-zinc-700 cursor-pointer"
+          />
+        </div>
+      </div>
+      <div :if={@description} id={"#{@id}-description"} class="text-sm text-zinc-700" hidden>
+        <%= @description %>
+      </div>
       <input
         type={@type}
         name={@name}

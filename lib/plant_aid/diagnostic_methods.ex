@@ -95,8 +95,6 @@ defmodule PlantAid.DiagnosticMethods do
 
   """
   def update_diagnostic_method(user, %DiagnosticMethod{} = diagnostic_method, attrs) do
-    IO.inspect(attrs, label: "update DM params")
-
     diagnostic_method
     |> Repo.preload([:pathologies])
     |> DiagnosticMethod.changeset(attrs)

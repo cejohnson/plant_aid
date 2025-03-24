@@ -5,6 +5,7 @@ defmodule PlantAid.DiagnosticMethods.Field do
 
   embedded_schema do
     field :name, :string
+    field :description, :string
     field :per_pathology, :boolean, default: false
     field :type, Ecto.Enum, values: [:string, :image, :select, :list, :map], default: :string
     field :subtype, Ecto.Enum, values: [:string, :image, :select]
@@ -16,12 +17,11 @@ defmodule PlantAid.DiagnosticMethods.Field do
 
   def changeset(field, attrs) do
     field
-    |> cast(attrs, [:name, :per_pathology, :type, :subtype])
+    |> cast(attrs, [:name, :per_pathology, :type, :subtype, :description])
     |> validate_required([:name])
     |> cast_embed(:select_options,
       sort_param: :select_options_sort,
       drop_param: :select_options_drop
     )
-    |> IO.inspect(label: "field_changeset")
   end
 end

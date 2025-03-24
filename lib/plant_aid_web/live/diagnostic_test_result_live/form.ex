@@ -41,11 +41,31 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
                           field={f_field[:value]}
                           type="text"
                           label={Changeset.get_field(f_field.source, :name)}
+                          description={Changeset.get_field(f_field.source, :description)}
                         />
                       </div>
                     <% :image -> %>
                       <div class="bg-white p-2 my-2">
-                        <.label><%= Changeset.get_field(f_field.source, :name) %></.label>
+                        <div class="flex">
+                          <.label><%= Changeset.get_field(f_field.source, :name) %></.label>
+                          <div
+                            :if={Changeset.get_field(f_field.source, :description)}
+                            phx-click={JS.toggle(to: "##{f_field.id}-description")}
+                          >
+                            <.icon
+                              name="hero-question-mark-circle-solid"
+                              class="ml-1 h-4 w-4 text-zinc-700 cursor-pointer"
+                            />
+                          </div>
+                        </div>
+                        <div
+                          :if={Changeset.get_field(f_field.source, :description)}
+                          id={"#{f_field.id}-description"}
+                          class="text-sm text-zinc-700"
+                          hidden
+                        >
+                          <%= Changeset.get_field(f_field.source, :description) %>
+                        </div>
                         <%= if f_field.data.value do %>
                           <.label>Current Image</.label>
                           <.input field={f_field[:delete]} type="checkbox" label="Delete" />
@@ -94,6 +114,7 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
                           field={f_field[:value]}
                           type="select"
                           label={Changeset.get_field(f_field.source, :name)}
+                          description={Changeset.get_field(f_field.source, :description)}
                           prompt="Select"
                           options={
                             Enum.map(Changeset.get_field(f_field.source, :select_options), & &1.value)
@@ -102,7 +123,26 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
                       </div>
                     <% :list -> %>
                       <div class="bg-white p-2 my-2">
-                        <.label><%= Changeset.get_field(f_field.source, :name) %></.label>
+                        <div class="flex">
+                          <.label><%= Changeset.get_field(f_field.source, :name) %></.label>
+                          <div
+                            :if={Changeset.get_field(f_field.source, :description)}
+                            phx-click={JS.toggle(to: "##{f_field.id}-description")}
+                          >
+                            <.icon
+                              name="hero-question-mark-circle-solid"
+                              class="ml-1 h-4 w-4 text-zinc-700 cursor-pointer"
+                            />
+                          </div>
+                        </div>
+                        <div
+                          :if={Changeset.get_field(f_field.source, :description)}
+                          id={"#{f_field.id}-description"}
+                          class="text-sm text-zinc-700"
+                          hidden
+                        >
+                          <%= Changeset.get_field(f_field.source, :description) %>
+                        </div>
                         <%= case Changeset.get_field(f_field.source, :subtype) do %>
                           <% :string -> %>
                             <div class=" px-2">
@@ -196,7 +236,26 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
                       </div>
                     <% :map -> %>
                       <div class="bg-white p-2 my-2">
-                        <.label><%= Changeset.get_field(f_field.source, :name) %></.label>
+                        <div class="flex">
+                          <.label><%= Changeset.get_field(f_field.source, :name) %></.label>
+                          <div
+                            :if={Changeset.get_field(f_field.source, :description)}
+                            phx-click={JS.toggle(to: "##{f_field.id}-description")}
+                          >
+                            <.icon
+                              name="hero-question-mark-circle-solid"
+                              class="ml-1 h-4 w-4 text-zinc-700 cursor-pointer"
+                            />
+                          </div>
+                        </div>
+                        <div
+                          :if={Changeset.get_field(f_field.source, :description)}
+                          id={"#{f_field.id}-description"}
+                          class="text-sm text-zinc-700"
+                          hidden
+                        >
+                          <%= Changeset.get_field(f_field.source, :description) %>
+                        </div>
                         <.inputs_for :let={f_entry} field={f_field[:map_entries]}>
                           <div class="flex space-x-2">
                             <input
@@ -289,9 +348,29 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
                               field={f_field[:value]}
                               type="text"
                               label={Changeset.get_field(f_field.source, :name)}
+                              description={Changeset.get_field(f_field.source, :description)}
                             />
                           <% :image -> %>
-                            <.label><%= Changeset.get_field(f_field.source, :name) %></.label>
+                            <div class="flex">
+                              <.label><%= Changeset.get_field(f_field.source, :name) %></.label>
+                              <div
+                                :if={Changeset.get_field(f_field.source, :description)}
+                                phx-click={JS.toggle(to: "##{f_field.id}-description")}
+                              >
+                                <.icon
+                                  name="hero-question-mark-circle-solid"
+                                  class="ml-1 h-4 w-4 text-zinc-700 cursor-pointer"
+                                />
+                              </div>
+                            </div>
+                            <div
+                              :if={Changeset.get_field(f_field.source, :description)}
+                              id={"#{f_field.id}-description"}
+                              class="text-sm text-zinc-700"
+                              hidden
+                            >
+                              <%= Changeset.get_field(f_field.source, :description) %>
+                            </div>
                             <%= if f_field.data.value do %>
                               <.label>Current Image</.label>
                               <.input field={f_field[:delete]} type="checkbox" label="Delete" />
@@ -349,6 +428,7 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
                               field={f_field[:value]}
                               type="select"
                               label={Changeset.get_field(f_field.source, :name)}
+                              description={Changeset.get_field(f_field.source, :description)}
                               prompt="Select"
                               options={
                                 Enum.map(
@@ -358,7 +438,26 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
                               }
                             />
                           <% :list -> %>
-                            <.label><%= Changeset.get_field(f_field.source, :name) %></.label>
+                            <div class="flex">
+                              <.label><%= Changeset.get_field(f_field.source, :name) %></.label>
+                              <div
+                                :if={Changeset.get_field(f_field.source, :description)}
+                                phx-click={JS.toggle(to: "##{f_field.id}-description")}
+                              >
+                                <.icon
+                                  name="hero-question-mark-circle-solid"
+                                  class="ml-1 h-4 w-4 text-zinc-700 cursor-pointer"
+                                />
+                              </div>
+                            </div>
+                            <div
+                              :if={Changeset.get_field(f_field.source, :description)}
+                              id={"#{f_field.id}-description"}
+                              class="text-sm text-zinc-700"
+                              hidden
+                            >
+                              <%= Changeset.get_field(f_field.source, :description) %>
+                            </div>
                             <%= case Changeset.get_field(f_field.source, :subtype) do %>
                               <% :string -> %>
                                 <div>
@@ -459,7 +558,26 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
                                 </section>
                             <% end %>
                           <% :map -> %>
-                            <.label><%= Changeset.get_field(f_field.source, :name) %></.label>
+                            <div class="flex">
+                              <.label><%= Changeset.get_field(f_field.source, :name) %></.label>
+                              <div
+                                :if={Changeset.get_field(f_field.source, :description)}
+                                phx-click={JS.toggle(to: "##{f_field.id}-description")}
+                              >
+                                <.icon
+                                  name="hero-question-mark-circle-solid"
+                                  class="ml-1 h-4 w-4 text-zinc-700 cursor-pointer"
+                                />
+                              </div>
+                            </div>
+                            <div
+                              :if={Changeset.get_field(f_field.source, :description)}
+                              id={"#{f_field.id}-description"}
+                              class="text-sm text-zinc-700"
+                              hidden
+                            >
+                              <%= Changeset.get_field(f_field.source, :description) %>
+                            </div>
                             <div>
                               <.inputs_for :let={f_entry} field={f_field[:map_entries]}>
                                 <div class="flex space-x-2">

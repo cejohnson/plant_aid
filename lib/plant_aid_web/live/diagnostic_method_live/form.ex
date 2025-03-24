@@ -35,7 +35,7 @@ defmodule PlantAidWeb.DiagnosticMethodLive.Form do
             <li><strong>select</strong>: a select dropdown with options you can provide here</li>
             <li><strong>list</strong>: a list of strings or images</li>
             <li>
-              <strong>map</strong>: a mapping of user provided string keys to string or select fields (ex: {"key": "value"})
+              <strong>map</strong>: a mapping of user provided string keys to string or select fields (ex: {"key": "value"}). You might want to use this if you know there will be labelled data, but you don't know what the labels will be ahead of time or they might change.
             </li>
           </ul>
           <div>
@@ -44,81 +44,92 @@ defmodule PlantAidWeb.DiagnosticMethodLive.Form do
         </div>
 
         <.inputs_for :let={f_field} field={@form[:fields]}>
-          <div class="flex space-x-2 items-top p-4 bg-neutral-100">
-            <div class="pt-8">
-              <button
-                class=""
-                type="button"
-                name="diagnostic_method[fields_drop][]"
-                value={f_field.index}
-                phx-click={JS.dispatch("change")}
-              >
-                <.icon name="hero-trash" class="w-6 h-6 relative top-2" />
-              </button>
-            </div>
-            <input type="hidden" name="diagnostic_method[fields_sort][]" value={f_field.index} />
-            <.input field={f_field[:name]} type="text" label="Name" />
-            <.input
-              field={f_field[:per_pathology]}
-              type="select"
-              label="Fill Out"
-              options={[{"Once Per Test", false}, {"For Each Pathology", true}]}
-            />
-            <.input
-              field={f_field[:type]}
-              type="select"
-              label="Type"
-              options={[:string, :image, :select, :list, :map]}
-            />
-            <%= case Ecto.Changeset.get_field(f_field.source, :type) do %>
-              <% :list -> %>
-                <.input
-                  field={f_field[:subtype]}
-                  type="select"
-                  label="List Type"
-                  options={[:string, :image]}
-                />
-              <% :map -> %>
-                <.input
-                  field={f_field[:subtype]}
-                  type="select"
-                  label="Map Type"
-                  options={[:string, :select]}
-                />
-              <% _ -> %>
-            <% end %>
-
-            <%= if Ecto.Changeset.get_field(f_field.source, :type) == :select or Ecto.Changeset.get_field(f_field.source, :subtype) == :select do %>
+          <div class="flex-col p-4 bg-neutral-100">
+            <div class="flex space-x-2 items-top">
               <div class="pt-8">
-                <.inputs_for :let={f_option} field={f_field[:select_options]}>
-                  <input
-                    type="hidden"
-                    name={"diagnostic_method[fields][#{f_field.index}][select_options_sort][]"}
-                    value={f_option.index}
-                  />
-                  <div class="flex items-end ">
-                    <.input field={f_option[:value]} type="text" label="Option" />
-                    <label class="cursor-pointer pb-3">
-                      <input
-                        type="checkbox"
-                        name={"diagnostic_method[fields][#{f_field.index}][select_options_drop][]"}
-                        class="hidden"
-                        value={f_option.index}
-                      />
-                      <.icon name="hero-x-mark" />
-                    </label>
-                  </div>
-                </.inputs_for>
-                <label class="cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name={"diagnostic_method[fields][#{f_field.index}][select_options_sort][]"}
-                    class="hidden"
-                  />
-                  <.icon name="hero-plus-circle" /><span class="align-middle">Add Option</span>
-                </label>
+                <button
+                  class=""
+                  type="button"
+                  name="diagnostic_method[fields_drop][]"
+                  value={f_field.index}
+                  phx-click={JS.dispatch("change")}
+                >
+                  <.icon name="hero-trash" class="w-6 h-6 relative top-2" />
+                </button>
               </div>
-            <% end %>
+              <input type="hidden" name="diagnostic_method[fields_sort][]" value={f_field.index} />
+              <.input field={f_field[:name]} type="text" label="Name" />
+              <.input
+                field={f_field[:per_pathology]}
+                type="select"
+                label="Fill Out"
+                options={[{"Once Per Test", false}, {"For Each Pathology", true}]}
+              />
+              <.input
+                field={f_field[:type]}
+                type="select"
+                label="Type"
+                options={[:string, :image, :select, :list, :map]}
+              />
+              <%= case Ecto.Changeset.get_field(f_field.source, :type) do %>
+                <% :list -> %>
+                  <.input
+                    field={f_field[:subtype]}
+                    type="select"
+                    label="List Type"
+                    options={[:string, :image]}
+                  />
+                <% :map -> %>
+                  <.input
+                    field={f_field[:subtype]}
+                    type="select"
+                    label="Map Type"
+                    options={[:string, :select]}
+                  />
+                <% _ -> %>
+              <% end %>
+
+              <%= if Ecto.Changeset.get_field(f_field.source, :type) == :select or Ecto.Changeset.get_field(f_field.source, :subtype) == :select do %>
+                <div class="">
+                  <label class="text-sm font-semibold text-zinc-800">Options</label>
+                  <.inputs_for :let={f_option} field={f_field[:select_options]}>
+                    <input
+                      type="hidden"
+                      name={"diagnostic_method[fields][#{f_field.index}][select_options_sort][]"}
+                      value={f_option.index}
+                    />
+                    <div class="flex items-end ">
+                      <.input field={f_option[:value]} type="text" />
+                      <label class="cursor-pointer pb-3">
+                        <input
+                          type="checkbox"
+                          name={"diagnostic_method[fields][#{f_field.index}][select_options_drop][]"}
+                          class="hidden"
+                          value={f_option.index}
+                        />
+                        <.icon name="hero-x-mark" />
+                      </label>
+                    </div>
+                  </.inputs_for>
+                  <label class="cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name={"diagnostic_method[fields][#{f_field.index}][select_options_sort][]"}
+                      class="hidden"
+                    />
+                    <div class="pt-4">
+                      <.icon name="hero-plus-circle" />
+                      <span class="align-middle">
+                        Add Option
+                      </span>
+                    </div>
+                  </label>
+                </div>
+              <% end %>
+            </div>
+            <div class="pl-8">
+              <.input field={f_field[:description]} type="textarea" label="Description" />
+            </div>
           </div>
         </.inputs_for>
 

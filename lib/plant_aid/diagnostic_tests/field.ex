@@ -5,6 +5,7 @@ defmodule PlantAid.DiagnosticTests.Field do
 
   embedded_schema do
     field :name, :string
+    field :description, :string
     field :type, Ecto.Enum, values: [:string, :image, :select, :list, :map], default: :string
     field :subtype, Ecto.Enum, values: [:string, :image, :select, nil], default: nil
     field :value, :string
