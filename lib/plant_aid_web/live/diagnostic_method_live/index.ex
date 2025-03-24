@@ -44,8 +44,18 @@ defmodule PlantAidWeb.DiagnosticMethodLive.Index do
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     diagnostic_method = DiagnosticMethods.get_diagnostic_method!(id)
-    {:ok, _} = DiagnosticMethods.delete_diagnostic_method(diagnostic_method)
 
-    {:noreply, stream_delete(socket, :diagnostic_methods, diagnostic_method)}
+    case DiagnosticMethods.delete_diagnostic_method(diagnostic_method) do
+      {:ok, _} ->
+        {:noreply, stream_delete(socket, :diagnostic_methods, diagnostic_method)}
+
+      {:error, _} ->
+        {:noreply,
+         put_flash(
+           socket,
+           :error,
+           "Error deleting diagnostic method, existing test results are associated with it."
+         )}
+    end
   end
 end

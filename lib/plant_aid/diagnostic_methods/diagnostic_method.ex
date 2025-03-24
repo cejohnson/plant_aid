@@ -21,6 +21,8 @@ defmodule PlantAid.DiagnosticMethods.DiagnosticMethod do
 
     embeds_many :fields, Field, on_replace: :delete
 
+    has_many :diagnostic_test_results, PlantAid.DiagnosticTests.TestResult
+
     timestamps()
   end
 

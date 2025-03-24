@@ -62,10 +62,16 @@ defmodule PlantAid.Alerts.AlertSubscription do
 
   @doc false
   def changeset(alert_subscription, attrs) do
-    alert_subscription
+    if User.has_role?(alert_subscription.user, [:researcher, :admin, :superuser]) do
+      alert_subscription
+      |> cast(attrs, [:events_selector])
+      |> validate_required([:events_selector])
+    else
+      alert_subscription
+      |> change(events_selector: :disease_confirmed)
+    end
     |> cast(attrs, [
       :enabled,
-      :events_selector,
       :pathologies_selector,
       :geographical_selector,
       :locations_selector,
@@ -79,7 +85,6 @@ defmodule PlantAid.Alerts.AlertSubscription do
     ])
     |> validate_required([
       :enabled,
-      :events_selector,
       :pathologies_selector,
       :geographical_selector
     ])

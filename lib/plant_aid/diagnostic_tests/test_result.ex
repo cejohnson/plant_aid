@@ -90,6 +90,8 @@ defmodule PlantAid.DiagnosticTests.TestResult do
   def changeset(test_result, attrs) do
     test_result
     |> cast(attrs, [:comments, :observation_id, :diagnostic_method_id])
+    |> foreign_key_constraint(:observation_id)
+    |> foreign_key_constraint(:diagnostic_method_id)
     |> cast_embed(:fields)
     |> cast_assoc(:pathology_results)
   end
@@ -103,6 +105,8 @@ defmodule PlantAid.DiagnosticTests.TestResult do
     changeset =
       test_result
       |> cast(attrs, [:comments, :observation_id, :diagnostic_method_id])
+      |> foreign_key_constraint(:observation_id)
+      |> foreign_key_constraint(:diagnostic_method_id)
 
     # |> IO.inspect(label: "1")
     # |> put_embed(:fields, overrides.fields)

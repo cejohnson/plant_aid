@@ -35,9 +35,9 @@
     </div>
     <.link patch={~p"/admin/diagnostic_methods/#{diagnostic_method}/edit"}>Edit</.link>
   </:action>
-  <:action :let={{id, diagnostic_method}}>
+  <:action :let={{_id, diagnostic_method}}>
     <.link
-      phx-click={JS.push("delete", value: %{id: diagnostic_method.id}) |> hide("##{id}")}
+      phx-click={JS.push("delete", value: %{id: diagnostic_method.id})}
       data-confirm="Are you sure?"
     >
       Delete

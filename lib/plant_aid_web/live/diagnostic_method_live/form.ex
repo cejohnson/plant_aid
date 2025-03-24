@@ -128,7 +128,12 @@ defmodule PlantAidWeb.DiagnosticMethodLive.Form do
               <% end %>
             </div>
             <div class="pl-8">
-              <.input field={f_field[:description]} type="textarea" label="Description" />
+              <.input
+                field={f_field[:description]}
+                type="textarea"
+                label="Description"
+                description="This will appear as help text for this field when submitting test results, in exactly the same way as this help text is displayed here."
+              />
             </div>
           </div>
         </.inputs_for>

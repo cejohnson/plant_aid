@@ -1,19 +1,20 @@
 <.header>
   Alert Subscription <%= @alert_subscription.id %>
-  <:subtitle>This is an alert_subscription record from your database.</:subtitle>
   <:actions>
     <.link
       patch={~p"/alerts/subscriptions/#{@alert_subscription}/show/edit"}
       phx-click={JS.push_focus()}
     >
-      <.button>Edit alert_subscription</.button>
+      <.button>Edit Alert Subscription</.button>
     </.link>
   </:actions>
 </.header>
 
 <.list>
   <:item title="Enabled"><%= @alert_subscription.enabled %></:item>
-  <:item title="Description"><%= @alert_subscription.description %></:item>
+  <:item title="Description">
+    <%= @alert_subscription.description || @alert_subscription.auto_description %>
+  </:item>
 </.list>
 
 <.back navigate={~p"/alerts/subscriptions"}>Back to alert subscriptions</.back>

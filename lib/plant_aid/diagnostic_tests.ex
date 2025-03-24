@@ -1,6 +1,7 @@
 defmodule PlantAid.DiagnosticTests do
   @behaviour Bodyguard.Policy
   import Ecto.Query, warn: false
+  alias PlantAid.Observations.Observation
   alias PlantAid.ObjectStorage
   alias Ecto.Changeset
   alias PlantAid.Repo
@@ -243,9 +244,11 @@ defmodule PlantAid.DiagnosticTests do
   end
 
   defp create_alerts({:ok, test_result}, "true") do
-    %{diagnostic_test_result_id: test_result.id}
-    |> PlantAid.Workers.CreateAlerts.new()
-    |> Oban.insert()
+    if Enum.any?(test_result.pathology_results, &(&1.result == :positive)) do
+      %{diagnostic_test_result_id: test_result.id}
+      |> PlantAid.Workers.CreateAlerts.new()
+      |> Oban.insert()
+    end
 
     {:ok, test_result}
   end
@@ -441,7 +444,9 @@ defmodule PlantAid.DiagnosticTests do
     |> maybe_populate_observation_id()
   end
 
-  defp maybe_populate_observation_id(%TestResult{observation: observation} = test_result) do
+  defp maybe_populate_observation_id(
+         %TestResult{observation: %Observation{} = observation} = test_result
+       ) do
     %{test_result | observation_id: observation.id}
   end
 

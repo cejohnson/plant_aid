@@ -119,7 +119,10 @@ defmodule PlantAid.DiagnosticMethods do
 
   """
   def delete_diagnostic_method(%DiagnosticMethod{} = diagnostic_method) do
-    Repo.delete(diagnostic_method)
+    diagnostic_method
+    |> change_diagnostic_method()
+    |> Changeset.no_assoc_constraint(:diagnostic_test_results)
+    |> Repo.delete()
   end
 
   @doc """

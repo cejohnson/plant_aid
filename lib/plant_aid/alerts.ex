@@ -82,8 +82,8 @@ defmodule PlantAid.Alerts do
     |> populate_virtual_fields()
   end
 
-  def create_alert_subscription(user, attrs \\ %{}) do
-    %AlertSubscription{user: user}
+  def create_alert_subscription(%AlertSubscription{} = alert_subscription, attrs \\ %{}) do
+    alert_subscription
     |> AlertSubscription.changeset(attrs)
     |> AlertSubscription.populate_nonvirtual_fields()
     |> Repo.insert()
@@ -410,6 +410,7 @@ defmodule PlantAid.Alerts do
 
   def preload_alert_subscription_fields(alert_subscription_or_subscriptions) do
     Repo.preload(alert_subscription_or_subscriptions, [
+      :user,
       :pathologies,
       :locations,
       :countries,
@@ -446,6 +447,14 @@ defmodule PlantAid.Alerts do
 
     Map.put(alert, :alert_subscriptions, alert_subscriptions)
   end
+
+  # defp maybe_set_events_selector(%AlertSubscription{} = subscription) do
+  #   if not User.has_role?(subscription.user, [:researcher, :admin, :superuser]) do
+  #     %{user | }
+  #   else
+  #     changeset
+  #   end
+  # end
 
   defp maybe_put_alert_subscription_distance(
          %AlertSubscription{distance_meters: nil} = alert_subscription

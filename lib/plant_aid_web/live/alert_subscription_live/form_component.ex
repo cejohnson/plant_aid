@@ -1,6 +1,7 @@
 defmodule PlantAidWeb.AlertSubscriptionLive.FormComponent do
   use PlantAidWeb, :live_component
 
+  alias PlantAid.Accounts.User
   alias PlantAid.Alerts
   alias PlantAid.Geography
   alias PlantAid.Locations
@@ -34,13 +35,17 @@ defmodule PlantAidWeb.AlertSubscriptionLive.FormComponent do
           placeholder="Optional, will be automatically populated if left empty."
         />
 
-        <.radio_group field={@form[:events_selector]} label="Event Type">
+        <.radio_group
+          :if={User.has_role?(@current_user, [:researcher, :admin, :superuser])}
+          field={@form[:events_selector]}
+          label="Event Type"
+        >
           <:radio value="any">Any</:radio>
           <:radio value="disease_reported">
-            Disease reported (this does not necessarily mean the disease is present, only suspected).
+            Disease reported
           </:radio>
           <:radio value="disease_confirmed">
-            Disease confirmed (disease presence has been confirmed by a validator).
+            Disease confirmed
           </:radio>
         </.radio_group>
 
@@ -132,7 +137,7 @@ defmodule PlantAidWeb.AlertSubscriptionLive.FormComponent do
         </div>
 
         <:actions>
-          <.button variant="primary" phx-disable-with="Saving...">Save Alert subscription</.button>
+          <.button variant="primary" phx-disable-with="Saving...">Save Alert Subscription</.button>
         </:actions>
       </.simple_form>
     </div>
@@ -144,7 +149,10 @@ defmodule PlantAidWeb.AlertSubscriptionLive.FormComponent do
         %{alert_subscription: alert_subscription, current_user: current_user} = assigns,
         socket
       ) do
-    changeset = Alerts.change_alert_subscription(alert_subscription)
+    changeset =
+      alert_subscription
+      |> Alerts.preload_alert_subscription_fields()
+      |> Alerts.change_alert_subscription()
 
     pathology_options = Pathologies.list_pathologies() |> Enum.map(&{&1.common_name, &1.id})
     location_options = Locations.list_locations(current_user) |> Enum.map(&{&1.name, &1.id})
@@ -162,6 +170,7 @@ defmodule PlantAidWeb.AlertSubscriptionLive.FormComponent do
     {:ok,
      socket
      |> assign(assigns)
+     |> assign(:alert_subscription, alert_subscription)
      |> assign(:pathology_options, pathology_options)
      |> assign(:location_options, location_options)
      |> assign(:country_options, country_options)
@@ -218,14 +227,12 @@ defmodule PlantAidWeb.AlertSubscriptionLive.FormComponent do
   end
 
   defp save_alert_subscription(socket, :new, alert_subscription_params) do
-    IO.puts("saving new alert subscription")
+    alert_subscription = socket.assigns.alert_subscription
     user = socket.assigns.current_user
 
     with :ok <- Bodyguard.permit(Alerts, :create_alert_subscription, user) do
-      IO.puts("authed good to go")
-
       case Alerts.create_alert_subscription(
-             user,
+             alert_subscription,
              alert_subscription_params
            ) do
         {:ok, alert_subscription} ->

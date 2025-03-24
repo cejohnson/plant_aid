@@ -48,7 +48,7 @@ defmodule PlantAidWeb.AlertSubscriptionLive.Index do
       |> assign(:page_title, "New Alert Subscription")
       |> assign(
         :alert_subscription,
-        %AlertSubscription{} |> Alerts.preload_alert_subscription_fields()
+        %AlertSubscription{user: user} |> Alerts.preload_alert_subscription_fields()
       )
     else
       _ ->
