@@ -1,4 +1,6 @@
 defmodule PlantAid.Utilities do
+  def pretty_print(nil), do: nil
+
   def pretty_print(term) when is_atom(term) do
     term
     |> Atom.to_string()

@@ -71,29 +71,39 @@
 
 <.table
   id="test_results"
-  rows={
-    Enum.flat_map(@observation.test_results, fn test_result ->
-      Enum.map(test_result.pathology_results, &{&1.id, &1})
-    end)
-  }
-  row_click={
-    fn {_id, pathology_result} ->
-      JS.navigate(~p"/test_results/#{pathology_result.test_result}")
-    end
-  }
+  rows={@observation.test_results}
+  row_click={&JS.navigate(~p"/test_results/#{&1}")}
 >
-  <:col :let={{_id, pathology_result}} label="Test ID">
-    <%= pathology_result.test_result.id %>
+  <:col :let={test_result} label="Test ID">
+    <%= test_result.id %>
   </:col>
-  <:col :let={{_id, pathology_result}} label="Pathology Tested">
-    <%= pathology_result.pathology.common_name %>
+  <:col :let={test_result} label="Pathology Tested">
+    <div class="flex-col">
+      <%= for pathology_result <- test_result.pathology_results do %>
+        <div>
+          <%= (pathology_result.pathology && pathology_result.pathology.common_name) || "\u00A0" %>
+        </div>
+      <% end %>
+    </div>
   </:col>
-  <:col :let={{_id, pathology_result}} label="Result"><%= pathology_result.result %></:col>
-  <:col :let={{_id, pathology_result}} label="Genotype">
-    <%= pathology_result.genotype && pathology_result.genotype.name %>
+  <:col :let={test_result} label="Result">
+    <div class="flex-col">
+      <%= for pathology_result <- test_result.pathology_results do %>
+        <div><%= pathology_result.result || "\u00A0" %></div>
+      <% end %>
+    </div>
   </:col>
-  <:col :let={{_id, pathology_result}} label="Last Updated On">
-    <%= DateTime.to_date(pathology_result.test_result.updated_at) %>
+  <:col :let={test_result} label="Genotype">
+    <div class="flex-col">
+      <%= for pathology_result <- test_result.pathology_results do %>
+        <div>
+          <%= (pathology_result.genotype && pathology_result.genotype.name) || "\u00A0" %>
+        </div>
+      <% end %>
+    </div>
+  </:col>
+  <:col :let={test_result} label="Last Updated On">
+    <%= DateTime.to_date(test_result.updated_at) %>
   </:col>
 </.table>
 

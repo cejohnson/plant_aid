@@ -10,6 +10,7 @@ defmodule PlantAid.Observations.Observation do
   @derive {
     Flop.Schema,
     filterable: [
+      :id,
       :status,
       :source,
       :observation_date,
@@ -27,6 +28,7 @@ defmodule PlantAid.Observations.Observation do
       :genotype_id
     ],
     sortable: [
+      :id,
       :status,
       :observation_date
     ],

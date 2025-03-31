@@ -127,15 +127,18 @@
                   navigate={~p"/alerts"}
                   class="font-light text-sm text-gray-600 hover:text-lime-700"
                 >
-                  Alerts
-                </.link>
-              </li>
-              <li>
-                <.link
-                  navigate={~p"/alerts/subscriptions"}
-                  class="font-light text-sm text-gray-600 hover:text-lime-700"
-                >
-                  Alert Subscriptions
+                  <div class="flex">
+                    Alerts
+                    <span
+                      :if={
+                        @current_user.unviewed_alert_count &&
+                          @current_user.unviewed_alert_count > 0
+                      }
+                      class="font-bold text-xs text-white bg-red-500 rounded-full w-4 h-4 flex justify-center items-center"
+                    >
+                      <%= @current_user.unviewed_alert_count %>
+                    </span>
+                  </div>
                 </.link>
               </li>
               <li>

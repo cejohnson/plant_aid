@@ -11,6 +11,7 @@ defmodule PlantAid.DiagnosticTests.TestResult do
   @derive {
     Flop.Schema,
     filterable: [
+      :id,
       :observation_date,
       :updated_on,
       :result,
@@ -19,6 +20,7 @@ defmodule PlantAid.DiagnosticTests.TestResult do
       :host_id
     ],
     sortable: [
+      :id,
       :observation_date,
       :updated_at
     ],
@@ -90,6 +92,7 @@ defmodule PlantAid.DiagnosticTests.TestResult do
   def changeset(test_result, attrs) do
     test_result
     |> cast(attrs, [:comments, :observation_id, :diagnostic_method_id])
+    |> validate_required([:observation_id, :diagnostic_method_id])
     |> foreign_key_constraint(:observation_id)
     |> foreign_key_constraint(:diagnostic_method_id)
     |> cast_embed(:fields)
@@ -101,42 +104,26 @@ defmodule PlantAid.DiagnosticTests.TestResult do
   end
 
   def changeset(test_result, overrides, attrs) do
-    # changeset =
     changeset =
       test_result
       |> cast(attrs, [:comments, :observation_id, :diagnostic_method_id])
+      |> validate_required([:observation_id, :diagnostic_method_id])
       |> foreign_key_constraint(:observation_id)
       |> foreign_key_constraint(:diagnostic_method_id)
-
-    # |> IO.inspect(label: "1")
-    # |> put_embed(:fields, overrides.fields)
-    # |> IO.inspect(label: "2")
-    # |> put_assoc(:pathology_results, overrides.pathology_results)
-    # |> IO.inspect(label: "3")
-    # |> cast_embed(:fields)
-    # |> IO.inspect(label: "4")
-    # |> cast_assoc(:pathology_results)
-    # |> IO.inspect(label: "5")
-
-    # fields_attrs = Map.get(attrs, "fields", %{})
 
     fields =
       overrides.fields
       |> Enum.with_index(fn field, index ->
         attrs = get_in(attrs, ["fields", Integer.to_string(index)]) || %{}
-        # attrs = Map.get(fields_attrs, Integer.to_string(index), %{})
         Field.changeset(field, attrs)
       end)
 
-    # pathology_results_attrs = Map.get(attrs, "pathology_results", %{})
     pathology_results =
       overrides.pathology_results
       |> Enum.with_index(fn pathology_result, pathology_result_index ->
-        # field_attrs = Map.get(pathology_results_attrs, "fields", %{})
         fields =
           pathology_result.fields
           |> Enum.with_index(fn field, field_index ->
-            # attrs = Map.get(attrs[""]["fields"], Integer.to_string(index), %{})
             attrs =
               get_in(attrs, [
                 "pathology_results",

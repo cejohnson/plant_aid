@@ -1,6 +1,5 @@
 <.header>
   Location <%= @location.id %>
-  <:subtitle>This is a location record from your database.</:subtitle>
   <:actions>
     <.link patch={~p"/locations/#{@location}/show/edit"} phx-click={JS.push_focus()}>
       <.button>Edit location</.button>

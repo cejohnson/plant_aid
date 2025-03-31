@@ -2,9 +2,34 @@
   Test result <%= @test_result.id %>
   <:subtitle>This is a test_result record from your database.</:subtitle>
   <:actions>
-    <.link patch={~p"/test_results/#{@test_result}/show/edit"} phx-click={JS.push_focus()}>
+    <.link
+      :if={
+        Bodyguard.permit?(
+          PlantAid.DiagnosticTests,
+          :update_test_result,
+          @current_user,
+          @test_result
+        )
+      }
+      patch={~p"/test_results/#{@test_result}/show/edit"}
+      phx-click={JS.push_focus()}
+    >
       <.button variant="primary">Edit Test Result</.button>
     </.link>
+    <.button
+      :if={
+        Bodyguard.permit?(
+          PlantAid.DiagnosticTests,
+          :delete_test_result,
+          @current_user,
+          @test_result
+        )
+      }
+      phx-click={JS.push("delete")}
+      data-confirm="Are you sure?"
+    >
+      Delete Test Result
+    </.button>
   </:actions>
 </.header>
 
@@ -150,7 +175,7 @@
   </:item>
 </.list>
 
-<.back navigate={~p"/test_results"}>Back to test_results</.back>
+<.back navigate={~p"/test_results"}>Back to Test Results</.back>
 
 <%!-- <.modal
   :if={@live_action == :edit}

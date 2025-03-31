@@ -47,6 +47,7 @@ defmodule PlantAid.Accounts.User do
     # has_many :connection_events, PlantAid.Accounts.UserConnectionEvent
 
     field :last_seen, :utc_datetime, virtual: true
+    field :unviewed_alert_count, :integer, virtual: true
 
     embeds_one :notifications_settings, NotificationsSettings do
       field :enabled, :boolean, default: false

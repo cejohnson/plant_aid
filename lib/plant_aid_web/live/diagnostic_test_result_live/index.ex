@@ -11,6 +11,7 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Index do
     host_options = Hosts.list_hosts() |> Enum.map(&{&1.common_name, &1.id})
 
     filter_fields = [
+      id: [label: "ID"],
       updated_on: [
         label: "From",
         op: :>=,
@@ -48,7 +49,7 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Index do
 
     {:ok,
      socket
-     |> assign(:page_title, "Listing Test results")
+     |> assign(:page_title, "Listing Test Results")
      |> assign(:base_filter_fields, filter_fields)
      |> assign(:filter_fields, filter_fields)}
   end
@@ -73,10 +74,22 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Index do
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
+    user = socket.assigns.current_user
     test_result = DiagnosticTests.get_test_result!(id)
-    {:ok, _} = DiagnosticTests.delete_test_result(test_result)
 
-    {:noreply, stream_delete(socket, :test_results, test_result)}
+    with :ok <- Bodyguard.permit(DiagnosticTests, :delete_test_result, user) do
+      {:ok, _} = DiagnosticTests.delete_test_result(test_result)
+
+      {:noreply,
+       socket
+       |> assign(:meta, %{socket.assigns.meta | total_count: socket.assigns.meta.total_count - 1})
+       |> stream_delete(:test_results, test_result)}
+    else
+      _ ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "Unauthorized")}
+    end
   end
 
   @impl true

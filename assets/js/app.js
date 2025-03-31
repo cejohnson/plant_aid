@@ -26,6 +26,20 @@ mapboxgl.accessToken = "pk.eyJ1Ijoic2hhbmtqNjg3IiwiYSI6ImNsNHlneGluejFqaDkzam5rN
 
 let Hooks = {}
 
+Hooks.OverrideEnter = {
+  mounted() {
+    this.el.addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        if (e.target.type === "textarea") {
+          e.stopPropagation();
+        } else {
+          e.preventDefault();
+        }
+      }
+    })
+  }
+}
+
 Hooks.GetTimezone = {
   mounted() {
     if (!this.el.value) {

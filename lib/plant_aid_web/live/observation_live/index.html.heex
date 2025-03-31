@@ -59,6 +59,9 @@
               rows={@observations}
               row_click={&JS.navigate(~p"/observations/#{&1}")}
             >
+              <:col :let={observation} label="ID">
+                <%= observation.id %>
+              </:col>
               <:col :let={observation} label="Observation Date">
                 <%= observation.observation_date %>
               </:col>

@@ -20,35 +20,62 @@
   </:actions>
 </.header>
 
-<.table
-  id="alerts"
-  rows={@streams.alerts}
-  row_click={fn {_id, alert} -> JS.navigate(~p"/alerts/#{alert}") end}
->
-  <:col :let={{_id, alert}} label="Type">
-    <%= PlantAid.Utilities.pretty_print(alert.alert_type) %>
-  </:col>
-  <:col :let={{_id, alert}} label="Pathology"><%= alert.pathology.common_name %></:col>
-  <:col :let={{_id, alert}} label="Location">
-    <%= PlantAid.Geography.pretty_print(alert.observation.secondary_subdivision) %>
-  </:col>
-  <:col :let={{_id, alert}} label="Observation Date">
-    <%= alert.observation.observation_date %>
-  </:col>
-  <:col :let={{_id, alert}} label="Confirmed At">
-    <%= alert.test_result && alert.test_result.inserted_at %>
-  </:col>
-  <:action :let={{_id, alert}}>
-    <div class="sr-only">
-      <.link navigate={~p"/alerts/#{alert}"}>Show</.link>
-    </div>
-  </:action>
-  <:action :let={{id, alert}}>
-    <.link
-      phx-click={JS.push("delete", value: %{id: alert.id}) |> hide("##{id}")}
-      data-confirm="Are you sure?"
+<div class="flex flex-row">
+  <div class="basis-5/6 pr-4">
+    <.table
+      id="alerts"
+      rows={@streams.alerts}
+      row_click={fn {_id, alert} -> JS.navigate(~p"/alerts/#{alert}") end}
     >
-      Delete
-    </.link>
-  </:action>
-</.table>
+      <:col :let={{_id, alert}} label="ID">
+        <div class={alert.viewed_at && "font-normal"}>
+          <%= alert.id %>
+        </div>
+      </:col>
+      <:col :let={{_id, alert}} label="Type">
+        <%= PlantAid.Utilities.pretty_print(alert.alert_type) %>
+      </:col>
+      <:col :let={{_id, alert}} label="Pathology"><%= alert.pathology.common_name %></:col>
+      <:col :let={{_id, alert}} label="Location">
+        <%= PlantAid.Geography.pretty_print(alert.observation.secondary_subdivision) %>
+      </:col>
+      <:col :let={{_id, alert}} label="Observation Date">
+        <%= alert.observation.observation_date %>
+      </:col>
+      <:col :let={{_id, alert}} label="Confirmed At">
+        <%= alert.test_result && alert.test_result.inserted_at %>
+      </:col>
+      <:col :let={{_id, alert}} label="Viewed At">
+        <%= alert.viewed_at %>
+      </:col>
+      <:action :let={{_id, alert}}>
+        <div class="sr-only">
+          <.link navigate={~p"/alerts/#{alert}"}>Show</.link>
+        </div>
+      </:action>
+      <:action :let={{id, alert}}>
+        <.link
+          phx-click={JS.push("delete", value: %{id: alert.id}) |> hide("##{id}")}
+          data-confirm="Are you sure?"
+        >
+          <i class="fa-solid fa-trash text-stone-600"></i>
+        </.link>
+      </:action>
+    </.table>
+    <Flop.Phoenix.pagination meta={@meta} path={~p"/alerts"} />
+  </div>
+
+  <div class="basis-1/6 bg-stone-300 mt-11">
+    <div class="p-2 text-md font-normal">
+      <%= case @meta.total_count do %>
+        <% 1  -> %>
+          1 alert matches filters
+        <% count -> %>
+          <%= count %> alerts match filters
+      <% end %>
+    </div>
+    <div class="overflow-auto bg-stone-300">
+      <.filter_form id="alert-filter-form" meta={@meta} fields={@filter_fields} />
+    </div>
+  </div>
+</div>

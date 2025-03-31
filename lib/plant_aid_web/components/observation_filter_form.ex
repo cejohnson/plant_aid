@@ -31,6 +31,9 @@ defmodule PlantAidWeb.ObservationFilterForm do
     pathology_options = FormHelpers.list_pathology_options(flop) |> prepend_default_option()
 
     fields = [
+      id: [
+        label: "ID"
+      ],
       source: [
         label: "Data Source",
         type: "select",

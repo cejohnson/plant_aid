@@ -14,10 +14,18 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
     <div>
       <.header>
         <%= @page_title %>
-        <:subtitle>Add or update test results for an observation sample.</:subtitle>
+        <:subtitle>
+          Add or update test results for an observation sample. Use Tab to advance through fields.
+        </:subtitle>
       </.header>
 
-      <.simple_form for={@form} id="test_result-form" phx-change="validate" phx-submit="save">
+      <.simple_form
+        for={@form}
+        id="test_result-form"
+        phx-change="validate"
+        phx-submit="save"
+        phx-hook="OverrideEnter"
+      >
         <.input field={@form[:observation_id]} type="text" label="Observation ID" />
         <.input field={@form[:comments]} type="textarea" label="Comments" />
         <.input
@@ -649,11 +657,16 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
           label="Notify Observation Reporter"
           value={true}
         />
-        <.input name="create_alerts" type="checkbox" label="Create Alerts" value={true} />
+        <div>
+          <.input name="create_alerts" type="checkbox" label="Create Alerts" value={true} />
+          <div class="text-sm text-zinc-800 pl-8">
+            If checked, this will create alerts for all users (other than you) who have alert subscriptions for confirmed diseases matching the location and pathology(ies) associated with this test result.
+          </div>
+        </div>
 
         <:actions>
           <.button variant="primary" phx-disable-with="Saving...">
-            Save Diagnostic test result
+            Save Test Result
           </.button>
           <.button variant="secondary" type="button" phx-click="reset">Reset</.button>
           <.button type="button" phx-click="cancel">Cancel</.button>
@@ -893,20 +906,52 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Form do
 
   defp put_upload_urls(changeset, socket) do
     changeset =
-      changeset
-      |> Changeset.get_embed(:fields)
-      |> Enum.map(&handle_field_upload_urls(&1, socket))
-      |> then(&Changeset.put_embed(changeset, :fields, &1))
+      if Changeset.changed?(changeset, :fields) do
+        changeset
+        |> Changeset.update_change(:fields, fn field_changesets ->
+          field_changesets
+          |> Enum.reject(&(&1.action == :replace))
+          |> Enum.map(&handle_field_upload_urls(&1, socket))
+        end)
+      else
+        changeset
+        |> Changeset.get_embed(:fields)
+        |> Enum.map(&handle_field_upload_urls(&1, socket))
+        |> then(&Changeset.put_embed(changeset, :fields, &1))
+      end
 
-    changeset
-    |> Changeset.get_assoc(:pathology_results)
-    |> Enum.map(fn pathology_result_changeset ->
-      pathology_result_changeset
-      |> Changeset.get_embed(:fields)
-      |> Enum.map(&handle_field_upload_urls(&1, socket))
-      |> then(&Changeset.put_embed(pathology_result_changeset, :fields, &1))
-    end)
-    |> then(&Changeset.put_assoc(changeset, :pathology_results, &1))
+    if Changeset.changed?(changeset, :pathology_results) do
+      changeset
+      |> Changeset.update_change(:pathology_results, fn pathology_result_changesets ->
+        pathology_result_changesets
+        |> Enum.reject(&(&1.action == :replace))
+        |> Enum.map(fn pathology_result_changeset ->
+          if Changeset.changed?(pathology_result_changeset, :fields) do
+            pathology_result_changeset
+            |> Changeset.update_change(:fields, fn field_changesets ->
+              field_changesets
+              |> Enum.reject(&(&1.action == :replace))
+              |> Enum.map(&handle_field_upload_urls(&1, socket))
+            end)
+          else
+            pathology_result_changeset
+            |> Changeset.get_embed(:fields)
+            |> Enum.map(&handle_field_upload_urls(&1, socket))
+            |> then(&Changeset.put_embed(pathology_result_changeset, :fields, &1))
+          end
+        end)
+      end)
+    else
+      changeset
+      |> Changeset.get_assoc(:pathology_results)
+      |> Enum.map(fn pathology_result_changeset ->
+        pathology_result_changeset
+        |> Changeset.get_embed(:fields)
+        |> Enum.map(&handle_field_upload_urls(&1, socket))
+        |> then(&Changeset.put_embed(pathology_result_changeset, :fields, &1))
+      end)
+      |> then(&Changeset.put_assoc(changeset, :pathology_results, &1))
+    end
   end
 
   defp handle_field_upload_urls(field_changeset, socket) do

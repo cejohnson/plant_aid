@@ -48,19 +48,23 @@ defmodule PlantAid.ObjectStorage do
     object_storage = Application.get_env(:plant_aid, PlantAid.ObjectStorage)
 
     objects =
-      Enum.map(urls, fn url ->
+      urls
+      |> Enum.filter(&is_binary/1)
+      |> Enum.map(fn url ->
         uri = URI.new!(url)
 
         uri.path
         |> String.slice(1..-1//1)
       end)
 
-    ExAws.S3.delete_multiple_objects(object_storage[:bucket], objects)
-    |> ExAws.request!(
-      host: object_storage[:region] <> "." <> object_storage[:domain],
-      access_key_id: object_storage[:access_key_id],
-      secret_access_key: object_storage[:secret_access_key]
-    )
+    if length(objects) > 0 do
+      ExAws.S3.delete_multiple_objects(object_storage[:bucket], objects)
+      |> ExAws.request!(
+        host: object_storage[:region] <> "." <> object_storage[:domain],
+        access_key_id: object_storage[:access_key_id],
+        secret_access_key: object_storage[:secret_access_key]
+      )
+    end
   end
 
   @doc """

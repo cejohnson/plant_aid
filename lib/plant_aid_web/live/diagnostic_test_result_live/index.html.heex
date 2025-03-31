@@ -14,6 +14,9 @@
       rows={@streams.test_results}
       row_click={fn {_id, test_result} -> JS.navigate(~p"/test_results/#{test_result}") end}
     >
+      <:col :let={{_id, test_result}} label="ID">
+        <%= test_result.id %>
+      </:col>
       <:col :let={{_id, test_result}} label="Observation Date">
         <%= test_result.observation.observation_date %>
       </:col>
@@ -24,19 +27,30 @@
         <%= test_result.observation.host.common_name %>
       </:col>
       <:col :let={{_id, test_result}} label="Pathologies Tested">
-        <%= Enum.map(test_result.pathology_results, &(&1.pathology && &1.pathology.common_name))
-        |> Enum.join(", ") %>
+        <div class="flex-col">
+          <%= for pathology_result <- test_result.pathology_results do %>
+            <div>
+              <%= (pathology_result.pathology && pathology_result.pathology.common_name) ||
+                "\u00A0" %>
+            </div>
+          <% end %>
+        </div>
       </:col>
       <:col :let={{_id, test_result}} label="Results">
-        <%= Enum.map(test_result.pathology_results, & &1.result)
-        |> Enum.join(", ") %>
+        <div class="flex-col">
+          <%= for pathology_result <- test_result.pathology_results do %>
+            <div><%= PlantAid.Utilities.pretty_print(pathology_result.result) || "\u00A0" %></div>
+          <% end %>
+        </div>
       </:col>
       <:col :let={{_id, test_result}} label="Genotypes">
-        <%= Enum.map(
-          test_result.pathology_results,
-          &(&1.genotype && &1.genotype.name)
-        )
-        |> Enum.join(", ") %>
+        <div class="flex-col">
+          <%= for pathology_result <- test_result.pathology_results do %>
+            <div>
+              <%= (pathology_result.genotype && pathology_result.genotype.name) || "\u00A0" %>
+            </div>
+          <% end %>
+        </div>
       </:col>
       <:col :let={{_id, test_result}} label="Last Modified By">
         <%= test_result.updated_by.email %>
@@ -59,7 +73,7 @@
           }
           patch={~p"/test_results/#{test_result}/edit"}
         >
-          Edit
+          <i class="fa-solid fa-pen text-stone-400"></i>
         </.link>
       </:action>
       <:action :let={{id, test_result}}>
@@ -75,7 +89,7 @@
           phx-click={JS.push("delete", value: %{id: test_result.id}) |> hide("##{id}")}
           data-confirm="Are you sure?"
         >
-          Delete
+          <i class="fa-solid fa-trash text-stone-600"></i>
         </.link>
       </:action>
     </.table>

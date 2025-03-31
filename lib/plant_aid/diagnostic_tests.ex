@@ -1,8 +1,7 @@
 defmodule PlantAid.DiagnosticTests do
   @behaviour Bodyguard.Policy
   import Ecto.Query, warn: false
-  alias PlantAid.Observations.Observation
-  alias PlantAid.ObjectStorage
+
   alias Ecto.Changeset
   alias PlantAid.Repo
   alias PlantAid.Accounts.User
@@ -10,13 +9,20 @@ defmodule PlantAid.DiagnosticTests do
   alias PlantAid.DiagnosticTests.Field
   alias PlantAid.DiagnosticTests.PathologyResult
   alias PlantAid.DiagnosticTests.TestResult
+  alias PlantAid.Observations.Observation
 
-  def authorize(:list_test_results, %User{} = user, _) do
-    User.has_role?(user, [:superuser, :admin, :researcher])
+  def authorize(:list_test_results, _, _) do
+    :ok
   end
 
   def authorize(:create_test_result, %User{} = user, _) do
     User.has_role?(user, [:superuser, :admin, :researcher])
+  end
+
+  def authorize(:get_test_result, %User{} = user, %TestResult{
+        observation: %Observation{user: user}
+      }) do
+    :ok
   end
 
   def authorize(:get_test_result, %User{} = user, _) do
@@ -119,6 +125,12 @@ defmodule PlantAid.DiagnosticTests do
     |> populate_virtual_fields()
   end
 
+  def get_test_result(id) do
+    Repo.get(TestResult, id)
+    |> preload()
+    |> populate_virtual_fields()
+  end
+
   @doc """
   Creates a test_result.
 
@@ -197,8 +209,14 @@ defmodule PlantAid.DiagnosticTests do
 
   """
   def delete_test_result(%TestResult{} = test_result) do
-    Repo.delete(test_result)
-    delete_all_images(test_result)
+    case Repo.delete(test_result) do
+      {:ok, test_result} ->
+        delete_all_images(test_result)
+        {:ok, test_result}
+
+      error ->
+        error
+    end
   end
 
   @doc """
@@ -260,19 +278,25 @@ defmodule PlantAid.DiagnosticTests do
   defp drop_deleted_values(changeset) do
     changeset =
       changeset
-      |> Changeset.get_embed(:fields)
-      |> Enum.map(&drop_deleted_field_values(&1))
-      |> then(&Changeset.put_embed(changeset, :fields, &1))
+      |> Changeset.update_change(:fields, fn field_changesets ->
+        field_changesets
+        |> Enum.reject(&(&1.action == :replace))
+        |> Enum.map(&drop_deleted_field_values(&1))
+      end)
 
     changeset
-    |> Changeset.get_assoc(:pathology_results)
-    |> Enum.map(fn pathology_result_changeset ->
-      pathology_result_changeset
-      |> Changeset.get_embed(:fields)
-      |> Enum.map(&drop_deleted_field_values(&1))
-      |> then(&Changeset.put_embed(pathology_result_changeset, :fields, &1))
+    |> Changeset.update_change(:pathology_results, fn pathology_result_changesets ->
+      pathology_result_changesets
+      |> Enum.reject(&(&1.action == :replace))
+      |> Enum.map(fn pathology_result_changeset ->
+        pathology_result_changeset
+        |> Changeset.update_change(:fields, fn field_changesets ->
+          field_changesets
+          |> Enum.reject(&(&1.action == :replace))
+          |> Enum.map(&drop_deleted_field_values(&1))
+        end)
+      end)
     end)
-    |> then(&Changeset.put_assoc(changeset, :pathology_results, &1))
   end
 
   defp drop_deleted_field_values(field_changeset) do
@@ -307,8 +331,8 @@ defmodule PlantAid.DiagnosticTests do
   end
 
   defp cleanup_deleted_images({:ok, new_test_result}, old_test_result) do
-    new_image_fields = get_image_fields(new_test_result)
-    old_image_fields = get_image_fields(old_test_result)
+    new_image_fields = get_image_fields(new_test_result) |> IO.inspect(label: "new image fields")
+    old_image_fields = get_image_fields(old_test_result) |> IO.inspect(label: "old image fields")
 
     delete_image_fields(old_image_fields -- new_image_fields, new_image_fields)
 
@@ -328,25 +352,32 @@ defmodule PlantAid.DiagnosticTests do
   end
 
   defp delete_image_fields(fields, updated_fields \\ []) do
-    fields
-    |> Enum.map(fn field ->
-      case field.type do
-        :image ->
-          field.value
+    image_urls =
+      fields
+      |> Enum.map(fn field ->
+        case field.type do
+          :image ->
+            field.value
 
-        :list ->
-          case Enum.find(updated_fields, &(&1.id == field.id)) do
-            nil ->
-              field.list_entries
+          :list ->
+            case Enum.find(updated_fields, &(&1.id == field.id)) do
+              nil ->
+                field.list_entries
 
-            updated_field ->
-              field.list_entries -- updated_field.list_entries
-          end
-          |> Enum.map(& &1.value)
-      end
-    end)
-    |> List.flatten()
-    |> ObjectStorage.delete_objects()
+              updated_field ->
+                field.list_entries -- updated_field.list_entries
+            end
+            |> Enum.map(& &1.value)
+        end
+      end)
+      |> List.flatten()
+      |> Enum.reject(&is_nil/1)
+
+    if length(image_urls) > 0 do
+      %{urls: image_urls}
+      |> PlantAid.Workers.DeleteImages.new()
+      |> Oban.insert()
+    end
   end
 
   defp after_save({:ok, test_result}, func) do

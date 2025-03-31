@@ -1,6 +1,21 @@
 <.header>
   Alert <%= @alert.id %>
-  <:subtitle>This is an alert record from your database.</:subtitle>
+  <:actions>
+    <.button
+      :if={
+        Bodyguard.permit?(
+          PlantAid.Alerts,
+          :delete_alert,
+          @current_user,
+          @alert
+        )
+      }
+      phx-click={JS.push("delete")}
+      data-confirm="Are you sure?"
+    >
+      Delete Alert
+    </.button>
+  </:actions>
 </.header>
 
 <.list>

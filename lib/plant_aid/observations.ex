@@ -229,6 +229,12 @@ defmodule PlantAid.Observations do
     |> populate_virtual_fields()
   end
 
+  def get_observation(id) do
+    Repo.get(Observation, id)
+    |> preload()
+    |> populate_virtual_fields()
+  end
+
   @doc """
   Creates a observation.
 

@@ -11,12 +11,21 @@ defmodule PlantAid.Alerts.Alert do
   @derive {
     Flop.Schema,
     filterable: [
-      :inserted_at,
+      :inserted_on,
       :viewed_at,
       :alert_type
     ],
     sortable: [
       :inserted_at
+    ],
+    adapter_opts: [
+      custom_fields: [
+        inserted_on: [
+          filter: {PlantAid.CustomFilters, :datetime_to_date_filter, [source: :inserted_at]},
+          ecto_type: :date,
+          operators: [:<=, :>=]
+        ]
+      ]
     ],
     default_order: %{
       order_by: [:inserted_at],

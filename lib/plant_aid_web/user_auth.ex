@@ -6,6 +6,7 @@ defmodule PlantAidWeb.UserAuth do
 
   alias PlantAid.Accounts
   alias PlantAid.Accounts.User
+  alias PlantAid.Alerts
 
   # Make the remember me cookie valid for 60 days.
   # If you want bump or reduce this value, also change
@@ -93,9 +94,13 @@ defmodule PlantAidWeb.UserAuth do
     {user_token, conn} = ensure_user_token(conn)
     user = user_token && Accounts.get_user_by_session_token(user_token)
 
-    if user do
-      ErrorTracker.set_context(%{user_id: user.id, user_email: user.email})
-    end
+    user =
+      if user do
+        ErrorTracker.set_context(%{user_id: user.id, user_email: user.email})
+        unviewed_alert_count = Alerts.get_unviewed_alert_count(user)
+
+        %{user | unviewed_alert_count: unviewed_alert_count}
+      end
 
     assign(conn, :current_user, user)
   end
@@ -207,9 +212,10 @@ defmodule PlantAidWeb.UserAuth do
 
           if user do
             ErrorTracker.set_context(%{user_id: user.id, user_email: user.email})
-          end
+            unviewed_alert_count = Alerts.get_unviewed_alert_count(user)
 
-          user
+            %{user | unviewed_alert_count: unviewed_alert_count}
+          end
         end)
 
       %{} ->

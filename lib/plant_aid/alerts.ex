@@ -215,6 +215,12 @@ defmodule PlantAid.Alerts do
     end)
   end
 
+  def list_alerts(%User{} = user, %{} = params) do
+    with {:ok, flop} <- Flop.validate(params, for: Alert) do
+      {:ok, list_alerts(user, flop)}
+    end
+  end
+
   def list_alerts(user) do
     Alert
     |> Bodyguard.scope(user)
@@ -231,6 +237,16 @@ defmodule PlantAid.Alerts do
         ]
       ]
     ])
+  end
+
+  def get_unviewed_alert_count(user) do
+    from(
+      a in Alert,
+      where: a.user_id == ^user.id,
+      where: is_nil(a.viewed_at),
+      select: count()
+    )
+    |> Repo.one()
   end
 
   @doc """
@@ -378,10 +394,14 @@ defmodule PlantAid.Alerts do
       {:error, %Ecto.Changeset{}}
 
   """
-  def view_alert(%Alert{} = alert) do
+  def view_alert(%User{id: user_id}, %Alert{user_id: user_id} = alert) do
     alert
     |> Ecto.Changeset.change(viewed_at: DateTime.utc_now(:second))
     |> Repo.update()
+  end
+
+  def alert(%User{}, %Alert{} = alert) do
+    alert
   end
 
   @doc """
