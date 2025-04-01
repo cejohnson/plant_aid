@@ -47,8 +47,10 @@
   <:item title="Control method"><%= @observation.control_method %></:item>
   <:item title="Notes"><%= @observation.notes %></:item>
   <:item title="Images">
-    <%= for url <- @observation.image_urls do %>
-      <img src={url} height="200" width="200" />
+    <%= for image <- @observation.images do %>
+      <a href={image.url} target="_blank">
+        <img src={image.url} height="200" width="200" />
+      </a>
     <% end %>
   </:item>
   <:item title="Metadata" if={User.has_role?(@current_user, [:researcher, :admin, :superuser])}>

@@ -87,6 +87,11 @@ defmodule PlantAid.Observations.Observation do
     has_one :sample, PlantAid.Observations.Sample
     has_many :test_results, PlantAid.DiagnosticTests.TestResult
 
+    embeds_many :images, Image, on_replace: :delete do
+      field :url, :string
+      field :delete, :boolean, virtual: true, default: false
+    end
+
     timestamps()
   end
 
@@ -110,6 +115,11 @@ defmodule PlantAid.Observations.Observation do
       :primary_subdivision_id,
       :secondary_subdivision_id
     ])
+    |> cast_embed(:images,
+      with: &image_changeset/2,
+      sort_param: :images_sort,
+      drop_param: :images_drop
+    )
     |> validate_number(:latitude, greater_than_or_equal_to: -90, less_than_or_equal_to: 90)
     |> validate_number(:longitude, greater_than_or_equal_to: -180, less_than_or_equal_to: 180)
     |> maybe_put_position()
@@ -181,5 +191,10 @@ defmodule PlantAid.Observations.Observation do
 
   def validate_geography(changeset) do
     changeset
+  end
+
+  defp image_changeset(images, attrs) do
+    images
+    |> cast(attrs, [:url, :delete])
   end
 end

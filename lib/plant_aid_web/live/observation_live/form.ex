@@ -34,7 +34,7 @@ defmodule PlantAidWeb.ObservationLive.Form do
      |> assign(:location_type_options, location_type_options)
      |> assign(:pathology_options, pathology_options)
      |> assign(:country_options, country_options)
-     |> allow_upload(:image,
+     |> allow_upload(:images,
        accept: ~w(.jpg .jpeg .png),
        max_entries: 10,
        external: &presign_upload/2
@@ -219,7 +219,7 @@ defmodule PlantAidWeb.ObservationLive.Form do
   end
 
   def handle_event("cancel-upload", %{"ref" => ref}, socket) do
-    {:noreply, cancel_upload(socket, :image, ref)}
+    {:noreply, cancel_upload(socket, :images, ref)}
   end
 
   defp save_observation(socket, :edit, observation_params, create_alerts) do
@@ -258,6 +258,7 @@ defmodule PlantAidWeb.ObservationLive.Form do
          |> push_navigate(to: ~p"/observations/#{observation}")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
+        IO.inspect(changeset, label: "errorrrr")
         {:noreply, assign(socket, changeset: changeset)}
     end
   end
@@ -414,13 +415,14 @@ defmodule PlantAidWeb.ObservationLive.Form do
   end
 
   defp put_image_urls(observation_params, socket) do
-    new_urls = get_upload_urls(socket, :image)
+    urls = get_upload_urls(socket, :images) |> IO.inspect(label: "images")
 
-    if length(new_urls) > 0 do
+    if length(urls) > 0 do
       Map.put(
         observation_params,
-        "image_urls",
-        Enum.concat(socket.assigns.observation.image_urls, new_urls)
+        "images",
+        Enum.map(urls, &%{"url" => &1})
+        # Enum.concat(socket.assigns.observation.images, new_urls)
       )
     else
       observation_params
@@ -475,7 +477,7 @@ defmodule PlantAidWeb.ObservationLive.Form do
   end
 
   defp consume_images(socket, %Observation{} = observation) do
-    consume_uploaded_entries(socket, :image, fn _meta, _entry -> {:ok, nil} end)
+    consume_uploaded_entries(socket, :images, fn _meta, _entry -> {:ok, nil} end)
     {:ok, observation}
   end
 

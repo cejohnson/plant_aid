@@ -7,6 +7,7 @@ defmodule PlantAid.Observations do
 
   import Ecto.Query, warn: false
   alias NimbleCSV.RFC4180, as: CSV
+  alias Ecto.Changeset
   alias PlantAid.Repo
 
   alias PlantAid.Accounts.User
@@ -291,9 +292,11 @@ defmodule PlantAid.Observations do
 
     observation
     |> Observation.changeset(attrs)
+    |> drop_deleted_images()
     |> Repo.update()
     |> preload()
     |> populate_virtual_fields()
+    |> cleanup_deleted_images(observation)
     |> after_save(after_save)
     |> create_alerts(create_alerts)
   end
@@ -316,6 +319,17 @@ defmodule PlantAid.Observations do
     result
   end
 
+  defp drop_deleted_images(changeset) do
+    images = Changeset.get_embed(changeset, :images)
+    to_drop = Enum.filter(images, &Changeset.get_field(&1, :delete))
+
+    if length(to_drop) > 0 do
+      Changeset.put_change(changeset, :images, images -- to_drop)
+    else
+      changeset
+    end
+  end
+
   @doc """
   Deletes a observation.
 
@@ -329,7 +343,14 @@ defmodule PlantAid.Observations do
 
   """
   def delete_observation(%Observation{} = observation) do
-    Repo.delete(observation)
+    case Repo.delete(observation) do
+      {:ok, observation} ->
+        delete_all_images(observation)
+        {:ok, observation}
+
+      error ->
+        error
+    end
   end
 
   @doc """
@@ -467,6 +488,24 @@ defmodule PlantAid.Observations do
 
   defp add_data_source(%Observation{source: :cucurbit_sentinel_network} = observation) do
     %{observation | data_source: "Cucurbit Sentinel Network"}
+  end
+
+  defp delete_all_images(observation) do
+    delete_images(observation.images)
+  end
+
+  defp cleanup_deleted_images({:ok, new_observation}, old_observation) do
+    delete_images(old_observation.images -- new_observation.images)
+
+    {:ok, new_observation}
+  end
+
+  defp delete_images([]), do: :ok
+
+  defp delete_images(images) do
+    %{urls: Enum.map(images, & &1.url)}
+    |> PlantAid.Workers.DeleteImages.new()
+    |> Oban.insert()
   end
 
   alias PlantAid.Observations.Sample

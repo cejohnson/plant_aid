@@ -132,20 +132,20 @@
       <div class="text-sm text-stone-500 pb-4">
         Add one or more images of the observation to aid in diagnosis.
       </div>
-      <label class="pb-2">General Images</label>
-      <%= if length(@observation.image_urls) > 0 do %>
-        <div>Uploaded Images</div>
-        <div>
-          <%= for url <- @observation.image_urls do %>
-            <img src={url} height="200" width="200" />
-          <% end %>
-        </div>
+
+      <%= if length(@observation.images) > 0 do %>
+        <.label>Uploaded Images</.label>
+        <.inputs_for :let={f_image} field={@form[:images]}>
+          <.input field={f_image[:delete]} type="checkbox" label="Delete" />
+          <img src={f_image.data.url} height="200" width="200" />
+        </.inputs_for>
       <% end %>
 
-      <.live_file_input upload={@uploads.image} />
-      <section class="pt-2" phx-drop-target={@uploads.image.ref}>
-        <%= for entry <- @uploads.image.entries do %>
-          <article>
+      <.label>Upload Images</.label>
+      <.live_file_input upload={@uploads.images} />
+      <section class="pt-2" phx-drop-target={@uploads.images.ref}>
+        <%= for entry <- @uploads.images.entries do %>
+          <article class="py-2">
             <figure>
               <.live_img_preview entry={entry} width={200} />
               <figcaption><%= entry.client_name %></figcaption>
@@ -163,14 +163,14 @@
               &times;
             </.button>
 
-            <%= for err <- upload_errors(@uploads.image, entry) do %>
-              <p><%= error_to_string(err) %></p>
+            <%= for err <- upload_errors(@uploads.images, entry) do %>
+              <p class="text-red-600 font-semibold"><%= error_to_string(err) %></p>
             <% end %>
           </article>
         <% end %>
 
-        <%= for err <- upload_errors(@uploads.image) do %>
-          <p><%= error_to_string(err) %></p>
+        <%= for err <- upload_errors(@uploads.images) do %>
+          <p class="text-red-600 font-semibold"><%= error_to_string(err) %></p>
         <% end %>
       </section>
     </div>
