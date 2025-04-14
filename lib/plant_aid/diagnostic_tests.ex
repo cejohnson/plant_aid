@@ -331,8 +331,8 @@ defmodule PlantAid.DiagnosticTests do
   end
 
   defp cleanup_deleted_images({:ok, new_test_result}, old_test_result) do
-    new_image_fields = get_image_fields(new_test_result) |> IO.inspect(label: "new image fields")
-    old_image_fields = get_image_fields(old_test_result) |> IO.inspect(label: "old image fields")
+    new_image_fields = get_image_fields(new_test_result)
+    old_image_fields = get_image_fields(old_test_result)
 
     delete_image_fields(old_image_fields -- new_image_fields, new_image_fields)
 

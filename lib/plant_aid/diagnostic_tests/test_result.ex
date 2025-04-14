@@ -28,8 +28,7 @@ defmodule PlantAid.DiagnosticTests.TestResult do
       join_fields: [
         result: [
           binding: :pathology_results,
-          field: :result,
-          ecto_type: {:ecto_enum, [positive: "positive", negative: "negative"]}
+          field: :result
         ],
         pathology_id: [
           binding: :pathology_results,

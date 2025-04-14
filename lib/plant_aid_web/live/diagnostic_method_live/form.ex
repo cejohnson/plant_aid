@@ -10,7 +10,6 @@ defmodule PlantAidWeb.DiagnosticMethodLive.Form do
     <div>
       <.header>
         <%= @page_title %>
-        <:subtitle>Use this form to manage diagnostic_method records in your database.</:subtitle>
       </.header>
 
       <.simple_form for={@form} id="diagnostic_method-form" phx-change="validate" phx-submit="save">

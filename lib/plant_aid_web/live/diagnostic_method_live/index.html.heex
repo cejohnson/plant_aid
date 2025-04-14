@@ -1,8 +1,8 @@
 <.header>
-  Listing Diagnostic methods
+  Listing Diagnostic Methods
   <:actions>
     <.link navigate={~p"/admin/diagnostic_methods/new"}>
-      <.button variant="primary">New Diagnostic method</.button>
+      <.button variant="primary">New Diagnostic Method</.button>
     </.link>
   </:actions>
 </.header>
@@ -33,14 +33,16 @@
     <div class="sr-only">
       <.link navigate={~p"/admin/diagnostic_methods/#{diagnostic_method}"}>Show</.link>
     </div>
-    <.link patch={~p"/admin/diagnostic_methods/#{diagnostic_method}/edit"}>Edit</.link>
+    <.link patch={~p"/admin/diagnostic_methods/#{diagnostic_method}/edit"}>
+      <i class="fa-solid fa-pen text-stone-400"></i>
+    </.link>
   </:action>
   <:action :let={{_id, diagnostic_method}}>
     <.link
       phx-click={JS.push("delete", value: %{id: diagnostic_method.id})}
       data-confirm="Are you sure?"
     >
-      Delete
+      <i class="fa-solid fa-trash text-stone-600"></i>
     </.link>
   </:action>
 </.table>

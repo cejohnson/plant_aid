@@ -25,6 +25,7 @@ defmodule PlantAid.Locations.Location do
     location
     |> cast(attrs, [:name, :location_type_id, :latitude, :longitude])
     |> validate_required([:name, :latitude, :longitude])
+    |> unique_constraint([:name, :user_id])
     |> validate_number(:latitude, greater_than_or_equal_to: -90, less_than_or_equal_to: 90)
     |> validate_number(:longitude, greater_than_or_equal_to: -180, less_than_or_equal_to: 180)
     |> maybe_put_position()

@@ -415,7 +415,7 @@ defmodule PlantAidWeb.ObservationLive.Form do
   end
 
   defp put_image_urls(observation_params, socket) do
-    urls = get_upload_urls(socket, :images) |> IO.inspect(label: "images")
+    urls = get_upload_urls(socket, :images)
 
     if length(urls) > 0 do
       Map.put(

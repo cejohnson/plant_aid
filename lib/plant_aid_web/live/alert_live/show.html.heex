@@ -52,7 +52,10 @@
     <ul>
       <%= for alert_subscription <- @alert.alert_subscriptions do %>
         <li>
-          <.link navigate={~p"/alerts/subscriptions/#{alert_subscription}"}>
+          <.link
+            navigate={~p"/alerts/subscriptions/#{alert_subscription}"}
+            class="text-primary hover:underline"
+          >
             <%= alert_subscription.description || alert_subscription.auto_description %>
           </.link>
         </li>
