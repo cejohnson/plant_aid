@@ -11,7 +11,7 @@ defmodule PlantAidWeb.AlertLive.Index do
     with :ok <- Bodyguard.permit(Alerts, :list_alerts, user) do
       filter_fields = [
         viewed_at: [
-          label: "Viewed?",
+          label: "Viewed Status",
           op: :not_empty,
           type: "select",
           options: [
