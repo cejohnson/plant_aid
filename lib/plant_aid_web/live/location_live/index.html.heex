@@ -20,14 +20,16 @@
     <div class="sr-only">
       <.link navigate={~p"/locations/#{location}"}>Show</.link>
     </div>
-    <.link patch={~p"/locations/#{location}/edit"}>Edit</.link>
+    <.link patch={~p"/locations/#{location}/edit"}>
+      <i class="fa-solid fa-pen text-stone-400"></i>
+    </.link>
   </:action>
   <:action :let={{id, location}}>
     <.link
       phx-click={JS.push("delete", value: %{id: location.id}) |> hide("##{id}")}
       data-confirm="Are you sure?"
     >
-      Delete
+      <i class="fa-solid fa-trash text-stone-600"></i>
     </.link>
   </:action>
 </.table>

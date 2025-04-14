@@ -1,4 +1,5 @@
 import Config
+require Logger
 
 # config/runtime.exs is executed for all environments, including
 # during releases. It is executed after compilation and before the
@@ -47,21 +48,24 @@ if config_env() == :prod do
 
   # Libcluster
   service_name =
-    System.get_env("LIBCLUSTER_SERVICE_NAME") ||
-      raise """
-      environment variable LIBCLUSTER_SERVICE_NAME is missing.
-      """
+    System.get_env("LIBCLUSTER_SERVICE_NAME")
 
-  config :libcluster,
-    topologies: [
-      plantaid: [
-        strategy: Elixir.Cluster.Strategy.Kubernetes.DNS,
-        config: [
-          service: service_name,
-          application_name: "plant_aid"
+  if service_name do
+    config :libcluster,
+      topologies: [
+        plantaid: [
+          strategy: Elixir.Cluster.Strategy.Kubernetes.DNS,
+          config: [
+            service: service_name,
+            application_name: "plant_aid"
+          ]
         ]
       ]
-    ]
+  else
+    Logger.warn(
+      "Environment variable LIBCLUSTER_SERVICE_NAME is missing, running without libcluster"
+    )
+  end
 
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you

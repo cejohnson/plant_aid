@@ -43,7 +43,9 @@ defmodule PlantAidWeb.UserSettingsLive do
         />
       </.inputs_for>
       <:actions>
-        <.button phx-disable-with="Changing...">Change Notifications Settings</.button>
+        <.button phx-disable-with="Changing..." variant="primary">
+          Change Notifications Settings
+        </.button>
       </:actions>
     </.simple_form>
 
@@ -66,7 +68,7 @@ defmodule PlantAidWeb.UserSettingsLive do
         required
       />
       <:actions>
-        <.button phx-disable-with="Changing...">Change Email</.button>
+        <.button phx-disable-with="Changing..." variant="primary">Change Email</.button>
       </:actions>
     </.simple_form>
 
@@ -98,7 +100,7 @@ defmodule PlantAidWeb.UserSettingsLive do
         required
       />
       <:actions>
-        <.button phx-disable-with="Changing...">Change Password</.button>
+        <.button phx-disable-with="Changing..." variant="primary">Change Password</.button>
       </:actions>
     </.simple_form>
 
@@ -116,7 +118,7 @@ defmodule PlantAidWeb.UserSettingsLive do
         required
       />
       <:actions>
-        <.button phx-disable-with="Changing...">Change Name</.button>
+        <.button phx-disable-with="Changing..." variant="primary">Change Name</.button>
       </:actions>
     </.simple_form>
     """

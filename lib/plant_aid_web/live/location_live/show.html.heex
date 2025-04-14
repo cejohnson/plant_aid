@@ -2,7 +2,7 @@
   Location <%= @location.id %>
   <:actions>
     <.link patch={~p"/locations/#{@location}/show/edit"} phx-click={JS.push_focus()}>
-      <.button>Edit location</.button>
+      <.button variant="primary">Edit location</.button>
     </.link>
   </:actions>
 </.header>
@@ -17,7 +17,7 @@
 <%!-- <div id="location-map" phx-hook="MapBoxPointData" phx-update="ignore" style="height: 200px;">
 </div> --%>
 
-<.back navigate={~p"/locations"}>Back to locations</.back>
+<.back navigate={~p"/locations"}>Back to Locations</.back>
 
 <.modal
   :if={@live_action == :edit}

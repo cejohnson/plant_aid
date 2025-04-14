@@ -6,7 +6,7 @@
       <.button>Submit Sample</.button>
     </.link>
     <.link navigate={~p"/observations/#{@observation}/edit"} phx-click={JS.push_focus()}>
-      <.button variant="primary">Edit observation</.button>
+      <.button variant="primary">Edit Observation</.button>
     </.link>
   </:actions>
 </.header>
@@ -147,7 +147,7 @@
   </.list>
 </div>
 
-<.back navigate={~p"/observations"}>Back to observations</.back>
+<.back navigate={~p"/observations"}>Back to Observations</.back>
 
 <.modal
   :if={@live_action in [:add_sample, :edit_sample]}

@@ -1,8 +1,8 @@
 <%!-- <div class=""> --%>
 <picture class="flex">
-  <source class="w-screen" media="(max-width:600px)" srcset="/images/HeroImage_mobile.png" />
+  <source class="w-screen" media="(max-width:600px)" srcset={~p"/images/HeroImage_mobile.png"} />
   <img
-    src="/images/HeroImage_1248w.png"
+    src={~p"/images/HeroImage_1248w.png"}
     alt="Plant Aid: Improving plant health through technology."
   />
 </picture>
@@ -19,7 +19,7 @@
     </div>
     <div class="flex-1">
       <.link navigate={~p"/about"}>
-        <img src="/images/Blueberries_1248w.png" />
+        <img src={~p"/images/Blueberries_1248w.png"} />
       </.link>
       <div class="text-right font-semibold">
         <.link navigate={~p"/about"} class="hover:opacity-80 inline-flex">
@@ -53,7 +53,7 @@
     </div>
     <div class="flex-1">
       <.link navigate={~p"/map"}>
-        <img src="/images/MapScreenshot_1248w.png" />
+        <img src={~p"/images/MapScreenshot_1248w.png"} />
       </.link>
       <div class="text-right font-semibold">
         <.link navigate={~p"/map"} class="hover:opacity-80 inline-flex">
