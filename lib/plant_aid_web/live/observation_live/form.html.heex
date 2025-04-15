@@ -35,10 +35,20 @@
       </div>
     </div>
     <div class="px-2">
-      <.input field={@form[:control_method]} type="textarea" label="Control Method" />
+      <.input
+        field={@form[:control_method]}
+        type="textarea"
+        label="Control Method"
+        description="Any steps you took to control the disease."
+      />
     </div>
     <div class="px-2">
-      <.input field={@form[:notes]} type="textarea" label="Notes" />
+      <.input
+        field={@form[:notes]}
+        type="textarea"
+        label="Notes"
+        description="Any other notes that might be helpful or interesting."
+      />
     </div>
     <div>
       <div class="text-lg font-semibold">
@@ -56,6 +66,7 @@
             label="Load from location"
             prompt="Select"
             phx-change="load_location"
+            description="Use the location type and geographic position of one of your locations."
           />
         </div>
         <div class="md:basis-1/3 px-2">
@@ -82,10 +93,22 @@
           />
         </div>
         <div class="md:basis-1/3 px-2">
-          <.input field={@form[:latitude]} type="text" inputmode="decimal" label="Latitude" />
+          <.input
+            field={@form[:latitude]}
+            type="text"
+            inputmode="decimal"
+            label="Latitude"
+            description="Numerical representation from -90 to 90."
+          />
         </div>
         <div class="md:basis-1/3 px-2">
-          <.input field={@form[:longitude]} type="text" inputmode="decimal" label="Longitude" />
+          <.input
+            field={@form[:longitude]}
+            type="text"
+            inputmode="decimal"
+            label="Longitude"
+            description="Numerical representation from -180 to 180."
+          />
         </div>
       </div>
       <div class="px-2 pt-4">
@@ -109,6 +132,7 @@
         </div>
         <div class="md:basis-1/3 px-2">
           <.input
+            :if={length(@primary_subdivision_options) > 0}
             field={@form[:primary_subdivision_id]}
             type="select"
             options={@primary_subdivision_options}
@@ -117,12 +141,21 @@
         </div>
         <div class="md:basis-1/3 px-2">
           <.input
+            :if={length(@secondary_subdivision_options) > 0}
             field={@form[:secondary_subdivision_id]}
             type="select"
             options={@secondary_subdivision_options}
             label="Secondary Subdivision"
           />
         </div>
+      </div>
+      <div class="px-2">
+        <.input
+          field={@form[:location_details]}
+          type="textarea"
+          label="Details"
+          description="More detailed location information. Anywhere from an address to the nearest city, the more precise the better."
+        />
       </div>
     </div>
     <div>
@@ -175,13 +208,12 @@
       </section>
     </div>
 
-    <.input
-      :if={User.has_role?(@current_user, [:researcher, :admin, :superuser])}
-      name="create_alerts"
-      type="checkbox"
-      label="Create Alerts"
-      value={true}
-    />
+    <div :if={User.has_role?(@current_user, [:researcher, :admin, :superuser])}>
+      <.input name="create_alerts" type="checkbox" label="Create Alerts" value={true} />
+      <div class="pl-8 text-sm text-stone-500">
+        If checked, this will create alerts for any researchers/validators (other than you) with alert subscriptions matching this pathology and location. This exists so that you can avoid creating alerts when adding historical data, and regular users do not have the option to disable this.
+      </div>
+    </div>
 
     <:actions>
       <.button variant="primary" phx-disable-with="Saving...">Save Observation</.button>

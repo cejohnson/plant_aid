@@ -211,9 +211,9 @@ defmodule PlantAidWeb.DiagnosticMethodLive.Form do
   def handle_event("cancel", _, socket) do
     to =
       if String.contains?(socket.assigns.url, "show") do
-        ~p"/admin/diagnostic_methods/#{socket.assigns.diagnostic_method}"
+        ~p"/diagnostic_methods/#{socket.assigns.diagnostic_method}"
       else
-        ~p"/admin/diagnostic_methods"
+        ~p"/diagnostic_methods"
       end
 
     {:noreply,
@@ -244,7 +244,7 @@ defmodule PlantAidWeb.DiagnosticMethodLive.Form do
           {:noreply,
            socket
            |> put_flash(:info, "Diagnostic method updated successfully")
-           |> push_navigate(to: ~p"/admin/diagnostic_methods/#{diagnostic_method}")}
+           |> push_navigate(to: ~p"/diagnostic_methods/#{diagnostic_method}")}
 
         {:error, %Ecto.Changeset{} = changeset} ->
           {:noreply, assign_form(socket, changeset)}

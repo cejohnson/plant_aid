@@ -254,11 +254,13 @@ defmodule PlantAidWeb.ObservationLive.Form do
       {:ok, observation} ->
         {:noreply,
          socket
-         |> put_flash(:info, "Observation created successfully")
+         |> put_flash(
+           :info,
+           "Observation created successfully! Please submit a sample if possible. Click the \"Submit Sample\" button to the left for instructions."
+         )
          |> push_navigate(to: ~p"/observations/#{observation}")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        IO.inspect(changeset, label: "errorrrr")
         {:noreply, assign(socket, changeset: changeset)}
     end
   end

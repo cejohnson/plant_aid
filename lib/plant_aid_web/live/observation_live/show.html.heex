@@ -18,9 +18,6 @@
   <:item title="Host">
     <%= (@observation.host && @observation.host.common_name) || @observation.host_other %>
   </:item>
-  <:item title="Host Variety">
-    <%= @observation.host_variety && @observation.host_variety.common_name %>
-  </:item>
   <:item title="Suspected Pathology">
     <%= @observation.suspected_pathology && @observation.suspected_pathology.common_name %>
   </:item>

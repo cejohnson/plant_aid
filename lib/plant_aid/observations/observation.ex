@@ -64,6 +64,7 @@ defmodule PlantAid.Observations.Observation do
     field :observation_date, :date
     field :organic, :boolean, default: false
     field :position, Geo.PostGIS.Geometry
+    field :location_details, :string
 
     field :source, Ecto.Enum,
       values: [:plant_aid, :usa_blight, :npdn, :cucurbit_sentinel_network],
@@ -108,6 +109,7 @@ defmodule PlantAid.Observations.Observation do
       :notes,
       :latitude,
       :longitude,
+      :location_details,
       :host_id,
       :location_type_id,
       :suspected_pathology_id,
