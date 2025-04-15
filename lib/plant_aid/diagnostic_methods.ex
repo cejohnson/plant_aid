@@ -98,7 +98,6 @@ defmodule PlantAid.DiagnosticMethods do
     diagnostic_method
     |> Repo.preload([:pathologies])
     |> DiagnosticMethod.changeset(attrs)
-    |> IO.inspect(label: "why no delete?")
     |> Changeset.put_change(:updated_by_id, user.id)
     |> put_pathologies(attrs)
     |> Repo.update()

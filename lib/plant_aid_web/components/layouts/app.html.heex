@@ -114,6 +114,16 @@
                   Observations
                 </.link>
               </li>
+              <%= if PlantAid.Accounts.User.has_role?(@current_user, [:superuser, :admin, :researcher]) do %>
+                <li>
+                  <.link
+                    navigate={~p"/diagnostic_methods"}
+                    class="font-light text-sm text-gray-600 hover:text-lime-700"
+                  >
+                    Diagnostic Methods
+                  </.link>
+                </li>
+              <% end %>
               <li>
                 <.link
                   navigate={~p"/test_results"}

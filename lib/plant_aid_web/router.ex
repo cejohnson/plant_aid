@@ -117,6 +117,12 @@ defmodule PlantAidWeb.Router do
       # live "/samples/:id", SampleLive.Show, :show
       # live "/samples/:id/show/edit", SampleLive.Show, :edit
 
+      live "/diagnostic_methods", DiagnosticMethodLive.Index, :index
+      live "/diagnostic_methods/new", DiagnosticMethodLive.Form, :new
+      live "/diagnostic_methods/:id/edit", DiagnosticMethodLive.Form, :edit
+      live "/diagnostic_methods/:id", DiagnosticMethodLive.Show, :show
+      live "/diagnostic_methods/:id/show/edit", DiagnosticMethodLive.Form, :edit
+
       live "/test_results", DiagnosticTestResultLive.Index, :index
       live "/test_results/new", DiagnosticTestResultLive.Form, :new
       live "/test_results/:id/edit", DiagnosticTestResultLive.Form, :edit
@@ -184,12 +190,6 @@ defmodule PlantAidWeb.Router do
       live "/pathologies/:id/edit", PathologyLive.Index, :edit
       live "/pathologies/:id", PathologyLive.Show, :show
       live "/pathologies/:id/show/edit", PathologyLive.Show, :edit
-
-      live "/diagnostic_methods", DiagnosticMethodLive.Index, :index
-      live "/diagnostic_methods/new", DiagnosticMethodLive.Form, :new
-      live "/diagnostic_methods/:id/edit", DiagnosticMethodLive.Form, :edit
-      live "/diagnostic_methods/:id", DiagnosticMethodLive.Show, :show
-      live "/diagnostic_methods/:id/show/edit", DiagnosticMethodLive.Form, :edit
     end
   end
 

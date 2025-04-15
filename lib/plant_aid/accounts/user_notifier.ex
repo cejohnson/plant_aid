@@ -98,8 +98,6 @@ defmodule PlantAid.Accounts.UserNotifier do
 
     #{url}
 
-    If you don't know #{inviter}, please ignore this.
-
     ==============================
     """)
   end

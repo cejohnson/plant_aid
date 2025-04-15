@@ -96,6 +96,7 @@ defmodule PlantAidWeb.UserAuth do
 
     user =
       if user do
+        Logger.metadata(user_id: user.id, user_email: user.email)
         ErrorTracker.set_context(%{user_id: user.id, user_email: user.email})
         unviewed_alert_count = Alerts.get_unviewed_alert_count(user)
 
@@ -211,6 +212,7 @@ defmodule PlantAidWeb.UserAuth do
           user = Accounts.get_user_by_session_token(user_token)
 
           if user do
+            Logger.metadata(user_id: user.id, user_email: user.email)
             ErrorTracker.set_context(%{user_id: user.id, user_email: user.email})
             unviewed_alert_count = Alerts.get_unviewed_alert_count(user)
 
