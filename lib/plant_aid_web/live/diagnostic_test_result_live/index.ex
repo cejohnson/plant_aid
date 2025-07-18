@@ -60,6 +60,7 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Index do
       case DiagnosticTests.list_test_results(socket.assigns.current_user, params) do
         {:ok, {test_results, meta}} ->
           socket
+          |> assign(:params, params)
           |> assign(:meta, meta)
           |> assign(:params, params)
           |> stream(:test_results, test_results, reset: true)
