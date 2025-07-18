@@ -67,7 +67,6 @@ defmodule PlantAid.Observations do
       preload: [
         :user,
         :host,
-        :host_variety,
         :location_type,
         :suspected_pathology,
         :country,
@@ -105,7 +104,6 @@ defmodule PlantAid.Observations do
         preload: [
           :user,
           :host,
-          :host_variety,
           :location_type,
           :suspected_pathology,
           :country,
@@ -131,7 +129,6 @@ defmodule PlantAid.Observations do
           o.observation_date,
           o.suspected_pathology && o.suspected_pathology.common_name,
           o.host && o.host.common_name,
-          o.host_variety && o.host_variety.name,
           o.location_type && o.location_type.name,
           o.organic,
           o.latitude,
@@ -139,6 +136,7 @@ defmodule PlantAid.Observations do
           o.country && o.country.name,
           o.primary_subdivision && o.primary_subdivision.name,
           o.secondary_subdivision && o.secondary_subdivision.name,
+          o.location_details,
           o.control_method,
           o.notes,
           o.data_source,
@@ -151,27 +149,23 @@ defmodule PlantAid.Observations do
 
     [
       [
-        "id",
-        "status",
-        "user",
-        "observation_date",
-        "suspected_pathology",
-        "host",
-        "host_variety",
-        "location_type",
-        "organic",
-        "latitude",
-        "longitude",
-        "country",
-        "primary_subdivision",
-        "secondary_subdivision",
-        "control_method",
-        "notes",
-        "data_source",
-        "sample_result",
-        "sample_comments",
-        "sample_pathology",
-        "sample_genotype"
+        "Observation ID",
+        "Status",
+        "Reported By",
+        "Observation Date",
+        "Suspected Pathology",
+        "Host",
+        "Location Type",
+        "Organic",
+        "Latitude",
+        "Longitude",
+        "Country",
+        "Primary Subdivision",
+        "Secondary Subdivision",
+        "Location Details",
+        "Control Method",
+        "Notes",
+        "Data Source"
       ]
       | observations
     ]
@@ -385,7 +379,6 @@ defmodule PlantAid.Observations do
     Repo.preload(observation_or_observations, [
       :user,
       :host,
-      :host_variety,
       :location_type,
       :suspected_pathology,
       :country,

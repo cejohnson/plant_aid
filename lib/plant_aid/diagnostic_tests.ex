@@ -162,12 +162,12 @@ defmodule PlantAid.DiagnosticTests do
         "Notes",
         "Data Source",
         "Test Result ID",
+        "Diagnostic Method",
         "Test Result Created By",
         "Test Result Created On",
         "Test Result Updated By",
         "Test Result Updated On",
         "Comments",
-        "Diagnostic Method",
         "Pathology",
         "Result",
         "Genotype"
@@ -195,12 +195,12 @@ defmodule PlantAid.DiagnosticTests do
           r.observation.notes,
           r.observation.data_source,
           r.id,
+          r.diagnostic_method && r.diagnostic_method.name,
           r.inserted_by && r.inserted_by.email,
           r.inserted_at,
           r.updated_by && r.updated_by.email,
           r.updated_at,
-          r.comments,
-          r.diagnostic_method && r.diagnostic_method.name
+          r.comments
         ]
 
         if length(r.pathology_results) > 0 do

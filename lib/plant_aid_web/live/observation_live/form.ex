@@ -88,8 +88,6 @@ defmodule PlantAidWeb.ObservationLive.Form do
     observation = socket.assigns.observation
     changeset = Observations.change_observation(observation)
 
-    host_variety_options = FormHelpers.list_host_variety_options(observation.host_id)
-
     primary_subdivision_options =
       FormHelpers.list_primary_subdivision_options(observation.country_id)
       |> prepend_default_option()
@@ -102,7 +100,6 @@ defmodule PlantAidWeb.ObservationLive.Form do
     |> assign_form(changeset)
     |> assign(:primary_subdivision_options, primary_subdivision_options)
     |> assign(:secondary_subdivision_options, secondary_subdivision_options)
-    |> assign(:host_variety_options, host_variety_options)
     |> assign(:selected_country_id, observation.country_id)
     |> assign(:selected_primary_subdivision_id, observation.primary_subdivision_id)
     |> assign(:selected_host, observation.host_id)

@@ -8,8 +8,7 @@ defmodule ConvertSamplesToTestResults do
   alias PlantAid.Accounts
 
   def run do
-    # TODO: change
-    user = Accounts.get_user_by_email("superuser@example.com")
+    user = Accounts.get_user_by_email("cejohns2@ncsu.edu")
 
     {:ok, usa_blight_diagnostic_method} =
       DiagnosticMethods.create_diagnostic_method(user, %{
@@ -166,7 +165,6 @@ defmodule ConvertSamplesToTestResults do
         "pathology_results" => %{
           "0" => %{
             "_persistent_id" => "0",
-            # "pathology_id" => sample.pathology_id && Integer.to_string(sample.pathology_id),
             "genotype_id" => sample.genotype_id && Integer.to_string(sample.genotype_id),
             "result" => sample.result && Atom.to_string(sample.result)}
         },
