@@ -272,7 +272,7 @@ defmodule PlantAidWeb.DiagnosticMethodLive.Form do
           {:noreply,
            socket
            |> put_flash(:info, "Diagnostic method created successfully")
-           |> push_navigate(to: ~p"/admin/diagnostic_methods/#{diagnostic_method}")}
+           |> push_navigate(to: ~p"/diagnostic_methods/#{diagnostic_method}")}
 
         {:error, %Ecto.Changeset{} = changeset} ->
           {:noreply, assign_form(socket, changeset)}

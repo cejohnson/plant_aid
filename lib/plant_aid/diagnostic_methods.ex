@@ -74,6 +74,8 @@ defmodule PlantAid.DiagnosticMethods do
 
   """
   def create_diagnostic_method(user, attrs \\ %{}) do
+    IO.inspect(attrs, label: "attrs")
+
     %DiagnosticMethod{inserted_by_id: user.id, updated_by_id: user.id}
     |> DiagnosticMethod.changeset(attrs)
     |> put_pathologies(attrs)

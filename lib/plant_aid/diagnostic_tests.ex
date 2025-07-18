@@ -1,6 +1,9 @@
 defmodule PlantAid.DiagnosticTests do
   @behaviour Bodyguard.Policy
+
   import Ecto.Query, warn: false
+  alias PlantAid.Observations
+  alias NimbleCSV.RFC4180, as: CSV
 
   alias Ecto.Changeset
   alias PlantAid.Repo
@@ -14,6 +17,8 @@ defmodule PlantAid.DiagnosticTests do
   def authorize(:list_test_results, _, _) do
     :ok
   end
+
+  def authorize(:export_test_results, %User{}, _), do: :ok
 
   def authorize(:create_test_result, %User{} = user, _) do
     User.has_role?(user, [:superuser, :admin, :researcher])
@@ -73,6 +78,205 @@ defmodule PlantAid.DiagnosticTests do
     with {:ok, flop} <- Flop.validate(params, for: TestResult) do
       {:ok, list_test_results(user, flop)}
     end
+  end
+
+  def export_test_results(%User{} = user) do
+    export_test_results(user, %Flop{})
+  end
+
+  def export_test_results(%User{} = user, %Flop{} = flop) do
+    opts = [for: TestResult]
+
+    test_results =
+      from(r in TestResult,
+        preload: [
+          :diagnostic_method,
+          :inserted_by,
+          :updated_by,
+          pathology_results: [:genotype, pathology: [:genotypes]],
+          observation: [
+            :user,
+            :host,
+            :host_variety,
+            :location_type,
+            :suspected_pathology,
+            :country,
+            :primary_subdivision,
+            secondary_subdivision:
+              ^from(s in PlantAid.Geography.SecondarySubdivision, select: %{s | geog: nil})
+          ]
+        ]
+      )
+      |> scope(user)
+      |> Flop.with_named_bindings(flop, &join_assocs/2, opts)
+      |> Flop.filter(flop, opts)
+      |> Repo.all()
+      |> Enum.map(&populate_virtual_fields/1)
+      |> Enum.map(fn tr ->
+        %{tr | observation: Observations.populate_virtual_fields(tr.observation)}
+      end)
+
+    diagnostic_methods =
+      test_results
+      |> Enum.map(& &1.diagnostic_method)
+      |> Enum.uniq()
+
+    use_diagnostic_method_prefix? = length(diagnostic_methods) > 1
+
+    dm_field_lengths =
+      diagnostic_methods
+      |> Enum.map(fn dm ->
+        {dm.id, length(dm.fields)}
+      end)
+
+    headers =
+      Enum.map(diagnostic_methods, fn method ->
+        method.fields
+        |> Enum.map(fn field ->
+          if use_diagnostic_method_prefix? do
+            method.name <> ": " <> field.name
+          else
+            field.name
+          end
+        end)
+      end)
+      |> List.flatten()
+
+    headers =
+      [
+        "Observation ID",
+        "Status",
+        "Reported By",
+        "Observation Date",
+        "Suspected Pathology",
+        "Host",
+        "Location Type",
+        "Organic",
+        "Latitude",
+        "Longitude",
+        "Country",
+        "Primary Subdivision",
+        "Secondary Subdivision",
+        "Location Details",
+        "Control Method",
+        "Notes",
+        "Data Source",
+        "Test Result ID",
+        "Test Result Created By",
+        "Test Result Created On",
+        "Test Result Updated By",
+        "Test Result Updated On",
+        "Comments",
+        "Diagnostic Method",
+        "Pathology",
+        "Result",
+        "Genotype"
+      ] ++ headers
+
+    rows =
+      test_results
+      |> Enum.flat_map(fn r ->
+        values = [
+          r.observation.id,
+          r.observation.status,
+          r.observation.user && r.observation.user.email,
+          r.observation.observation_date,
+          r.observation.suspected_pathology && r.observation.suspected_pathology.common_name,
+          r.observation.host && r.observation.host.common_name,
+          r.observation.location_type && r.observation.location_type.name,
+          r.observation.organic,
+          r.observation.latitude,
+          r.observation.longitude,
+          r.observation.country && r.observation.country.name,
+          r.observation.primary_subdivision && r.observation.primary_subdivision.name,
+          r.observation.secondary_subdivision && r.observation.secondary_subdivision.name,
+          r.observation.location_details,
+          r.observation.control_method,
+          r.observation.notes,
+          r.observation.data_source,
+          r.id,
+          r.inserted_by && r.inserted_by.email,
+          r.inserted_at,
+          r.updated_by && r.updated_by.email,
+          r.updated_at,
+          r.comments,
+          r.diagnostic_method && r.diagnostic_method.name
+        ]
+
+        if length(r.pathology_results) > 0 do
+          Enum.map(r.pathology_results, fn pr ->
+            field_values =
+              dm_field_lengths
+              |> Enum.flat_map(fn {id, field_length} ->
+                if r.diagnostic_method_id == id do
+                  Enum.map(r.fields, &serialize_field/1) ++
+                    Enum.map(pr.fields, &serialize_field/1)
+                else
+                  List.duplicate("", field_length)
+                end
+              end)
+
+            pathology_values = [
+              pr.pathology && pr.pathology.common_name,
+              pr.result,
+              pr.genotype && pr.genotype.name
+            ]
+
+            values ++
+              pathology_values ++
+              field_values
+          end)
+        else
+          field_values =
+            dm_field_lengths
+            |> Enum.map(fn {id, field_length} ->
+              if r.diagnostic_method_id == id do
+                Enum.map(r.fields, &serialize_field/1)
+              else
+                List.duplicate("", field_length)
+              end
+            end)
+
+          [values ++ [nil, nil, nil] ++ field_values]
+        end
+      end)
+
+    [
+      headers
+      | rows
+    ]
+    |> CSV.dump_to_iodata()
+  end
+
+  def export_test_results(%User{} = user, %{} = params) do
+    with {:ok, flop} <- Flop.validate(params, for: TestResult) do
+      {:ok, export_test_results(user, flop)}
+    end
+  end
+
+  defp serialize_field(%Field{type: :list, list_entries: entries}) when length(entries) == 0 do
+    nil
+  end
+
+  defp serialize_field(%Field{type: :list, list_entries: entries}) do
+    entries
+    |> Enum.map(& &1.value)
+    |> Jason.encode!()
+  end
+
+  defp serialize_field(%Field{type: :map, map_entries: entries}) when length(entries) == 0 do
+    nil
+  end
+
+  defp serialize_field(%Field{type: :map, map_entries: entries}) do
+    entries
+    |> Enum.map(&{&1.key, &1.value})
+    |> Map.new()
+    |> Jason.encode!()
+  end
+
+  defp serialize_field(%Field{value: value}) do
+    value
   end
 
   defp scope(query, %User{} = user) do
@@ -148,6 +352,7 @@ defmodule PlantAid.DiagnosticTests do
         changeset,
         opts \\ []
       ) do
+    IO.inspect(changeset, label: "changeset")
     after_save = Keyword.get(opts, :after_save, &{:ok, &1})
     notify_reporter = Keyword.get(opts, :notify_reporter)
     create_alerts = Keyword.get(opts, :create_alerts)

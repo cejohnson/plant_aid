@@ -40,6 +40,9 @@
   }>
     <%= @observation.secondary_subdivision && @observation.secondary_subdivision.name %>
   </:item>
+  <:item title="Location Details">
+    <%= @observation.location_details %>
+  </:item>
   <:item title="Organic"><%= @observation.organic %></:item>
   <:item title="Control method"><%= @observation.control_method %></:item>
   <:item title="Notes"><%= @observation.notes %></:item>

@@ -825,6 +825,44 @@ defmodule PlantAidWeb.CoreComponents do
     """
   end
 
+  attr :meta, Flop.Meta, required: true
+  attr :path, :any, default: nil
+  attr :on_paginate, JS, default: nil
+  attr :target, :string, default: nil
+
+  attr :aria_label, :string,
+    default: "Pagination",
+    doc: """
+    Aria label for the `<nav>` element. The value should be localized. In
+    languages with latin characters, the first letter should be capitalized.
+    If multiple pagination components are rendered on the same page, each one
+    should have a distinct aria label.
+    """
+
+  def pagination(assigns) do
+    ~H"""
+    <Flop.Phoenix.pagination
+      class="pagination"
+      meta={@meta}
+      path={@path}
+      on_paginate={@on_paginate}
+      target={@target}
+      aria-label={@aria_label}
+      page_link_aria_label_fun={&"Page #{&1}"}
+    >
+      <:previous attrs={[class: "previous"]}>
+        <i class="fas fa-chevron-left" />
+      </:previous>
+      <:next attrs={[class: "next"]}>
+        <i class="fas fa-chevron-right" />
+      </:next>
+      <:ellipsis>
+        <span class="ellipsis">‥</span>
+      </:ellipsis>
+    </Flop.Phoenix.pagination>
+    """
+  end
+
   def register_or_login(assigns) do
     if Application.get_env(:plant_aid, :registration_enabled) do
       ~H"""

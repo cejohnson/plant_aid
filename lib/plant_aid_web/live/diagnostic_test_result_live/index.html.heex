@@ -4,6 +4,9 @@
     <.link patch={~p"/test_results/new"}>
       <.button variant="primary">New Test Result</.button>
     </.link>
+    <.link href={~p"/test_results/export?#{@params}"} download target="_blank">
+      <.button type="button" variant="primary">Export CSV</.button>
+    </.link>
   </:actions>
 </.header>
 
@@ -21,10 +24,13 @@
         <%= test_result.observation.observation_date %>
       </:col>
       <:col :let={{_id, test_result}} label="Reported By">
-        <%= test_result.observation.user.email %>
+        <%= test_result.observation.user && test_result.observation.user.email %>
       </:col>
       <:col :let={{_id, test_result}} label="Host">
         <%= test_result.observation.host.common_name %>
+      </:col>
+      <:col :let={{_id, test_result}} label="Diagnostic Method">
+        <%= test_result.diagnostic_method.name %>
       </:col>
       <:col :let={{_id, test_result}} label="Pathologies Tested">
         <div class="flex-col">
@@ -53,7 +59,7 @@
         </div>
       </:col>
       <:col :let={{_id, test_result}} label="Last Modified By">
-        <%= test_result.updated_by.email %>
+        <%= test_result.updated_by && test_result.updated_by.email %>
       </:col>
       <:col :let={{_id, test_result}} label="Last Modified On">
         <%= DateTime.to_date(test_result.updated_at) %>

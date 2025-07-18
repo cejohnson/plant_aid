@@ -1,7 +1,7 @@
 <.header>
   Listing Diagnostic Methods
   <:actions>
-    <.link navigate={~p"/admin/diagnostic_methods/new"}>
+    <.link navigate={~p"/diagnostic_methods/new"}>
       <.button variant="primary">New Diagnostic Method</.button>
     </.link>
   </:actions>
@@ -12,7 +12,7 @@
   rows={@streams.diagnostic_methods}
   row_click={
     fn {_id, diagnostic_method} ->
-      JS.navigate(~p"/admin/diagnostic_methods/#{diagnostic_method}")
+      JS.navigate(~p"/diagnostic_methods/#{diagnostic_method}")
     end
   }
 >
@@ -31,9 +31,9 @@
   </:col>
   <:action :let={{_id, diagnostic_method}}>
     <div class="sr-only">
-      <.link navigate={~p"/admin/diagnostic_methods/#{diagnostic_method}"}>Show</.link>
+      <.link navigate={~p"/diagnostic_methods/#{diagnostic_method}"}>Show</.link>
     </div>
-    <.link patch={~p"/admin/diagnostic_methods/#{diagnostic_method}/edit"}>
+    <.link patch={~p"/diagnostic_methods/#{diagnostic_method}/edit"}>
       <i class="fa-solid fa-pen text-stone-400"></i>
     </.link>
   </:action>

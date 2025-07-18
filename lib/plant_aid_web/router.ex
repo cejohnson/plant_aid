@@ -71,6 +71,7 @@ defmodule PlantAidWeb.Router do
 
     get "/observations/:id/print", SampleController, :print
     get "/observations/export", ObservationController, :export_csv
+    get "/test_results/export", DiagnosticTestResultController, :export_csv
 
     live_session :require_authenticated_user,
       on_mount: [

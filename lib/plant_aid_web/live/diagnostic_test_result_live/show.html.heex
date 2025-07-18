@@ -63,13 +63,13 @@
   <:item title="Diagnostic Method"><%= @test_result.diagnostic_method.name %></:item>
 
   <:item title="Created By">
-    <%= @test_result.inserted_by.email %>
+    <%= @test_result.inserted_by && @test_result.inserted_by.email %>
   </:item>
   <:item title="Created On">
     <%= DateTime.to_date(@test_result.inserted_at) %>
   </:item>
   <:item title="Updated By">
-    <%= @test_result.updated_by.email %>
+    <%= @test_result.updated_by && @test_result.updated_by.email %>
   </:item>
   <:item title="Updated On">
     <%= DateTime.to_date(@test_result.updated_at) %>

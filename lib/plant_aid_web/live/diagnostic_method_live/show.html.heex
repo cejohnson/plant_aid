@@ -2,7 +2,7 @@
   Diagnostic Method <%= @diagnostic_method.id %>
   <:actions>
     <.link
-      navigate={~p"/admin/diagnostic_methods/#{@diagnostic_method}/show/edit"}
+      navigate={~p"/diagnostic_methods/#{@diagnostic_method}/show/edit"}
       phx-click={JS.push_focus()}
     >
       <.button variant="primary">Edit Diagnostic Method</.button>
@@ -55,4 +55,4 @@
   </:item>
 </.list>
 
-<.back navigate={~p"/admin/diagnostic_methods"}>Back to Diagnostic Methods</.back>
+<.back navigate={~p"/diagnostic_methods"}>Back to Diagnostic Methods</.back>

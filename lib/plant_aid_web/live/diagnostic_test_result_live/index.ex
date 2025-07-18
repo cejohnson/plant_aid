@@ -61,6 +61,7 @@ defmodule PlantAidWeb.DiagnosticTestResultLive.Index do
         {:ok, {test_results, meta}} ->
           socket
           |> assign(:meta, meta)
+          |> assign(:params, params)
           |> stream(:test_results, test_results, reset: true)
           |> maybe_add_genotype_filter_field(meta.flop)
 
