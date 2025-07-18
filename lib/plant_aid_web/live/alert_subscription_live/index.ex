@@ -70,7 +70,6 @@ defmodule PlantAidWeb.AlertSubscriptionLive.Index do
         {PlantAidWeb.AlertSubscriptionLive.FormComponent, {:saved, alert_subscription}},
         socket
       ) do
-    IO.inspect(alert_subscription, label: "saved!")
     {:noreply, stream_insert(socket, :alert_subscriptions, alert_subscription)}
   end
 

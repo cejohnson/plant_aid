@@ -333,8 +333,6 @@ defmodule PlantAidWeb.AlertSubscriptionLive.FormComponent do
   end
 
   defp get_primary_subdivision_label_and_options(country_ids) do
-    IO.inspect(country_ids, label: "getting primary subdivisions")
-
     with {primary_subdivisions, _meta} <-
            Geography.list_primary_subdivisions(%Flop{
              filters: [%Flop.Filter{field: :country_id, op: :in, value: country_ids}],
@@ -367,8 +365,6 @@ defmodule PlantAidWeb.AlertSubscriptionLive.FormComponent do
   end
 
   defp get_secondary_subdivision_label_and_options(primary_subdivision_ids) do
-    IO.inspect(primary_subdivision_ids, label: "getting secondary subdivisions")
-
     with {secondary_subdivisions, _meta} <-
            Geography.list_secondary_subdivisions(%Flop{
              filters: [

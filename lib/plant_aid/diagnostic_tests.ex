@@ -352,7 +352,6 @@ defmodule PlantAid.DiagnosticTests do
         changeset,
         opts \\ []
       ) do
-    IO.inspect(changeset, label: "changeset")
     after_save = Keyword.get(opts, :after_save, &{:ok, &1})
     notify_reporter = Keyword.get(opts, :notify_reporter)
     create_alerts = Keyword.get(opts, :create_alerts)
